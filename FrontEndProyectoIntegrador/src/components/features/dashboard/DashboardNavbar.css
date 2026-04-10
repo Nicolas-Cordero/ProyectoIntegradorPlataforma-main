@@ -1,0 +1,181 @@
+/* Animación de brillo sutil (shimmer) en la navbar */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Efecto de brillo en hover */
+.navbar-blur-effect {
+  position: relative;
+  animation: slideInDown 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navbar-blur-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: shimmer 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Botones con efecto de onda */
+.button-wave-effect {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.button-wave-effect::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  transform: translate(-50%, -50%);
+  transition: width 0.55s ease-out, height 0.55s ease-out;
+}
+
+.button-wave-effect:hover::after {
+  width: 160px;
+  height: 160px;
+}
+
+/* Efecto de vidrio (glassmorphism mejorado) */
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15),
+              0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.glassmorphism:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25),
+              0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Chip con efecto de brillo */
+.chip-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.chip-glow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Logo con efecto flotante */
+.navbar-logo {
+  animation: float 10s ease-in-out infinite;
+}
+
+/* Texto con efecto de fade-in */
+.navbar-text {
+  animation: slideInDown 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Efectos de transición fluida */
+.navbar-button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navbar-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.navbar-button:active {
+  transform: translateY(0);
+}
+
+/* Hover sutil para botones con fondo degradado */
+.gradient-subtle-hover {
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s ease, filter 0.28s ease;
+  will-change: transform;
+}
+.gradient-subtle-hover:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+  filter: brightness(1.03);
+}
+.gradient-subtle-hover:active {
+  transform: translateY(0);
+  filter: brightness(1);
+}
+
+/* Linea de brillo superior */
+.navbar-top-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  pointer-events: none;
+}

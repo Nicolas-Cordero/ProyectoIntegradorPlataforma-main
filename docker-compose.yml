@@ -1,0 +1,39 @@
+services:
+  backend:
+    build:
+      context: ./backend-proyecto-integrador
+      dockerfile: Dockerfile
+    container_name: dev-backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend-proyecto-integrador:/app
+      - /app/node_modules
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_DATABASE: myapp
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: myapp
+    command: npm run start:dev
+  db:
+    image: postgres:16-alpine
+    container_name: dev-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: myapp
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+volumes:
+  pgdata:

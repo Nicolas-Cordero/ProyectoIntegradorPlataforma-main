@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 80" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <style>
+      .btn-text {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        fill: white;
+        text-anchor: middle;
+        dominant-baseline: middle;
+      }
+    </style>
+    <clipPath id="btnClip">
+      <rect x="10" y="10" width="380" height="60" rx="30" ry="30"/>
+    </clipPath>
+  </defs>
+  
+  <!-- Red section with wavy edge -->
+  <g clip-path="url(#btnClip)">
+    <path d="M 10 40 Q 15 35, 20 40 Q 25 45, 30 40 Q 35 35, 40 38 L 40 70 Q 35 75, 30 70 Q 25 65, 20 70 Q 15 75, 10 70 Z" fill="#C7654F"/>
+    <path d="M 40 10 Q 45 15, 50 12 Q 55 9, 60 14 L 60 70 Q 55 65, 50 68 Q 45 71, 40 68 L 40 10 Z" fill="#C7654F"/>
+    
+    <!-- Red-Orange transitional section -->
+    <path d="M 60 10 Q 65 12, 70 10 Q 75 8, 80 12 L 90 70 Q 85 72, 80 70 Q 75 68, 70 70 Q 65 72, 60 70 L 60 10 Z" fill="#D4775A"/>
+    
+    <!-- Orange-Yellow section -->
+    <path d="M 90 10 Q 95 14, 100 12 Q 105 10, 110 15 L 130 70 Q 125 73, 120 70 Q 115 67, 110 70 Q 105 73, 100 70 Q 95 67, 90 70 L 90 10 Z" fill="#E8B96D"/>
+    
+    <!-- Yellow section -->
+    <path d="M 130 10 Q 135 8, 140 12 Q 145 16, 150 10 L 170 70 Q 165 74, 160 70 Q 155 66, 150 70 Q 145 74, 140 70 Q 135 66, 130 70 L 130 10 Z" fill="#ECB876"/>
+    
+    <!-- Yellow-Beige section -->
+    <path d="M 170 10 Q 175 12, 180 9 Q 185 6, 190 11 L 210 70 Q 205 73, 200 70 Q 195 67, 190 70 Q 185 73, 180 70 Q 175 67, 170 70 L 170 10 Z" fill="#D9C89B"/>
+    
+    <!-- Beige-Green transitional section -->
+    <path d="M 210 10 Q 215 14, 220 11 Q 225 8, 230 14 L 250 70 Q 245 72, 240 69 Q 235 66, 230 70 Q 225 74, 220 70 Q 215 66, 210 70 L 210 10 Z" fill="#7FBB9E"/>
+    
+    <!-- Green section -->
+    <path d="M 250 10 Q 255 8, 260 13 Q 265 18, 270 12 L 290 70 Q 285 75, 280 70 Q 275 65, 270 70 Q 265 75, 260 70 Q 255 65, 250 70 L 250 10 Z" fill="#65B39B"/>
+    
+    <!-- Green ending section -->
+    <path d="M 290 10 Q 295 15, 300 11 Q 305 7, 310 12 L 320 70 Q 315 74, 310 70 Q 305 66, 300 70 Q 295 74, 290 70 L 290 10 Z" fill="#5BA089"/>
+    
+    <!-- Final green to border -->
+    <path d="M 320 10 L 390 10 Q 395 15, 390 40 Q 395 65, 390 70 L 320 70 Q 315 74, 310 70 Q 305 66, 300 70 Q 295 74, 290 70 L 320 10 Z" fill="#65B39B"/>
+  </g>
+  
+  <!-- Text overlay -->
+  <text x="200" y="40" class="btn-text">Botón</text>
+</svg>

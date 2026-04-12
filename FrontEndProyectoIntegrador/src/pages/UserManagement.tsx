@@ -4,7 +4,6 @@ import { authService, userService, PermissionService } from '../services';
 import type { Usuario } from '../types';
 import {
   Box,
-  Container,
   Paper,
   Typography,
   Button,
@@ -39,7 +38,6 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Person as PersonIcon,
   SupervisorAccount as TutorIcon,
   Visibility as VisibilityIcon,
   Lock as LockIcon,
@@ -49,6 +47,7 @@ import {
 } from '@mui/icons-material';
 import { GradientButton } from '../components/common/GradientButton';
 import { TypingText } from '../components/common/TypingText';
+import { useConfirmDialog } from '../components/ui';
 import { DashboardParticles } from '../components/features/dashboard/DashboardParticles';
 import logoFundacion from '../assets/logos/logo.svg';
 import marcoIzquierdo from '../assets/frames/marco-izquierda.svg';
@@ -58,6 +57,7 @@ import userSvg from '../assets/icons/user.svg';
 export const UserManagement: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const { showConfirm, ConfirmDialog } = useConfirmDialog();
   const showAdminChip = useMediaQuery(theme.breakpoints.up('lg'));
   
   const [users, setUsers] = useState<Usuario[]>([]);
@@ -245,18 +245,17 @@ export const UserManagement: React.FC = () => {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
-      return;
-    }
-
-    try {
-      await userService.delete(userId);
-      setSnackbar({ open: true, message: 'Usuario eliminado exitosamente', severity: 'success' });
-      await loadUsers(); // Recargar lista
-    } catch (err) {
-      console.error('Error al eliminar usuario:', err);
-      setSnackbar({ open: true, message: 'Error al eliminar el usuario', severity: 'error' });
-    }
+    showConfirm({
+      title: 'Eliminar usuario',
+      message: '¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.',
+      confirmText: 'Eliminar',
+      confirmColor: 'error',
+      onConfirm: async () => {
+        await userService.delete(userId);
+        setSnackbar({ open: true, message: 'Usuario eliminado exitosamente', severity: 'success' });
+        await loadUsers(); // Recargar lista
+      }
+    });
   };
 
   const handleOpenPasswordDialog = (user: Usuario) => {
@@ -299,12 +298,6 @@ export const UserManagement: React.FC = () => {
       'visita': 'info'
     };
     return colorMap[role] || 'secondary';
-  };
-
-  const getRoleIcon = (role: string) => {
-    if (role === 'tutor') return <TutorIcon />;
-    if (role === 'visita') return <VisibilityIcon />;
-    return <PersonIcon />;
   };
 
   return (
@@ -911,6 +904,7 @@ export const UserManagement: React.FC = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+      <ConfirmDialog />
     </div>
   );
 };

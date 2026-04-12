@@ -13,6 +13,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import { useConfirmDialog } from '../../ui';
 
 interface Ramo {
   id?: number;
@@ -55,6 +56,7 @@ export const SemesterModal: React.FC<SemesterModalProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const { showConfirm, ConfirmDialog } = useConfirmDialog();
 
   useEffect(() => {
     if (semester) {
@@ -111,10 +113,18 @@ export const SemesterModal: React.FC<SemesterModalProps> = ({
   };
 
   const handleDelete = () => {
-    if (semester && onDelete && window.confirm(`¿Estás seguro de que quieres eliminar el Semestre ${semester.semestre}? Esto eliminará todas las materias asociadas.`)) {
-      onDelete(semester.semestre);
-      onClose();
-    }
+    if (!semester || !onDelete) return;
+
+    showConfirm({
+      title: 'Eliminar semestre',
+      message: `¿Estás seguro de que quieres eliminar el Semestre ${semester.semestre}? Esto eliminará todas las materias asociadas.`,
+      confirmText: 'Eliminar',
+      confirmColor: 'error',
+      onConfirm: async () => {
+        onDelete(semester.semestre);
+        onClose();
+      }
+    });
   };
 
   const generatePeriodoSuggestions = () => {
@@ -127,7 +137,8 @@ export const SemesterModal: React.FC<SemesterModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <>
+      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <EditIcon />
         Configurar Semestre {semester?.semestre}
@@ -237,6 +248,6 @@ export const SemesterModal: React.FC<SemesterModalProps> = ({
           </Box>
         </Box>
       </DialogActions>
-    </Dialog>
-  );
+    </Dialog>      <ConfirmDialog />
+    </>  );
 };

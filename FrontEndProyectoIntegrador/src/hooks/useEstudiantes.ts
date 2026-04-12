@@ -29,7 +29,7 @@ interface UseEstudiantesReturn {
  * ```tsx
  * const { estudiantes, loading, error, refresh } = useEstudiantes({ generacionId: '2023' });
  * 
- * if (loading) return <LoadingSpinner />;
+ * if (loading) return <Spinner />;
  * if (error) return <ErrorMessage message={error} onRetry={refresh} />;
  * ```
  */

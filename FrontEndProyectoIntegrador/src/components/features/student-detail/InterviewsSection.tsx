@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Button, Paper, Chip, Stack, CircularProgress } from '@mui/material';
 import { Add as AddIcon, Visibility as VisibilityIcon, Edit as EditIcon, Article as ArticleIcon } from '@mui/icons-material';
 import { NuevaEntrevistaModal } from './components';
+import { useConfirmDialog } from '../../ui';
 import { EntrevistaReportGenerator } from '../../EntrevistaReportGenerator';
 import { entrevistaService } from '../../../services';
 import type { Entrevista } from '../../../types';
@@ -25,6 +26,7 @@ export function InterviewsSection({ estudianteId, estudiante }: InterviewsSectio
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [textoEdicion, setTextoEdicion] = useState('');
   const [textoInfoAdicional, setTextoInfoAdicional] = useState('');
+  const { showConfirm, ConfirmDialog } = useConfirmDialog();
 
   // Cargar entrevistas del backend
   useEffect(() => {
@@ -80,25 +82,39 @@ export function InterviewsSection({ estudianteId, estudiante }: InterviewsSectio
   };
 
   const handleEliminarComentario = async (entrevista: Entrevista) => {
-    if (!window.confirm('¿Eliminar solo el comentario? La entrevista se mantendrá.')) return;
-    try {
-      await entrevistaService.update(entrevista.id, { observaciones: '' });
-      setEntrevistas((prev) => prev.map((e) => (e.id === entrevista.id ? { ...e, observaciones: '' } : e)));
-    } catch (err) {
-      console.error('Error eliminando comentario', err);
-      alert('No se pudo eliminar el comentario');
-    }
+    showConfirm({
+      title: 'Eliminar comentario',
+      message: '¿Eliminar solo el comentario? La entrevista se mantendrá.',
+      confirmText: 'Eliminar',
+      confirmColor: 'error',
+      onConfirm: async () => {
+        try {
+          await entrevistaService.update(entrevista.id, { observaciones: '' });
+          setEntrevistas((prev) => prev.map((e) => (e.id === entrevista.id ? { ...e, observaciones: '' } : e)));
+        } catch (err) {
+          console.error('Error eliminando comentario', err);
+          alert('No se pudo eliminar el comentario');
+        }
+      }
+    });
   };
 
   const handleEliminarEntrevista = async (entrevista: Entrevista) => {
-    if (!window.confirm('¿Eliminar la entrevista y todos sus comentarios?')) return;
-    try {
-      await entrevistaService.delete(entrevista.id);
-      setEntrevistas((prev) => prev.filter((e) => e.id !== entrevista.id));
-    } catch (err) {
-      console.error('Error eliminando entrevista', err);
-      alert('No se pudo eliminar la entrevista');
-    }
+    showConfirm({
+      title: 'Eliminar entrevista',
+      message: '¿Eliminar la entrevista y todos sus comentarios? Esta acción no se puede deshacer.',
+      confirmText: 'Eliminar entrevista',
+      confirmColor: 'error',
+      onConfirm: async () => {
+        try {
+          await entrevistaService.delete(entrevista.id);
+          setEntrevistas((prev) => prev.filter((e) => e.id !== entrevista.id));
+        } catch (err) {
+          console.error('Error eliminando entrevista', err);
+          alert('No se pudo eliminar la entrevista');
+        }
+      }
+    });
   };
 
   // Agrupar por fecha (solo día) y ordenar desc
@@ -364,6 +380,7 @@ export function InterviewsSection({ estudianteId, estudiante }: InterviewsSectio
         onClose={() => setMostrarModalNuevaEntrevista(false)}
         estudianteId={estudianteId}
       />
+      <ConfirmDialog />
     </Box>
   );
 }

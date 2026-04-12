@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { Estudiante } from '../../../types';
 import { entrevistaService } from '../../../services';
+import { useConfirmDialog } from '../../ui';
 
 // INTERFACE: Estructura de notas
 interface Note {
@@ -44,6 +45,7 @@ export function NoteEditor({
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
   const [entrevistaFecha, setEntrevistaFecha] = useState<Date | null>(null);
+  const { showConfirm, ConfirmDialog } = useConfirmDialog();
   const updateShowFilters = (visible: boolean) => {
     setShowFilters(visible);
     onFiltersVisibilityChange?.(visible);
@@ -211,18 +213,25 @@ export function NoteEditor({
 
   const handleDeleteNote = async (noteId: string) => {
     if (!entrevistaId) return;
-    if (!window.confirm('¿Eliminar esta nota?')) return;
-    setIsLoading(true);
-    try {
-      await entrevistaService.deleteTexto(entrevistaId, noteId);
-      setNotes((prev) => prev.filter((n) => n.id !== noteId));
-      if (editingNoteId === noteId) handleCancelEdit();
-    } catch (error) {
-      console.error('Error al eliminar nota:', error);
-      alert('Error al eliminar la nota. Inténtalo nuevamente.');
-    } finally {
-      setIsLoading(false);
-    }
+    showConfirm({
+      title: 'Eliminar nota',
+      message: '¿Eliminar esta nota? Esta acción no se puede deshacer.',
+      confirmText: 'Eliminar',
+      confirmColor: 'error',
+      onConfirm: async () => {
+        setIsLoading(true);
+        try {
+          await entrevistaService.deleteTexto(entrevistaId, noteId);
+          setNotes((prev) => prev.filter((n) => n.id !== noteId));
+          if (editingNoteId === noteId) handleCancelEdit();
+        } catch (error) {
+          console.error('Error al eliminar nota:', error);
+          alert('Error al eliminar la nota. Inténtalo nuevamente.');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    });
   };
 
   // FILTROS: Aplicar búsqueda
@@ -432,6 +441,7 @@ export function NoteEditor({
           </div>
         </div>
       </div>
+      <ConfirmDialog />
     </div>
   );
 };

@@ -62,26 +62,26 @@ export const StatCard: React.FC<StatCardProps> = ({
       role={isClickable ? 'button' : 'region'}
       aria-label={`${label}: ${value}`}
     >
-      <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Box
-          display="grid"
-          gridTemplateColumns="auto minmax(0, 1fr) auto"
+          display="flex"
+          flexDirection="column"
           alignItems="center"
           justifyContent="center"
-          columnGap={2}
-          sx={{ minHeight: 72, width: '100%' }}
+          gap={1.5}
+          sx={{ width: '100%', textAlign: 'center' }}
         >
           {icon && (
             <Box
-              sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
             >
               <Box
               component="img"
               src={icon}
               alt={label}
               sx={{
-                width: { xs: 42, md: 46 },
-                height: { xs: 42, md: 46 },
+                width: { xs: 36, md: 42 },
+                height: { xs: 36, md: 42 },
                 objectFit: 'contain',
                 flexShrink: 0,
               }}
@@ -91,45 +91,35 @@ export const StatCard: React.FC<StatCardProps> = ({
           <Box
             sx={{
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
+              gap: 0.5,
               minWidth: 0,
-              textAlign: 'center',
+              width: '100%',
             }}
           >
             <TypingText
               component="span"
-              text={`${label}:`}
+              text={label}
               startDelayMs={typingStartDelayMs}
               charDelayMs={1}
               sx={{
                 color: 'text.secondary',
-                lineHeight: 1,
-                fontSize: { xs: '0.95rem', md: '1rem' },
-                flexShrink: 0,
-                whiteSpace: 'nowrap',
+                lineHeight: 1.2,
+                fontSize: { xs: '0.75rem', md: '0.85rem' },
+                flexShrink: 1,
               }}
             />
-          </Box>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minWidth: 48,
-            }}
-          >
             <Typography 
-              variant="h4" 
+              variant="h5" 
               component="span"
               fontWeight={800}
               sx={{ 
                 color: accentColor || 'text.primary',
                 lineHeight: 1,
-                fontSize: { xs: '2.1rem', md: '2.7rem' },
+                fontSize: { xs: '1.5rem', md: '1.8rem' },
                 letterSpacing: '-0.03em',
                 flexShrink: 0,
-                textAlign: 'center',
               }}
             >
               {value}

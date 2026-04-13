@@ -3,8 +3,8 @@
  */
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, IconButton, Box } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
+import { Box } from '@mui/material';
+import { Modal, Input, Textarea, Select, Button } from '../../../ui';
 import { entrevistaService } from '../../../../services';
 import { authService } from '../../../../services/authService';
 
@@ -35,22 +35,17 @@ export function NuevaEntrevistaModal({ open, onClose, estudianteId }: NuevaEntre
   );
 
   const handleCrearEntrevista = async () => {
-    // Prevenir múltiples envíos
-    if (isSubmitting) {
-      console.log('⚠️ Ya se está procesando una solicitud');
-      return;
-    }
-
+    if (isSubmitting) return;
     setIsSubmitting(true);
 
     const user = authService.getCurrentUser();
     if (!user) {
       alert('Debes iniciar sesión para crear una entrevista.');
+      setIsSubmitting(false);
       return;
     }
 
     try {
-      // Construir fecha y hora local sin desfases de zona
       const [yearStr, monthStr, dayStr] = fecha.split('-');
       const [hourStr, minuteStr] = (hora || '12:00').split(':');
       const fechaLocal = new Date(
@@ -63,7 +58,6 @@ export function NuevaEntrevistaModal({ open, onClose, estudianteId }: NuevaEntre
         0
       );
 
-      // Calcular siguiente número de entrevista del estudiante considerando solo el año de la nueva fecha
       const entrevistasPrevias = await entrevistaService.getByEstudiante(String(estudianteId));
       const entrevistasDelAnio = entrevistasPrevias.filter((ent) => {
         const fechaEnt = new Date((ent as any).fecha);
@@ -75,7 +69,6 @@ export function NuevaEntrevistaModal({ open, onClose, estudianteId }: NuevaEntre
         return typeof n === 'number' ? Math.max(max, n) : max;
       }, 0);
 
-      // Valores requeridos por el DTO del backend
       const payload = {
         id_estudiante: String(estudianteId),
         fecha: fechaLocal.toISOString(),
@@ -104,116 +97,99 @@ export function NuevaEntrevistaModal({ open, onClose, estudianteId }: NuevaEntre
     }
   };
 
+  const ESTADOS_OPTION = [
+    { valor: 'programada', etiqueta: 'Programada' },
+    { valor: 'completada', etiqueta: 'Completada' },
+    { valor: 'cancelada', etiqueta: 'Cancelada' },
+    { valor: 'reprogramada', etiqueta: 'Reprogramada' }
+  ];
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
-        ➕ Nueva Entrevista
-        <IconButton onClick={onClose} size="small">
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
+    <Modal
+      titulo="➕ Nueva Entrevista"
+      abierto={open}
+      onCerrar={onClose}
+      tamanio="sm"
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Input
+          etiqueta="Fecha"
+          tipo="text"
+          valor={fecha}
+          onChange={setFecha}
+          requerido
+        />
 
-      <DialogContent>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-          <TextField
-            label="Fecha"
-            type="date"
-            value={fecha}
-            onChange={(e) => setFecha(e.target.value)}
-            required
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-          />
+        <Input
+          etiqueta="Hora"
+          tipo="text"
+          valor={hora}
+          onChange={setHora}
+          placeholder="HH:MM"
+          requerido
+        />
 
-          <TextField
-            label="Hora"
-            type="time"
-            value={hora}
-            onChange={(e) => setHora(e.target.value)}
-            required
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-          />
+        <Input
+          etiqueta="Entrevistador"
+          valor={nombreEntrevistador}
+          onChange={setNombreEntrevistador}
+          requerido
+        />
 
-          <TextField
-            label="Entrevistador"
-            value={nombreEntrevistador}
-            required
-            fullWidth
-            onChange={(e) => setNombreEntrevistador(e.target.value)}
-          />
+        <Input
+          etiqueta="Temas a tratar (opcional)"
+          valor={temas}
+          onChange={setTemas}
+          placeholder="Ej: Rendimiento académico, situación familiar..."
+          ayuda="Separar con comas"
+        />
 
-          <TextField
-            label="Entrevistador"
-            value={nombreEntrevistador}
-            disabled
-            fullWidth
-            helperText="Se usará tu usuario autenticado como entrevistador"
-          />
+        <Textarea
+          etiqueta="Observaciones Generales (opcional)"
+          valor={observaciones}
+          onChange={setObservaciones}
+          placeholder="Observaciones iniciales de la entrevista..."
+          filas={4}
+        />
 
-          <TextField
-            label="Temas a tratar (opcional)"
-            placeholder="Ej: Rendimiento académico, situación familiar..."
-            fullWidth
-            value={temas}
-            onChange={(e) => setTemas(e.target.value)}
-            helperText="Separar con comas"
-          />
+        <Textarea
+          etiqueta="Información adicional (opcional)"
+          valor={informacionAdicional}
+          onChange={setInformacionAdicional}
+          placeholder="Notas o información relevante que no provenga de una entrevista"
+          filas={4}
+          ayuda="No es obligatoria y puedes editarla luego"
+        />
 
-          <TextField
-            label="Observaciones Generales (opcional)"
-            placeholder="Observaciones iniciales de la entrevista..."
-            multiline
-            rows={4}
-            fullWidth
-            value={observaciones}
-            onChange={(e) => setObservaciones(e.target.value)}
-          />
+        <Input
+          etiqueta="Duración (minutos)"
+          tipo="number"
+          valor={String(duracionMinutos)}
+          onChange={(v) => setDuracionMinutos(Number(v) || 60)}
+        />
 
-          <TextField
-            label="Información adicional (opcional)"
-            placeholder="Notas o información relevante que no provenga de una entrevista"
-            multiline
-            rows={4}
-            fullWidth
-            value={informacionAdicional}
-            onChange={(e) => setInformacionAdicional(e.target.value)}
-            helperText="No es obligatoria y puedes editarla luego"
-          />
+        <Select
+          etiqueta="Estado"
+          opciones={ESTADOS_OPTION}
+          valor={estadoEntrevista}
+          onChange={(v) => setEstadoEntrevista(v as any)}
+          requerido
+        />
 
-          <TextField
-            label="Duración (minutos)"
-            type="number"
-            fullWidth
-            inputProps={{ min: 15, max: 180, step: 5 }}
-            value={duracionMinutos}
-            onChange={(e) => setDuracionMinutos(Number(e.target.value) || 60)}
-          />
-
-          <TextField
-            label="Estado"
-            select
-            fullWidth
-            value={estadoEntrevista}
-            onChange={(e) => setEstadoEntrevista(e.target.value as any)}
-            SelectProps={{ native: true }}
+        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+          <Button variante="outline" tamano="md" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button 
+            variante="primary" 
+            tamano="md" 
+            onClick={handleCrearEntrevista} 
+            deshabilitado={isSubmitting}
           >
-            <option value="programada">Programada</option>
-            <option value="completada">Completada</option>
-            <option value="cancelada">Cancelada</option>
-            <option value="reprogramada">Reprogramada</option>
-          </TextField>
+            {isSubmitting ? 'Creando...' : 'Crear y Abrir Entrevista'}
+          </Button>
         </Box>
-      </DialogContent>
-
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} variant="outlined" color="inherit">
-          Cancelar
-        </Button>
-        <Button onClick={handleCrearEntrevista} variant="contained" color="primary" disabled={isSubmitting}>
-          {isSubmitting ? 'Creando...' : 'Crear y Abrir Entrevista'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+      </Box>
+    </Modal>
   );
 }

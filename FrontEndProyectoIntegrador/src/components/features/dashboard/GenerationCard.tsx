@@ -43,9 +43,6 @@ export function GenerationCard({
   ];
   const iconColor = iconColors[cardIndex % iconColors.length];
 
-  // Calcular la variante del botón de forma correlativa (1-6)
-  const buttonVariant = ((cardIndex % 6) + 1) as 1 | 2 | 3 | 4 | 5 | 6;
-
   return (
     <Card
       onClick={onClick}
@@ -134,7 +131,7 @@ export function GenerationCard({
               fullWidth
               startIcon={<AddIcon />}
               onClick={handleAddEstudiante}
-              gradientVariant={buttonVariant}
+              solidColor={iconColor}
               sx={{ minHeight: { xs: 48, md: 56 } }}
             >
               Agregar Estudiante

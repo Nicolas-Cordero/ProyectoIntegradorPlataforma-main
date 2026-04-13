@@ -8,16 +8,14 @@ import {
   Typography,
   Avatar,
   Button,
-  TextField,
   Grid as GridBase,
   Divider,
   IconButton,
   Card,
   CardContent,
-  Chip,
-  Alert,
-  Snackbar
+  Chip
 } from '@mui/material';
+import { Input, Alert } from '../components/ui';
 import {
   Edit as EditIcon,
   Save as SaveIcon,
@@ -248,7 +246,11 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
   if (!user) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-        <Alert severity="error">Error al cargar el perfil del usuario</Alert>
+        <Alert 
+          tipo="error" 
+          mensaje="Error al cargar el perfil del usuario"
+          onCerrar={() => {}}
+        />
       </Box>
     );
   }
@@ -382,13 +384,11 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
                     </Typography>
                   </Box>
                   {isEditing ? (
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={editedUser?.nombres || ''}
-                      onChange={(e) => handleInputChange('nombres', e.target.value)}
+                    <Input
+                      etiqueta=""
+                      valor={editedUser?.nombres || ''}
+                      onChange={(v) => handleInputChange('nombres', v)}
                       placeholder="Nombres"
-                      sx={{ mb: 2 }}
                     />
                   ) : (
                     <Typography variant="body1" sx={{ mb: 2, ml: 4 }}>
@@ -405,13 +405,11 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
                     </Typography>
                   </Box>
                   {isEditing ? (
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={editedUser?.apellidos || ''}
-                      onChange={(e) => handleInputChange('apellidos', e.target.value)}
+                    <Input
+                      etiqueta=""
+                      valor={editedUser?.apellidos || ''}
+                      onChange={(v) => handleInputChange('apellidos', v)}
                       placeholder="Apellidos"
-                      sx={{ mb: 2 }}
                     />
                   ) : (
                     <Typography variant="body1" sx={{ mb: 2, ml: 4 }}>
@@ -428,14 +426,12 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
                     </Typography>
                   </Box>
                   {isEditing ? (
-                    <TextField
-                      fullWidth
-                      size="small"
-                      type="email"
-                      value={editedUser?.email || ''}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
+                    <Input
+                      etiqueta=""
+                      tipo="email"
+                      valor={editedUser?.email || ''}
+                      onChange={(v) => handleInputChange('email', v)}
                       placeholder="correo@ejemplo.com"
-                      sx={{ mb: 2 }}
                     />
                   ) : (
                     <Typography variant="body1" sx={{ mb: 2, ml: 4 }}>
@@ -472,34 +468,28 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
               <>
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      type="password"
-                      label="Contraseña actual"
-                      value={passwordData.currentPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                      variant="outlined"
+                    <Input
+                      etiqueta="Contraseña actual"
+                      tipo="password"
+                      valor={passwordData.currentPassword}
+                      onChange={(v) => setPasswordData({ ...passwordData, currentPassword: v })}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      type="password"
-                      label="Nueva contraseña"
-                      value={passwordData.newPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                      variant="outlined"
-                      helperText="Mínimo 6 caracteres"
+                    <Input
+                      etiqueta="Nueva contraseña"
+                      tipo="password"
+                      valor={passwordData.newPassword}
+                      onChange={(v) => setPasswordData({ ...passwordData, newPassword: v })}
+                      ayuda="Mínimo 6 caracteres"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      type="password"
-                      label="Confirmar nueva contraseña"
-                      value={passwordData.confirmPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                      variant="outlined"
+                    <Input
+                      etiqueta="Confirmar nueva contraseña"
+                      tipo="password"
+                      valor={passwordData.confirmPassword}
+                      onChange={(v) => setPasswordData({ ...passwordData, confirmPassword: v })}
                     />
                   </Grid>
                 </Grid>
@@ -566,20 +556,13 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
         </Card>
 
         {/* Snackbar for notifications */}
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={3000}
-          onClose={() => setSnackbarOpen(false)}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        >
+        {snackbarOpen && (
           <Alert 
-            onClose={() => setSnackbarOpen(false)} 
-            severity={snackbarSeverity}
-            variant="filled"
-          >
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
+            tipo={snackbarSeverity === 'error' ? 'error' : 'exito'} 
+            mensaje={snackbarMessage}
+            onCerrar={() => setSnackbarOpen(false)}
+          />
+        )}
       </Container>
     </Box>
   );

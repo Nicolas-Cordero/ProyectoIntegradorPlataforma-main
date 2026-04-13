@@ -10,6 +10,11 @@ import {
   getEstudianteEmail,
   getEstudianteTelefono
 } from '../../../utils/migration-helpers';
+import promedioIcon from '../../../assets/icons/for-estudiante-view/promedio.ico';
+import semestreIcon from '../../../assets/icons/for-estudiante-view/semestre.ico';
+import becaIcon from '../../../assets/icons/for-estudiante-view/beca.png';
+import estadoActivoIcon from '../../../assets/icons/for-estudiante-view/estado_activo.ico';
+import estadoInactivoIcon from '../../../assets/icons/for-estudiante-view/estado-inactivo.ico';
 // Colores personalizados para cada estado
 const estadoColorMap: Record<string, string> = {
   activo: '#43a047', // verde
@@ -102,6 +107,11 @@ export function ProfileSection({ estudiante, seccionActiva }: ProfileSectionProp
     const numero = Number((estudiante as any)?.promedio);
     if (!Number.isFinite(numero)) return 'N/A';
     return Number(numero.toFixed(2));
+  };
+
+  const getEstadoIcono = () => {
+    const estadoActual = getEstudianteStatus(estudiante) || estudiante.estado || 'activo';
+    return estadoActual === 'activo' || estadoActual === 'egresado' ? estadoActivoIcon : estadoInactivoIcon;
   };
 
   return (
@@ -230,35 +240,48 @@ export function ProfileSection({ estudiante, seccionActiva }: ProfileSectionProp
       </Paper>
 
       {/* Resumen Académico */}
-      <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
-        <Typography variant="h5" fontWeight="bold" gutterBottom>
+      <Paper elevation={2} sx={{ p: { xs: 3, md: 4 }, borderRadius: 3, mt: 4, maxWidth: '600px', mx: 'auto' }}>
+        <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ fontSize: { xs: '1.1rem', md: '1.25rem' } }}>
           Resumen Académico
         </Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 3, mt: 3 }}>
-          <StatCard
-            icon="📊"
-            label="Promedio General"
-            value={promedioGeneralDisplay()}
-            accentColor="#2196f3"
-          />
-          <StatCard
-            icon="📚"
-            label="Semestre Actual"
-            value={semestreActualDisplay()}
-            accentColor="#4caf50"
-          />
-          <StatCard
-            icon="🎓"
-            label="Beca"
-            value={estudiante.beca || 'Sin beca'}
-            accentColor="#9c27b0"
-          />
-          <StatCard
-            icon="✅"
-            label="Estado Académico"
-            value={getEstudianteStatus(estudiante) || estudiante.estado || 'N/A'}
-            accentColor="#ECB876"
-          />
+        <Box sx={{ 
+          display: 'grid', 
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(2, 1fr)' }, 
+          gap: { xs: 2, md: 2.5 }, 
+          mt: 3 
+        }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: '100%' }}>
+            <StatCard
+              icon={promedioIcon}
+              label="Promedio General"
+              value={promedioGeneralDisplay()}
+              accentColor="#2196f3"
+            />
+          </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: '100%' }}>
+            <StatCard
+              icon={semestreIcon}
+              label="Semestre Actual"
+              value={semestreActualDisplay()}
+              accentColor="#4caf50"
+            />
+          </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: '100%' }}>
+            <StatCard
+              icon={becaIcon}
+              label="Beca"
+              value={estudiante.beca || 'Sin beca'}
+              accentColor="#9c27b0"
+            />
+          </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: '100%' }}>
+            <StatCard
+              icon={getEstadoIcono()}
+              label="Estado Académico"
+              value={getEstudianteStatus(estudiante) || estudiante.estado || 'N/A'}
+              accentColor="#ECB876"
+            />
+          </Box>
         </Box>
       </Paper>
     </Box>

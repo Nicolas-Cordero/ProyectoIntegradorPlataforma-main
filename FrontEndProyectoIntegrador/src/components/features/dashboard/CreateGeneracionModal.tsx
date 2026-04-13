@@ -1,15 +1,6 @@
 import { useState } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Alert,
-  Box,
-  Typography
-} from '@mui/material';
+import { Box } from '@mui/material';
+import { Modal, Input, Button, Alert } from '../../ui';
 
 interface CreateGeneracionModalProps {
   open: boolean;
@@ -28,7 +19,6 @@ export function CreateGeneracionModal({
   const handleSubmit = () => {
     setError('');
 
-    // Validar año
     const añoNum = parseInt(año);
     const currentYear = new Date().getFullYear();
 
@@ -53,55 +43,40 @@ export function CreateGeneracionModal({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
-          📅 Crear Nueva Generación
-        </Typography>
-      </DialogTitle>
-
-      <DialogContent>
-        <Box sx={{ pt: 2 }}>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          <TextField
-            fullWidth
-            label="Año de la Generación"
-            type="number"
-            value={año}
-            onChange={(e) => setAño(e.target.value)}
-            placeholder="Ej: 2024"
-            helperText="Ingresa el año de ingreso de la generación"
-            autoFocus
-            inputProps={{
-              min: 2000,
-              max: new Date().getFullYear() + 5
-            }}
+    <Modal
+      titulo="📅 Crear Nueva Generación"
+      abierto={open}
+      onCerrar={handleClose}
+      tamanio="sm"
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {error && (
+          <Alert 
+            tipo="error" 
+            mensaje={error}
+            cerrable 
+            onCerrar={() => setError('')}
           />
-        </Box>
-      </DialogContent>
+        )}
 
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={handleClose} color="inherit">
-          Cancelar
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          sx={{
-            bgcolor: 'var(--color-turquoise)',
-            '&:hover': {
-              bgcolor: 'var(--color-turquoise-dark)'
-            }
-          }}
-        >
-          Crear Generación
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <Input
+          etiqueta="Año de la Generación"
+          tipo="number"
+          valor={año}
+          onChange={setAño}
+          placeholder="Ej: 2024"
+          ayuda="Ingresa el año de ingreso de la generación"
+        />
+
+        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+          <Button variante="outline" tamano="md" onClick={handleClose}>
+            Cancelar
+          </Button>
+          <Button variante="primary" tamano="md" onClick={handleSubmit}>
+            Crear Generación
+          </Button>
+        </Box>
+      </Box>
+    </Modal>
   );
-};
+}

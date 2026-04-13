@@ -39,7 +39,13 @@ export function TabNavigation({
   };
 
   return (
-    <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: '#FFFEF5', px: 4 }}>
+    <Box sx={{ 
+      borderBottom: 1, 
+      borderColor: 'divider', 
+      bgcolor: '#FFFBF0',
+      position: 'relative',
+      zIndex: 10
+    }}>
       <Tabs 
         value={seccionActiva} 
         onChange={handleChange}
@@ -53,11 +59,11 @@ export function TabNavigation({
             minHeight: 60
           },
           '& .Mui-selected': {
-            color: '#65B39B',
+            color: 'text.primary',
             fontWeight: 600
           },
           '& .MuiTabs-indicator': {
-            backgroundColor: '#65B39B',
+            backgroundColor: '#999',
             height: 3
           }
         }}

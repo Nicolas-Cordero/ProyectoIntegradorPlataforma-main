@@ -2,12 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
-  TextField, 
-  Button, 
-  Alert,
   Link,
   CircularProgress
 } from '@mui/material';
+import { Input, Alert, Button } from '../../../../components/ui';
 import { authService } from '../../../../services/authService';
 import type { LoginCredentials } from '../../../../types';
 import { logger } from '../../../../config';
@@ -29,11 +27,11 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
 
   const navigate = useNavigate();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+  const handleInputChangeSimple = (field: string, value: string) => {
+    const { name } = { name: field } as any;
     setCredentials(prev => ({
       ...prev,
-      [name]: value
+      [field]: value
     }));
     if (error) setError('');
   };
@@ -90,73 +88,48 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
       gradientColors={{ from: '#65B39B', to: '#C7654F' }}
     >
       <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-        <TextField
-          fullWidth
-          type="email"
-          id="email"
-          name="email"
-          label="Email de Administrador"
-          value={credentials.email}
-          onChange={handleInputChange}
+        <Input
+          tipo="email"
+          etiqueta="Email de Administrador"
+          valor={credentials.email}
+          onChange={(v) => handleInputChangeSimple('email', v)}
           placeholder="admin@fundacion.cl"
-          disabled={loading}
-          required
-          autoComplete="email"
-          variant="outlined"
+          deshabilitado={loading}
+          requerido
           error={!!error}
           sx={{
-            '& .MuiOutlinedInput-root': {
-              backgroundColor: '#f8f9fa',
-              '&:hover': {
-                backgroundColor: '#FFFEF5'
-              },
-              '&.Mui-focused': {
-                backgroundColor: '#FFFEF5'
-              }
-            }
+            backgroundColor: '#f8f9fa'
           }}
         />
 
-        <TextField
-          fullWidth
-          type="password"
-          id="password"
-          name="password"
-          label="Contraseña de Administrador"
-          value={credentials.password}
-          onChange={handleInputChange}
+        <Input
+          tipo="password"
+          etiqueta="Contraseña de Administrador"
+          valor={credentials.password}
+          onChange={(v) => handleInputChangeSimple('password', v)}
           placeholder="Contraseña segura"
-          disabled={loading}
-          required
-          autoComplete="current-password"
-          variant="outlined"
+          deshabilitado={loading}
+          requerido
           error={!!error}
           sx={{
-            '& .MuiOutlinedInput-root': {
-              backgroundColor: '#f8f9fa',
-              '&:hover': {
-                backgroundColor: '#FFFEF5'
-              },
-              '&.Mui-focused': {
-                backgroundColor: '#FFFEF5'
-              }
-            }
+            backgroundColor: '#f8f9fa'
           }}
         />
 
         {error && (
-          <Alert severity="error" sx={{ mt: 1 }}>
-            {error}
-          </Alert>
+          <Alert 
+            tipo="error" 
+            mensaje={error}
+            onCerrar={() => {}}
+            sx={{ mt: 1 }}
+          />
         )}
 
         <Button
-          fullWidth
-          type="submit"
-          variant="contained"
-          size="large"
-          disabled={loading}
-          startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+          variante="primary"
+          tamano="lg"
+          deshabilitado={loading}
+          onClick={(e: any) => { e.preventDefault(); handleSubmit(e as any); }}
           sx={{
             mt: 1,
             py: 1.5,

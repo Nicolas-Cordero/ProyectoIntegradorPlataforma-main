@@ -7,7 +7,6 @@ import {
   Container,
   Paper,
   Typography,
-  Button,
   Table,
   TableBody,
   TableCell,
@@ -16,16 +15,6 @@ import {
   TableRow,
   Chip,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Alert,
   Snackbar,
   Tab,
   Tabs,
@@ -35,6 +24,7 @@ import {
   useMediaQuery,
   useTheme
 } from '@mui/material';
+import { Modal, Input, Select, Button, Alert } from '../components/ui';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -476,11 +466,8 @@ export const UserManagement: React.FC = () => {
             )}
 
             <Button
-              variant="text"
-              className="navbar-button button-wave-effect"
-              startIcon={<AccountCircleIcon />}
+              variante="secondary"
               onClick={() => navigate('/perfil')}
-              title="Ver perfil"
               sx={{
                 color: 'white',
                 textTransform: 'none',
@@ -491,12 +478,6 @@ export const UserManagement: React.FC = () => {
                 px: { xs: 0.5, sm: 1, md: 1.5 },
                 fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.875rem' },
                 flex: { xs: 1, md: 'none' },
-                '& .MuiButton-startIcon': {
-                  mr: { xs: 0.3, sm: 0.5, md: 0.75 },
-                  '& svg': {
-                    fontSize: { xs: '0.9rem', sm: '1rem', md: '1.25rem' },
-                  },
-                },
                 whiteSpace: 'nowrap',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 position: 'relative',
@@ -522,13 +503,13 @@ export const UserManagement: React.FC = () => {
                 }
               }}
             >
+              <AccountCircleIcon sx={{ mr: 0.5 }} />
               Perfil
             </Button>
 
             <Button
-              variant="contained"
-              className="navbar-button button-wave-effect"
-              startIcon={<LogoutIcon />}
+              variante="primary"
+              tamano="md"
               onClick={handleLogout}
               sx={{
                 background: 'linear-gradient(135deg, #C7654F 0%, #a84a38 100%)',
@@ -538,22 +519,12 @@ export const UserManagement: React.FC = () => {
                 minHeight: { xs: 38, sm: 42, md: 44 },
                 px: { xs: 0.5, sm: 1, md: 1.5 },
                 fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.875rem' },
-                flex: { xs: 1, md: 'none' },
-                '& .MuiButton-startIcon': {
-                  mr: { xs: 0.3, sm: 0.5, md: 0.75 },
-                  '& svg': {
-                    fontSize: { xs: '0.9rem', sm: '1rem', md: '1.25rem' },
-                  },
-                },
-                boxShadow: '0 4px 12px rgba(199, 101, 79, 0.3)',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #d97a5f 0%, #b85842 100%)',
-                  boxShadow: '0 8px 24px rgba(199, 101, 79, 0.4)',
-                  transform: 'translateY(-2px)'
+                  background: 'linear-gradient(135deg, #B75A47 0%, #993d2f 100%)'
                 }
               }}
             >
+              <LogoutIcon sx={{ mr: 0.5 }} />
               Salir
             </Button>
           </Box>
@@ -772,145 +743,123 @@ export const UserManagement: React.FC = () => {
         </TableContainer>
       </div>
 
-      {/* Dialog para Crear/Editar Usuario */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 600, color: '#1f2937' }}>
-          {editingUser ? 'Editar Usuario' : 'Agregar Nuevo Usuario'}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-            <TextField
-              label="Nombres *"
-              value={formData.nombres}
-              onChange={(e) => setFormData({ ...formData, nombres: e.target.value })}
-              fullWidth
-              variant="outlined"
+      {/* Modal para Crear/Editar Usuario */}
+      <Modal
+        titulo={editingUser ? 'Editar Usuario' : 'Agregar Nuevo Usuario'}
+        abierto={openDialog}
+        onCerrar={handleCloseDialog}
+        tamanio="sm"
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Input
+            etiqueta="Nombres"
+            valor={formData.nombres}
+            onChange={(v) => setFormData({ ...formData, nombres: v })}
+            requerido
+          />
+          <Input
+            etiqueta="Apellidos"
+            valor={formData.apellidos}
+            onChange={(v) => setFormData({ ...formData, apellidos: v })}
+            requerido
+          />
+          <Input
+            etiqueta="Email"
+            tipo="email"
+            valor={formData.email}
+            onChange={(v) => setFormData({ ...formData, email: v })}
+            requerido
+          />
+          {!editingUser && (
+            <Input
+              etiqueta="Contraseña"
+              tipo="password"
+              valor={formData.password}
+              onChange={(v) => setFormData({ ...formData, password: v })}
+              ayuda="Mínimo 6 caracteres"
+              requerido
             />
-            <TextField
-              label="Apellidos *"
-              value={formData.apellidos}
-              onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })}
-              fullWidth
-              variant="outlined"
-            />
-            <TextField
-              label="Email *"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              fullWidth
-              variant="outlined"
-            />
-            {!editingUser && (
-              <TextField
-                label="Contraseña *"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                fullWidth
-                helperText="Mínimo 6 caracteres"
-                variant="outlined"
-              />
-            )}
-            <TextField
-              label="RUT"
-              value={formData.rut}
-              onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
-              placeholder="12345678-9"
-              fullWidth
-              variant="outlined"
-            />
-            <TextField
-              label="Teléfono"
-              value={formData.telefono}
-              onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-              placeholder="+56912345678"
-              fullWidth
-              variant="outlined"
-            />
-            <FormControl fullWidth>
-              <InputLabel>Rol *</InputLabel>
-              <Select
-                value={formData.rol}
-                onChange={(e) => setFormData({ ...formData, rol: e.target.value as 'tutor' | 'visita' })}
-                label="Rol *"
-              >
-                <MenuItem value="tutor">
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <TutorIcon /> Tutor
-                  </Box>
-                </MenuItem>
-                <MenuItem value="visita">
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <VisibilityIcon /> Visita
-                  </Box>
-                </MenuItem>
-              </Select>
-            </FormControl>
+          )}
+          <Input
+            etiqueta="RUT"
+            valor={formData.rut}
+            onChange={(v) => setFormData({ ...formData, rut: v })}
+            placeholder="12345678-9"
+          />
+          <Input
+            etiqueta="Teléfono"
+            tipo="tel"
+            valor={formData.telefono}
+            onChange={(v) => setFormData({ ...formData, telefono: v })}
+            placeholder="+56912345678"
+          />
+          <Select
+            etiqueta="Rol"
+            opciones={[
+              { valor: 'tutor', etiqueta: 'Tutor' },
+              { valor: 'visita', etiqueta: 'Visita' }
+            ]}
+            valor={formData.rol}
+            onChange={(v) => setFormData({ ...formData, rol: v as 'tutor' | 'visita' })}
+            requerido
+          />
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+            <Button variante="outline" tamano="md" onClick={handleCloseDialog}>
+              Cancelar
+            </Button>
+            <Button
+              variante="primary"
+              tamano="md"
+              onClick={handleSaveUser}
+              deshabilitado={!formData.nombres || !formData.apellidos || !formData.email}
+            >
+              {editingUser ? 'Actualizar' : 'Crear'}
+            </Button>
           </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button onClick={handleCloseDialog} variant="outlined">Cancelar</Button>
-          <Button 
-            variant="contained" 
-            onClick={handleSaveUser}
-            disabled={!formData.nombres || !formData.apellidos || !formData.email}
-            sx={{ background: 'linear-gradient(135deg, #65B39B 0%, #4f8a77 100%)' }}
-          >
-            {editingUser ? 'Actualizar' : 'Crear'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Box>
+      </Modal>
 
-      {/* Dialog para Cambiar Contraseña */}
-      <Dialog open={openPasswordDialog} onClose={handleClosePasswordDialog} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 600, color: '#1f2937' }}>
-          Cambiar Contraseña - {passwordUser?.nombres} {passwordUser?.apellidos}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ pt: 2 }}>
-            <TextField
-              fullWidth
-              type="password"
-              label="Nueva Contraseña"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Mínimo 6 caracteres"
-              helperText="La contraseña debe tener al menos 6 caracteres"
-              variant="outlined"
-            />
+      {/* Modal para Cambiar Contraseña */}
+      <Modal
+        titulo={`Cambiar Contraseña - ${passwordUser?.nombres} ${passwordUser?.apellidos}`}
+        abierto={openPasswordDialog}
+        onCerrar={handleClosePasswordDialog}
+        tamanio="sm"
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Input
+            etiqueta="Nueva Contraseña"
+            tipo="password"
+            valor={newPassword}
+            onChange={setNewPassword}
+            placeholder="Mínimo 6 caracteres"
+            ayuda="La contraseña debe tener al menos 6 caracteres"
+            requerido
+          />
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+            <Button variante="outline" tamano="md" onClick={handleClosePasswordDialog}>
+              Cancelar
+            </Button>
+            <Button
+              variante="primary"
+              tamano="md"
+              onClick={handleChangePassword}
+              deshabilitado={!newPassword.trim() || newPassword.length < 6}
+            >
+              Cambiar Contraseña
+            </Button>
           </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button onClick={handleClosePasswordDialog} variant="outlined">
-            Cancelar
-          </Button>
-          <Button 
-            variant="contained" 
-            onClick={handleChangePassword}
-            disabled={!newPassword.trim() || newPassword.length < 6}
-            sx={{ background: 'linear-gradient(135deg, #65B39B 0%, #4f8a77 100%)' }}
-          >
-            Cambiar Contraseña
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Box>
+      </Modal>
 
       {/* Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
+      {snackbar.open && (
         <Alert 
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          variant="filled"
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+          tipo={snackbar.severity === 'error' ? 'error' : 'exito'}
+          mensaje={snackbar.message}
+          onCerrar={() => setSnackbar({ ...snackbar, open: false })}
+        />
+      )}
     </div>
   );
 };

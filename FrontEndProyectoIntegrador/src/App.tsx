@@ -4,7 +4,7 @@ import { authService } from './services/authService';
 import { logger } from './config';
 import { LoginAdminForm } from './components/features/auth/login/LoginAdminForm';
 import { SolicitarRecuperacion, VerificarCodigo, NuevaPassword } from './components/features/auth/password-recovery';
-import { LoadingSpinner } from './components/ui';
+import { Spinner } from './components/ui';
 
 // Lazy loading de componentes pesados para mejor rendimiento
 const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -38,12 +38,12 @@ function App() {
   };
 
   if (isLoading) {
-    return <LoadingSpinner fullScreen message="Verificando autenticación..." />;
+    return <Spinner fullScreen message="Verificando autenticación..." />;
   }
 
   return (
     <Router>
-      <Suspense fallback={<LoadingSpinner fullScreen message="Cargando página..." />}>
+      <Suspense fallback={<Spinner fullScreen message="Cargando página..." />}>
         <Routes>
           <Route 
             path="/" 

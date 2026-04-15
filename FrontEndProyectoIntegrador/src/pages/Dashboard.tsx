@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { authService, estadisticasService } from '../services';
 import { estudianteService } from '../services';
 import { logger } from '../config';
-import { LoadingSpinner, ErrorMessage, StatCard } from '../components/ui';
+import { Spinner, ErrorMessage, StatCard } from '../components/ui';
 import { GradientButton } from '../components/common/GradientButton';
 import logoFundacionFooter from '../assets/logos/logo-fundacion.png';
 import marcoIzquierdo from '../assets/frames/marco-izquierda.svg';
@@ -348,7 +348,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
   };
 
   if (loading) {
-    return <LoadingSpinner fullScreen message="Cargando Dashboard..." />;
+    return <Spinner fullScreen message="Cargando Dashboard..." />;
   }
 
   if (error) {

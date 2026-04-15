@@ -13,12 +13,11 @@ import { daysSince } from '../utils/dateHelpers';
 import type { Estudiante } from '../types';
 import { Box, AppBar, Toolbar, Button, Chip, useMediaQuery, useTheme } from '@mui/material';
 import {
-  Add as AddIcon,
   AccountCircle as AccountCircleIcon,
   Logout as LogoutIcon
 } from '@mui/icons-material';
-import { GradientButton } from '../components/common/GradientButton';
 import { TypingText } from '../components/common/TypingText';
+import { useConfirmDialog } from '../components/ui';
 import { DashboardParticles } from '../components/features/dashboard/DashboardParticles';
 import logoFundacion from '../assets/logos/logo.svg';
 import marcoIzquierdo from '../assets/frames/marco-izquierda.svg';
@@ -44,10 +43,9 @@ export default function GeneracionViewSimple(){
   const [filterEstado, setFilterEstado] = useState('');
   const [sortField, setSortField] = useState<keyof UIStudent>('apellidos');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [usuario, setUsuario] = useState<any>(null);
-
   const [students, setStudents] = useState<UIStudent[]>([]);
   const [openCreateEstudiante, setOpenCreateEstudiante] = useState(false);
+  const { showConfirm, ConfirmDialog } = useConfirmDialog();
 
   const handleLogout = async () => {
     try {
@@ -57,11 +55,6 @@ export default function GeneracionViewSimple(){
       console.error('Error al cerrar sesión:', error);
     }
   };
-
-  useEffect(() => {
-    const user = authService.getCurrentUser();
-    setUsuario(user);
-  }, []);
 
   const normalizeNumber = (value?: number | string | null) => {
     if (value === null || value === undefined) return undefined;
@@ -245,20 +238,20 @@ export default function GeneracionViewSimple(){
   };
 
   const handleDeleteStudent = async (studentId: string | number) => {
-    const confirmed = window.confirm('¿Seguro que deseas eliminar este estudiante?');
-    if (!confirmed) return;
-
-    try {
-      await estudianteService.delete(String(studentId));
-      setStudents((prev) => prev.filter((student) => {
-        const id = String((student as any).id_estudiante || student.id);
-        return id !== String(studentId);
-      }));
-      logger.log('🗑️ Estudiante eliminado:', studentId);
-    } catch (error) {
-      logger.error('❌ Error al eliminar estudiante:', error);
-      alert('No se pudo eliminar el estudiante. Intenta nuevamente.');
-    }
+    showConfirm({
+      title: 'Eliminar estudiante',
+      message: '¿Seguro que deseas eliminar este estudiante? Esta acción no se puede deshacer.',
+      confirmText: 'Eliminar',
+      confirmColor: 'error',
+      onConfirm: async () => {
+        await estudianteService.delete(String(studentId));
+        setStudents((prev) => prev.filter((student) => {
+          const id = String((student as any).id_estudiante || student.id);
+          return id !== String(studentId);
+        }));
+        logger.log('🗑️ Estudiante eliminado:', studentId);
+      }
+    });
   };
 
   const loadStudents = useCallback(async () => {
@@ -572,6 +565,7 @@ export default function GeneracionViewSimple(){
         onSuccess={handleEstudianteCreated}
         generacion={generationId}
       />
+      <ConfirmDialog />
     </div>
   );
 };

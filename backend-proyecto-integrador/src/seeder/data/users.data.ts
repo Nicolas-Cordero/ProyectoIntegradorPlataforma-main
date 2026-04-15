@@ -3,7 +3,7 @@ import { UserRole } from "../../users";
 export const usersData = [
   {
     username: 'admin',
-    email: 'admin@fundacion.cl',
+    email: 'admin@admin.cl',
     password: 'admin123',
     nombre: 'Administrador',
     apellido: 'Sistema',

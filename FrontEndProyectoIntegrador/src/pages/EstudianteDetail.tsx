@@ -1,4 +1,4 @@
-﻿import { LoadingSpinner, ErrorMessage } from '../components/ui';
+﻿import { Spinner, ErrorMessage } from '../components/ui';
 import {
   StudentHeader,
   TabNavigation,
@@ -60,7 +60,7 @@ export default function EstudianteDetail() {
 
 
   if (loading) {
-    return <LoadingSpinner fullScreen message="Cargando datos del estudiante..." />;
+    return <Spinner fullScreen message="Cargando datos del estudiante..." />;
   }
 
   if (error || !estudiante || !estudianteConEdiciones) {

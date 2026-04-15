@@ -1,6 +1,7 @@
 import { AppBar, Toolbar, Button, Breadcrumbs, Typography, Avatar, Chip, Box } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, CheckCircle as CheckCircleIcon, AccountCircle as AccountCircleIcon } from '@mui/icons-material';
 import type { Estudiante } from '../../../types';
+import { useConfirmDialog } from '../../ui';
 
 interface TopNavbarProps {
   estudiante: Estudiante;
@@ -15,9 +16,11 @@ export function TopNavbar({ estudiante, onNavigateBack }: TopNavbarProps) {
   const universidad = estudiante.universidad || 
     estudiante.institucion?.nombre_institucion || 
     'Sin especificar';
+  const { showConfirm, ConfirmDialog } = useConfirmDialog();
 
   return (
-    <AppBar position="static" elevation={1} sx={{ bgcolor: '#FFFEF5', color: 'text.primary', height: 64 }}>
+    <>
+      <AppBar position="static" elevation={1} sx={{ bgcolor: '#FFFEF5', color: 'text.primary', height: 64 }}>
       <Toolbar sx={{ justifyContent: 'space-between', height: '100%' }}>
         {/* LADO IZQUIERDO: Logo y navegación */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -60,9 +63,15 @@ export function TopNavbar({ estudiante, onNavigateBack }: TopNavbarProps) {
           <Button
             startIcon={<CheckCircleIcon />}
             onClick={() => {
-              if (window.confirm('¿Deseas terminar y guardar esta entrevista?')) {
-                onNavigateBack();
-              }
+              showConfirm({
+                title: 'Terminar entrevista',
+                message: '¿Deseas terminar y guardar esta entrevista?',
+                confirmText: 'Terminar',
+                confirmColor: 'primary',
+                onConfirm: async () => {
+                  onNavigateBack();
+                }
+              });
             }}
             variant="contained"
             color="primary"
@@ -89,5 +98,7 @@ export function TopNavbar({ estudiante, onNavigateBack }: TopNavbarProps) {
         </Box>
       </Toolbar>
     </AppBar>
+    <ConfirmDialog />
+    </>
   );
 }

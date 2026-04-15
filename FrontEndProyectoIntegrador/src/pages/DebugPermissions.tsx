@@ -24,6 +24,7 @@ import {
   FormControl,
   InputLabel
 } from '@mui/material';
+import { useConfirmDialog } from '../components/ui';
 import {
   CheckCircle as CheckIcon,
   Cancel as CancelIcon,
@@ -40,6 +41,7 @@ import {
  */
 export const DebugPermissions: React.FC = () => {
   const navigate = useNavigate();
+  const { showConfirm, ConfirmDialog } = useConfirmDialog();
   const [user, setUser] = useState<Usuario | null>(null);
   const [newRole, setNewRole] = useState<string>('admin');
 
@@ -59,10 +61,16 @@ export const DebugPermissions: React.FC = () => {
   };
 
   const handleClearAll = () => {
-    if (window.confirm('¿Seguro que quieres limpiar todo y cerrar sesión?')) {
-      localStorage.clear();
-      window.location.href = '/';
-    }
+    showConfirm({
+      title: 'Limpiar todo',
+      message: '¿Seguro que quieres limpiar todo y cerrar sesión? Esta acción cerrará tu sesión y borrará los datos locales.',
+      confirmText: 'Limpiar',
+      confirmColor: 'error',
+      onConfirm: async () => {
+        localStorage.clear();
+        window.location.href = '/';
+      }
+    });
   };
 
   const getDetectedRole = () => {
@@ -354,6 +362,7 @@ export const DebugPermissions: React.FC = () => {
           </Typography>
         </Paper>
       </Container>
+      <ConfirmDialog />
     </Box>
   );
 };

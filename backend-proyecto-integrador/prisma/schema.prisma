@@ -1,0 +1,198 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+model usuario {
+  rut_usuario String @id
+  nombre      String
+  email       String
+  telefono    String
+  rol         String
+  password    String
+
+  entrevistas entrevista[] @relation("Entrevistador")
+  audit_logs  audit_log[]
+}
+
+model universidad {
+  codigo_universidad Int    @id @default(autoincrement())
+  nombre             String @unique
+  comuna             Int
+
+  carreras carrera[]
+}
+
+model liceo {
+  rbd          String @id
+  nombre       String
+  comuna       String
+  especialidad String
+
+  estudiantes estudiante[]
+}
+
+model beneficio {
+  codigo_beneficio Int     @id @default(autoincrement())
+  proveedor        String
+  tipo             String
+  monto            Decimal
+
+  beneficio_estudiante beneficio_estudiante[]
+}
+
+model semestre {
+  semestre_id Int    @id @default(autoincrement())
+  year        Int
+  semestre    String
+  tipo        String
+
+  ramos       ramo[]
+  entrevistas entrevista[]
+}
+
+model estudiante {
+  rut_estudiante  String  @id
+  nombre          String
+  email           String  @unique
+  telefono        String
+  puntaje_paes    Int?
+  generacion      String
+  estado          String
+  rbd_liceo       String
+  promedios_media Decimal
+
+  liceo liceo @relation(fields: [rbd_liceo], references: [rbd])
+
+  familiares  familiar[]
+  beneficios  beneficio_estudiante[]
+  carreras    carrera[]
+  ramos       ramo[]
+  notas       nota[]
+  entrevistas entrevista[]
+  comentarios comentario[]
+}
+
+model familiar {
+  rut_familiar   String
+  rut_estudiante String
+  nombre         String
+  telefono       String
+  parentesco     String
+  observacion    String
+
+  estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
+
+  @@id([rut_familiar, rut_estudiante])
+}
+
+model beneficio_estudiante {
+  codigo_beneficio Int
+  rut_estudiante   String
+  estado           String
+  inicio           DateTime
+  fin              DateTime
+
+  beneficio  beneficio  @relation(fields: [codigo_beneficio], references: [codigo_beneficio])
+  estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
+
+  @@id([codigo_beneficio, rut_estudiante])
+}
+
+model carrera {
+  codigo_carrera     Int    @id @default(autoincrement())
+  nombre             String
+  rut_estudiante     String
+  duracion_sem       Int
+  codigo_universidad Int
+  via_acceso         String
+
+  estudiante  estudiante  @relation(fields: [rut_estudiante], references: [rut_estudiante])
+  universidad universidad @relation(fields: [codigo_universidad], references: [codigo_universidad])
+
+  ramos ramo[]
+}
+
+model ramo {
+  nrc            String
+  semestre_id    Int
+  rut_estudiante String
+  codigo_carrera Int
+  nombre         String
+  estado         String
+  comentario     String
+  intento        Int
+
+  estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
+  semestre   semestre   @relation(fields: [semestre_id], references: [semestre_id])
+  carrera    carrera    @relation(fields: [codigo_carrera], references: [codigo_carrera])
+
+  notas nota[]
+
+  @@id([nrc, semestre_id, rut_estudiante, codigo_carrera])
+}
+
+model nota {
+  nrc            String
+  semestre_id    Int
+  rut_estudiante String
+  codigo_carrera Int
+  fecha_hora     DateTime
+  nota           Decimal
+
+  ramo ramo @relation(fields: [nrc, semestre_id, rut_estudiante, codigo_carrera], references: [nrc, semestre_id, rut_estudiante, codigo_carrera])
+
+  estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
+
+  @@id([nrc, semestre_id, rut_estudiante, codigo_carrera, fecha_hora])
+}
+model entrevista {
+  fecha_hora        DateTime
+  rut_estudiante    String
+  semestre_id       Int
+  duracion_s        Int
+  rut_entrevistador String
+  resumen           String?
+
+  estudiante   estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
+  semestre     semestre   @relation(fields: [semestre_id], references: [semestre_id])
+  entrevistador usuario   @relation("Entrevistador", fields: [rut_entrevistador], references: [rut_usuario])
+
+  comentarios comentario[]
+
+  @@id([fecha_hora, rut_estudiante])
+}
+
+model comentario {
+  fecha_hora_entrevista DateTime
+  rut_estudiante        String
+  fecha_hora_comentario DateTime
+  topico                String
+  texto                 String
+
+  entrevista entrevista @relation(fields: [fecha_hora_entrevista, rut_estudiante], references: [fecha_hora, rut_estudiante])
+
+  estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
+
+  @@id([fecha_hora_entrevista, rut_estudiante, fecha_hora_comentario, topico])
+}
+
+model audit_log {
+  fecha_hora  DateTime
+  rut_usuario String
+  descripcion String
+
+  usuario usuario @relation(fields: [rut_usuario], references: [rut_usuario])
+
+  @@id([fecha_hora, rut_usuario])
+}

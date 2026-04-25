@@ -1,26 +1,26 @@
 export class AuthResponseDto {
-  accessToken: string;
-  refreshToken: string;
-  user: UserResponseDto;
+  accessToken!: string;
+  refreshToken!: string;
+  user!: UserResponseDto;
 }
 
 export class UserResponseDto {
-  id: string;
-  username: string;
-  email: string;
-  nombre: string;
-  apellido: string;
-  rol: string;
+  id!: string;
+  username!: string;
+  email!: string;
+  nombre!: string;
+  apellido!: string;
+  rol!: string;
 }
 
 export class TokensResponseDto {
-  accessToken: string;
-  refreshToken: string;
+  accessToken!: string;
+  refreshToken!: string;
 }
 
 export class ValidateTokenResponseDto {
-  valid: boolean;
-  user: {
+  valid!: boolean;
+  user!: {
     id: string;
     username: string;
     email: string;
@@ -29,5 +29,5 @@ export class ValidateTokenResponseDto {
 }
 
 export class LogoutResponseDto {
-  message: string;
+  message!: string;
 }

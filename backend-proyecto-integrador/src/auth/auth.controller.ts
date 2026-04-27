@@ -25,14 +25,21 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { AuthenticatedUser } from './interfaces/auth.interfaces';
 
+
+
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+
+
 
   /**
    * Registra un nuevo usuario
    * @param registerDto Datos del usuario a registrar
    * @returns Usuario creado con tokens JWT
+   * LISTO
    */
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
@@ -40,10 +47,14 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
+
+  
+
   /**
    * Inicia sesión con credenciales
    * @param loginDto Credenciales del usuario
    * @returns Usuario autenticado con tokens JWT
+   * LISTO
    */
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -51,31 +62,52 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+
+
+  /**
+   * Refresca el token de acceso
+   * @param  RefreshTokenDto token de refresco
+   * @returns TokensResponseDto token de acceso regenerado
+   * LISTO
+   */
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(@Body() refreshTokenDto: RefreshTokenDto): Promise<TokensResponseDto> {
     return this.authService.refreshAccessToken(refreshTokenDto.refreshToken);
   }
 
+
+
+  /**
+   * Deslogea al usuario
+   * @param  RefreshTokenDto token de refresco
+   * @returns LogoutResponseDto Respuesta de logout exitoso o no
+   * 
+   */
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async logout(@Body() refreshTokenDto: RefreshTokenDto): Promise<LogoutResponseDto> {
     return this.authService.logout(refreshTokenDto.refreshToken);
   }
+  
+
+
+
 
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   async getProfile(@CurrentUser() user: AuthenticatedUser): Promise<UserResponseDto> {
     return {
-      id: user.id,
-      username: user.username,
+      rut_usuario: user.rut_usuario,
       email: user.email,
+      telefono: user.telefono,
       nombre: user.nombre,
       apellido: user.apellido,
       rol: user.rol,
     };
   }
+
 
   @Get('validate')
   @UseGuards(JwtAuthGuard)
@@ -84,14 +116,22 @@ export class AuthController {
     return {
       valid: true,
       user: {
-        id: user.id,
-        username: user.username,
+        rut_usuario: user.rut_usuario,
+        nombre: user.nombre,
+        apellido: user.apellido,
         email: user.email,
+        telefono: user.telefono,
         rol: user.rol,
       },
     };
   }
 
+
+
+
+
+
+  
   // ════════════════════════════════════════════════════════════════════════════
   // ENDPOINTS DE RECUPERACIÓN DE CONTRASEÑA
   // ════════════════════════════════════════════════════════════════════════════
@@ -113,7 +153,12 @@ export class AuthController {
     };
   }
 
-  /**
+
+
+
+
+
+  /**REVISAR FRONT, EN UNA DE ESAS ES INNECESARIA   <------------------------------------------
    * Verifica si un código de recuperación es válido
    * @param dto Email y código del usuario
    * @returns Indica si el código es válido

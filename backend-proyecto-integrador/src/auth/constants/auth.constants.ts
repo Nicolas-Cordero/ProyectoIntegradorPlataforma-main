@@ -20,7 +20,7 @@ export const AUTH_MESSAGES = {
   LOGOUT_SUCCESS: 'Sesión cerrada exitosamente',
   
   //Register
-  USERNAME_ALREADY_EXISTS: 'El nombre de usuario ya está en uso',
+  RUT_ALREADY_EXISTS: 'Esta persona ya es usuaria',
   EMAIL_ALREADY_EXISTS: 'El email ya está registrado',
   REGISTRATION_SUCCESS: 'Usuario registrado exitosamente',
 } as const;

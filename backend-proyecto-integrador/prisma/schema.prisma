@@ -4,22 +4,27 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "postgresql"
 }
 
-
 model usuario {
-  rut_usuario String @id
-  nombre      String
-  email       String
-  telefono    String
-  rol         String
-  password    String
+  rut_usuario   String   @id
+  nombre        String
+  apellido      String
+  email         String   @unique
+  telefono      String
+  rol           String
+  password      String
+
+  ultimo_login  DateTime?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  reset_token           String? 
+  reset_token_expires   DateTime?
 
   entrevistas entrevista[] @relation("Entrevistador")
   audit_logs  audit_log[]
@@ -64,6 +69,7 @@ model semestre {
 model estudiante {
   rut_estudiante  String  @id
   nombre          String
+  apellido        String
   email           String  @unique
   telefono        String
   puntaje_paes    Int?

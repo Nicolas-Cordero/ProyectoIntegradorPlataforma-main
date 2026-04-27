@@ -4,11 +4,12 @@ export { UsersController } from './users.controller';
 // Services
 export { UsersService } from './users.service';
 
+
+//Repository
+export {UsersRepository} from './users.repository'
+
 // Module
 export { UsersModule } from './users.module';
-
-// Entities
-export { User, UserRole } from './entities/user.entity';
 
 // DTOs
 export type { CreateUserDto } from './dto/create-user.dto';

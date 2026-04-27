@@ -7,14 +7,17 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { TokenService } from './services/token.service';
 import { EmailService } from './services/email.service';
-import { User } from '../users/entities/user.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { PrismaService } from '../prisma/prisma.service';
+import { AuthRepository } from './auth.repository';
+import { UsersRepository } from '../users';
 import emailConfig from '../config/email.config';
+import { RecoveryService } from './services/recovery.service';
 
 @Module({
+
   imports: [
-    TypeOrmModule.forFeature([User]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     ConfigModule.forFeature(emailConfig),
     JwtModule.registerAsync({
@@ -28,8 +31,28 @@ import emailConfig from '../config/email.config';
       }),
     }),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, TokenService, EmailService, JwtStrategy, JwtRefreshStrategy],
-  exports: [AuthService, TokenService, JwtStrategy, PassportModule],
+
+  controllers: [
+    AuthController
+  ],
+
+  providers: [
+    AuthService,
+    TokenService,
+    EmailService,
+    RecoveryService,
+    JwtStrategy,
+    JwtRefreshStrategy,
+    PrismaService,
+    AuthRepository
+  ],
+
+  exports: [
+    AuthService,
+    TokenService,
+    JwtStrategy,
+    PassportModule
+  ],
+
 })
 export class AuthModule {}

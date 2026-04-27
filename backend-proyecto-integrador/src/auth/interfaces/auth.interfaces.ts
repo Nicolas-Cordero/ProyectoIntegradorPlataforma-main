@@ -1,7 +1,5 @@
 export interface JwtPayload {
   sub: string;
-  username: string;
-  email: string;
   rol: string;
 }
 
@@ -15,10 +13,16 @@ export interface StoredRefreshToken {
 }
 
 export interface AuthenticatedUser {
-  id: string;
-  username: string;
-  email: string;
-  rol: string;
+  rut_usuario: string;
   nombre: string;
-  apellido: string;
+  apellido: string
+  email: string;
+  telefono: string
+  rol: string;
+}
+
+export enum UserRole {
+  ADMIN= 'admin',
+  TUTOR= 'tutor',
+  VISITA= 'visita'
 }

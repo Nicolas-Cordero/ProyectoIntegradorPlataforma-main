@@ -21,6 +21,8 @@ import { FamiliarModule } from './familiar/familiar.module';
 import { BeneficiosModule } from './beneficios/beneficios.module';
 import { PeriodoAcademicoModule } from './periodo-academico/periodo-academico.module';
 
+import { PrismaService } from './prisma/prisma.service';
+
 @Module({
   imports: [
     
@@ -29,42 +31,9 @@ import { PeriodoAcademicoModule } from './periodo-academico/periodo-academico.mo
       load: [appConfig, databaseConfig, jwtConfig],
       envFilePath: ['.env.local', '.env'],
     }),
+    AuthModule
 
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('database.postgres.host'),
-        port: configService.get('database.postgres.port'),
-        username: configService.get('database.postgres.username'),
-        password: configService.get('database.postgres.password'),
-        database: configService.get('database.postgres.database'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: configService.get('database.postgres.synchronize'),
-        logging: configService.get('database.postgres.logging'),
-      }),
-    }),
-
-    // === MÓDULOS LEGACY ===
-    EstudianteModule,
-    FamiliaModule,
-    RamosCursadosModule,
-    HistorialAcademicoModule,
-    InformacionAcademicaModule,
-    InstitucionModule,
-    UsersModule,
-    EntrevistasModule,
-    AuthModule,
-    SeederModule,
-
-    // === MÓDULOS REFACTORIZADOS ===
-    InformacionContactoModule,
-    EstadoAcademicoModule,
-    InformacionAdmisionModule,
-    FamiliarModule,
-    BeneficiosModule,
-    PeriodoAcademicoModule,
   ],
+  providers: [PrismaService]
 })
 export class AppModule {}

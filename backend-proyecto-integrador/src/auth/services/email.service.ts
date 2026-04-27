@@ -57,9 +57,9 @@ export class EmailService {
   private async verifyConnection(): Promise<void> {
     try {
       await this.transporter.verify();
-      this.logger.log('✅ Conexión con servidor de email verificada exitosamente');
+      this.logger.log('Conexión con servidor de email verificada exitosamente');
     } catch (error:any) {
-      this.logger.error('❌ Error al verificar conexión con servidor de email:', error.message);
+      this.logger.error('Error al verificar conexión con servidor de email:', error.message);
       this.logger.warn('El envío de emails puede fallar. Verifica tu configuración.');
     }
   }
@@ -86,9 +86,9 @@ export class EmailService {
 
     try {
       const info = await this.transporter.sendMail(mailOptions);
-      this.logger.log(`📧 Email de recuperación enviado a: ${email} - ID: ${info.messageId}`);
+      this.logger.log(`Email de recuperación enviado a: ${email} - ID: ${info.messageId}`);
     } catch (error: any) {
-      this.logger.error(`❌ Error al enviar email a ${email}:`, error.message);
+      this.logger.error(`Error al enviar email a ${email}:`, error.message);
       throw new Error('No se pudo enviar el email de recuperación');
     }
   }
@@ -119,9 +119,9 @@ export class EmailService {
     //TODO ARREGLAR ERROR
     try {
       await this.transporter.sendMail(mailOptions);
-      this.logger.log(`📧 Notificación de cambio de contraseña enviada a: ${email}`);
+      this.logger.log(`Notificación de cambio de contraseña enviada a: ${email}`);
     } catch (error: any) {
-      this.logger.error(`❌ Error al enviar notificación a ${email}:`, error.message);
+      this.logger.error(`Error al enviar notificación a ${email}:`, error.message);
       // No lanzar error aquí, es solo una notificación
     }
   }

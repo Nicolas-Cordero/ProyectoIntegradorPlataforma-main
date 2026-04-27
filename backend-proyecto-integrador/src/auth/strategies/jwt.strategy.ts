@@ -4,15 +4,15 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import { usuario } from '@prisma/client';
 import { JwtPayload, AuthenticatedUser } from '../interfaces/auth.interfaces';
 import { AUTH_MESSAGES } from '../constants/auth.constants';
+import { UsersRepository } from '../../users';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    private readonly userRepo: UsersRepository,
     private readonly configService: ConfigService,
   ) {
     super({
@@ -23,21 +23,20 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
-    const user = await this.usersRepository.findOne({
-      where: { id: payload.sub, activo: true },
-    });
+
+    const user = await this.userRepo.findByRut(payload.sub)
 
     if (!user) {
       throw new UnauthorizedException(AUTH_MESSAGES.UNAUTHORIZED_USER);
     }
 
     return {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      rol: user.rol,
+      rut_usuario: user.rut_usuario,
       nombre: user.nombre,
       apellido: user.apellido,
+      email: user.email,
+      telefono: user.telefono,
+      rol: user.rol,
     };
   }
 }

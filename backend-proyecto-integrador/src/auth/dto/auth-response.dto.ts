@@ -5,11 +5,11 @@ export class AuthResponseDto {
 }
 
 export class UserResponseDto {
-  id!: string;
-  username!: string;
-  email!: string;
+  rut_usuario!: string;
   nombre!: string;
-  apellido!: string;
+  apellido!: string
+  email!: string;
+  telefono!: string
   rol!: string;
 }
 
@@ -21,9 +21,11 @@ export class TokensResponseDto {
 export class ValidateTokenResponseDto {
   valid!: boolean;
   user!: {
-    id: string;
-    username: string;
+    rut_usuario: string;
+    nombre: string;
+    apellido: string
     email: string;
+    telefono: string
     rol: string;
   };
 }

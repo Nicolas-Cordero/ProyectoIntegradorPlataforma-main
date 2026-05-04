@@ -79,7 +79,8 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
         const mappedCurrentUser = {
           ...currentUser,
           nombres: (currentUser as any).nombre || currentUser.nombres,
-          apellidos: (currentUser as any).apellido || currentUser.apellidos
+          apellidos: (currentUser as any).apellido || currentUser.apellidos,
+          role: (currentUser as any).rol || currentUser.role,
         };
         setUser(mappedCurrentUser);
         setEditedUser({ ...mappedCurrentUser });

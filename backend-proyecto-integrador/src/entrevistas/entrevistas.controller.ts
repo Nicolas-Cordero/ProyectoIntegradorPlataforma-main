@@ -16,16 +16,19 @@ import { CreateEntrevistaDto } from './dto/create-entrevista.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '../users/entities/user.entity';
+import { UserRol } from '@prisma/client';
 import type { Request } from 'express';
 
+
+
 @Controller('entrevistas')
-@UsePipes(new ValidationPipe({ transform: true }))
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN, UserRole.TUTOR)
+@Roles(UserRol.ADMIN, UserRol.TUTOR)
 export class EntrevistasController {
   constructor(private readonly entrevistasService: EntrevistasService) {}
 
+
+  //Creación de una entrevista
   @Post()
   async create(
     @Req() req: Request,
@@ -35,17 +38,28 @@ export class EntrevistasController {
     return this.entrevistasService.create(createEntrevistaDto, userId);
   }
 
+
+
+  //Elimina una entrevista
   @Delete(':id')
   async delete(@Param('id') id: string) {
     await this.entrevistasService.deleteEntrevista(id);
     return { message: 'Entrevista eliminada' };
   }
 
+
+
+
+  //Busca todas las entrevistas
   @Get()
   async findAll() {
     return this.entrevistasService.findAll();
   }
 
+
+
+
+  //Encuentra todas por estudiante
   @Get('estudiante/:idEstudiante')
   async findOneBy(
     @Param('idEstudiante') idEstudiante: string,
@@ -53,6 +67,9 @@ export class EntrevistasController {
     return this.entrevistasService.findByEstudiante(idEstudiante);
   }
 
+
+
+  //actualiza una entrevista
   @Patch(':id')
   async update(
     @Param('id') id: string,
@@ -61,15 +78,22 @@ export class EntrevistasController {
     return this.entrevistasService.updateEntrevista(id, data);
   }
 
+
+
+  //encuentra una entrevista por id
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.entrevistasService.findOne(id);
   }
 
+
+  //todos los comentarios por entrevista
   @Get(':id/textos')
   async getTextos(@Param('id') id: string) {
     return this.entrevistasService.getTextosByEntrevista(id);
   }
+
+
 
   @Post(':id/textos')
   async addTexto(
@@ -78,6 +102,8 @@ export class EntrevistasController {
   ) {
     return this.entrevistasService.addTexto(id, textoData);
   }
+
+
 
   @Patch(':id/textos/:textoId')
   async updateTexto(
@@ -88,6 +114,8 @@ export class EntrevistasController {
     return this.entrevistasService.updateTexto(id, textoId, data);
   }
 
+
+  
   @Delete(':id/textos/:textoId')
   async deleteTexto(@Param('id') id: string, @Param('textoId') textoId: string) {
     await this.entrevistasService.deleteTexto(id, textoId);

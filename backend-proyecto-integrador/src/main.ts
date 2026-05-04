@@ -27,6 +27,9 @@ async function bootstrap() {
     credentials: true
   });
 
+
+
+  //no permite que metan info extra en los DTO
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

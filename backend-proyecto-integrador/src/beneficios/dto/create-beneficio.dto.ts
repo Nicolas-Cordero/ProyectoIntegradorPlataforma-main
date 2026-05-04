@@ -1,24 +1,27 @@
-import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { TipoBeneficio } from '../entities/beneficio.entity';
+import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { TipoBeneficio } from '..';
+import { Type } from 'class-transformer';
 
 export class CreateBeneficioDto {
   @IsString()
   @IsNotEmpty()
-  nombre: string;
+  nombre!: string;
+
+  @IsEnum(TipoBeneficio)
+  @IsNotEmpty()
+  tipo!: TipoBeneficio;
+
+  @Type(()=>Number)
+  @IsNumber()
+  @IsNotEmpty()
+  monto!: string;
 
   @IsString()
   @IsNotEmpty()
-  codigo: string;
-
-  @IsEnum(TipoBeneficio)
-  @IsOptional()
-  tipo?: TipoBeneficio;
+  proveedor!: string;
 
   @IsString()
-  @IsOptional()
-  descripcion?: string;
+  @IsNotEmpty()
+  descripcion!: string;
 
-  @IsBoolean()
-  @IsOptional()
-  activo?: boolean;
 }

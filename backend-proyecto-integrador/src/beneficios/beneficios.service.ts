@@ -1,53 +1,35 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Beneficio } from './entities/beneficio.entity';
-import { BeneficioEstudiante } from './entities/beneficio-estudiante.entity';
+import { beneficio } from '@prisma/client';
 import {
   CreateBeneficioDto,
   UpdateBeneficioDto,
-  CreateBeneficioEstudianteDto,
-  UpdateBeneficioEstudianteDto,
 } from './dto';
+import { BeneficiosRepository } from './beneficios.repository';
 
 @Injectable()
 export class BeneficiosService {
   constructor(
-    @InjectRepository(Beneficio)
-    private readonly beneficioRepository: Repository<Beneficio>,
-    @InjectRepository(BeneficioEstudiante)
-    private readonly beneficioEstudianteRepository: Repository<BeneficioEstudiante>,
+    private readonly beneficioRepo : BeneficiosRepository
   ) {}
 
   // === BENEFICIO (Catálogo) ===
 
-  async createBeneficio(createDto: CreateBeneficioDto): Promise<Beneficio> {
-    const existeNombre = await this.beneficioRepository.findOne({
-      where: { nombre: createDto.nombre },
-    });
-
-    if (existeNombre) {
-      throw new ConflictException('Ya existe un beneficio con ese nombre');
-    }
-
-    const existeCodigo = await this.beneficioRepository.findOne({
-      where: { codigo: createDto.codigo },
-    });
-
-    if (existeCodigo) {
-      throw new ConflictException('Ya existe un beneficio con ese código');
-    }
-
-    const beneficio = this.beneficioRepository.create(createDto);
-    return await this.beneficioRepository.save(beneficio);
+  async createBeneficio(createDto: CreateBeneficioDto): Promise<beneficio> {
+    const existeNombre = await this.beneficioRepo.findByName(createDto.nombre)
+    if(existeNombre) throw new ConflictException('Ya existe un beneficio con ese nombre')
+    return this.beneficioRepo.createBeneficio(createDto);
   }
 
-  async findAllBeneficios(): Promise<Beneficio[]> {
-    return await this.beneficioRepository.find();
+
+
+  async findAllBeneficios(): Promise<beneficio[]> {
+    return await this.beneficioRepo.findAllBeneficios()
   }
 
-  async findBeneficio(id: string): Promise<Beneficio> {
-    const beneficio = await this.beneficioRepository.findOne({ where: { id_beneficio: id } });
+
+
+  async findBeneficioById(id: number): Promise<beneficio> {
+    const beneficio = await this.beneficioRepo.findByCode(id);
 
     if (!beneficio) {
       throw new NotFoundException(`Beneficio con ID ${id} no encontrado`);
@@ -56,25 +38,20 @@ export class BeneficiosService {
     return beneficio;
   }
 
-  async findBeneficiosActivos(): Promise<Beneficio[]> {
-    return await this.beneficioRepository.find({
-      where: { activo: true },
-    });
+
+  async updateBeneficio(id: number, updateDto: UpdateBeneficioDto): Promise<beneficio> {
+    return await this.beneficioRepo.updateBeneficioByID(id, updateDto);
   }
 
-  async updateBeneficio(id: string, updateDto: UpdateBeneficioDto): Promise<Beneficio> {
-    const beneficio = await this.findBeneficio(id);
-    Object.assign(beneficio, updateDto);
-    return await this.beneficioRepository.save(beneficio);
+  async removeBeneficio(id: number): Promise<beneficio> {
+    return this.beneficioRepo.deleteBeneficioByID(id);
   }
 
-  async removeBeneficio(id: string): Promise<void> {
-    const beneficio = await this.findBeneficio(id);
-    await this.beneficioRepository.remove(beneficio);
-  }
+
 
   // === BENEFICIO ESTUDIANTE ===
-
+  //Estos metodos deben pasar a un modulo de relacion
+/*
   async create(createDto: CreateBeneficioEstudianteDto): Promise<BeneficioEstudiante> {
     const beneficioEstudiante = this.beneficioEstudianteRepository.create(createDto);
     return await this.beneficioEstudianteRepository.save(beneficioEstudiante);
@@ -126,4 +103,6 @@ export class BeneficiosService {
     const beneficioEstudiante = await this.findOne(id);
     await this.beneficioEstudianteRepository.remove(beneficioEstudiante);
   }
+*/
+
 }

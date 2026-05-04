@@ -12,9 +12,9 @@ import { BeneficiosService } from './beneficios.service';
 import {
   CreateBeneficioDto,
   UpdateBeneficioDto,
-  CreateBeneficioEstudianteDto,
-  UpdateBeneficioEstudianteDto,
 } from './dto';
+
+
 
 @Controller('beneficios')
 export class BeneficiosController {
@@ -22,76 +22,52 @@ export class BeneficiosController {
 
   // === CATÁLOGO DE BENEFICIOS ===
 
-  @Post('catalogo')
+
+
+  //metodo  para crear nuevos beneficios.
+  @Post()
   createBeneficio(@Body() createDto: CreateBeneficioDto) {
     return this.beneficiosService.createBeneficio(createDto);
   }
 
-  @Get('catalogo')
+
+
+//metodo para obtener todos los beneficios disponibles.
+  @Get()
   findAllBeneficios() {
     return this.beneficiosService.findAllBeneficios();
   }
 
-  @Get('catalogo/activos')
-  findBeneficiosActivos() {
-    return this.beneficiosService.findBeneficiosActivos();
+
+
+
+
+//este metodo si tiene sentido debido a que busca un beneficio segun su id.
+  @Get(':id')
+  findBeneficio(@Param('id', ParseIntPipe) id: number) {
+    return this.beneficiosService.findBeneficioById(id);
   }
 
-  @Get('catalogo/:id')
-  findBeneficio(@Param('id') id: string) {
-    return this.beneficiosService.findBeneficio(id);
-  }
 
-  @Patch('catalogo/:id')
+
+
+
+//tiene sentido debido a que lo actualiza
+  @Patch(':id')
   updateBeneficio(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: UpdateBeneficioDto,
   ) {
     return this.beneficiosService.updateBeneficio(id, updateDto);
   }
 
-  @Delete('catalogo/:id')
-  removeBeneficio(@Param('id') id: string) {
+
+
+
+//lo remueve
+  @Delete(':id')
+  removeBeneficio(@Param('id', ParseIntPipe) id: number) {
     return this.beneficiosService.removeBeneficio(id);
   }
 
-  // === BENEFICIOS POR ESTUDIANTE ===
-
-  @Post()
-  create(@Body() createDto: CreateBeneficioEstudianteDto) {
-    return this.beneficiosService.create(createDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.beneficiosService.findAll();
-  }
-
-  @Get('activos')
-  findActivos() {
-    return this.beneficiosService.findActivos();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.beneficiosService.findOne(id);
-  }
-
-  @Get('estudiante/:estudianteId')
-  findByEstudiante(@Param('estudianteId') estudianteId: string) {
-    return this.beneficiosService.findByEstudiante(estudianteId);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateDto: UpdateBeneficioEstudianteDto,
-  ) {
-    return this.beneficiosService.update(id, updateDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.beneficiosService.remove(id);
-  }
 }

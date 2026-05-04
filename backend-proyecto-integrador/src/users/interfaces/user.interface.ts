@@ -1,3 +1,6 @@
+import { UserRol } from "@prisma/client";
+
+
 export interface User {
   rut_usuario: string;
   email: string;
@@ -5,14 +8,8 @@ export interface User {
   password: string;
   nombre: string;
   apellido: string;
-  rol: UserRole;
+  rol: UserRol;
   ultimo_login?: Date;
-}
-
-export enum UserRole {
-  ADMIN = 'admin',
-  TUTOR = 'tutor',
-  VISITA = 'visita'
 }
 
 export interface UserResponse {
@@ -21,7 +18,7 @@ export interface UserResponse {
   email: string;
   nombre: string;
   apellido: string;
-  rol: UserRole;
+  rol: UserRol;
   activo: boolean;
   ultimo_login?: Date;
   created_at: Date;

@@ -2,92 +2,62 @@ import {
   IsString,
   IsNotEmpty,
   IsNumber,
-  IsArray,
-  IsDateString,
   IsOptional,
-  ValidateNested,
-  Min,
-  Max,
+  IsEnum,
+  IsDate,
 } from 'class-validator';
-import { Type, Transform } from 'class-transformer';
-import { Exclude, Expose } from 'class-transformer';
+import { Type} from 'class-transformer';
+import { Topico } from '@prisma/client';
 
-export class TextoEtiquetaDto {
+
+
+export class CreateComentarioDto {
+
+  @IsDate()
+  @Type(() => Date)
+  fecha_entrevista!: Date;
+
   @IsString()
   @IsNotEmpty()
-  contenido: string;
+  rut_estudiante!: string;
 
-  @IsDateString()
+
+  @IsEnum(Topico)
   @IsNotEmpty()
-  fecha: string;
+  topico!: Topico;
 
+
+  //Será necesario ponerle limite a cada comentario?
   @IsString()
-  @IsOptional()
-  contexto?: string;
+  @IsNotEmpty()
+  texto!:string;
 }
 
-export class EtiquetaDto {
-  @IsString()
-  @IsNotEmpty()
-  nombre_etiqueta: string;
 
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => TextoEtiquetaDto)
-  textos: TextoEtiquetaDto[];
-}
+
 
 export class CreateEntrevistaDto {
   @IsString()
   @IsNotEmpty()
-  id_estudiante: string;
-
-  @IsDateString()
-  @IsNotEmpty()
-  fecha: string;
+  rut_estudiante!: string;
 
   @IsString()
   @IsNotEmpty()
-  nombre_tutor: string;
+  rut_entrevistador!: string;
 
   @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
-  @Min(2020)
-  año: number;
+  semestre_id!: number;
+
 
   @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
-  @Min(1)
-  numero_entrevista: number;
+  duracion_s!: number;
 
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  @Min(15)
-  @Max(180)
-  duracion_minutos: number;
-
-  @IsString()
-  @IsNotEmpty()
-  estado: 'programada' | 'completada' | 'cancelada' | 'reprogramada';
 
   @IsString()
   @IsOptional()
-  observaciones?: string;
-
-  @IsString()
-  @IsOptional()
-  informacion_adicional?: string;
-
-  @IsArray()
-  @IsString({ each: true })
-  temas_abordados: string[];
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => EtiquetaDto)
-  @IsOptional()
-  etiquetas?: EtiquetaDto[];
+  resumen?: string;
 }

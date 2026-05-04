@@ -20,9 +20,3 @@ export interface AuthenticatedUser {
   telefono: string
   rol: string;
 }
-
-export enum UserRole {
-  ADMIN= 'admin',
-  TUTOR= 'tutor',
-  VISITA= 'visita'
-}

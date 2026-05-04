@@ -7,6 +7,10 @@ export { EstudianteService } from './estudiante.service';
 // Module
 export { EstudianteModule } from './estudiante.module';
 
+
+export { EstudianteRepository } from '../estudiante/estudiante.repository';
+
+
 // Entities
 export type { Estudiante } from './entities/estudiante.entity';
 

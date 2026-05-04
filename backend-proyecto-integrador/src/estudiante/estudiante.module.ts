@@ -10,6 +10,7 @@ import { InstitucionModule } from '../institucion/institucion.module';
 import { EntrevistasModule } from '../entrevistas/entrevistas.module';
 import { InformacionContactoModule } from '../informacion-contacto/informacion-contacto.module';
 import { EstadoAcademicoModule } from '../estado-academico/estado-academico.module';
+import { EstudianteRepository } from './estudiante.repository';
 
 @Module({
   imports: [
@@ -23,7 +24,10 @@ import { EstadoAcademicoModule } from '../estado-academico/estado-academico.modu
     forwardRef(() => EntrevistasModule),
   ],
   controllers: [EstudianteController],
-  providers: [EstudianteService],
+  providers: [
+    EstudianteService,
+    EstudianteRepository
+  ],
   exports: [EstudianteService],
 })
 export class EstudianteModule {}

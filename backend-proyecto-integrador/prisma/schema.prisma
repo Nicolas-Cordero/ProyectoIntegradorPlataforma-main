@@ -10,13 +10,57 @@ datasource db {
   provider = "postgresql"
 }
 
+enum EstadoBeneficio {
+  ACTIVO
+  CONGELADO
+  FIRMADO
+  RECHAZADO
+  EN_TRAMITE
+}
+
+
+enum EstadoRamo {
+  APROBADO
+  REPROBADO
+  CURSANDO
+  RETIRADO
+}
+
+enum Topico {
+  ACADEMICO
+  PERSONAL
+  ECONOMICO
+  SALUD
+  FAMILIAR
+  OTRO
+}
+
+enum EstadoEstudiante {
+  ACTIVO
+  CONDICIONAL
+  SUSPENDIDO
+  RETIRADO
+  CONGELADO
+  EGRESADO
+  TITULADO
+}
+
+enum UserRol {
+  ADMIN
+  TUTOR
+  VISITA
+  ESTUDIANTE
+}
+
+
+
 model usuario {
   rut_usuario   String   @id
   nombre        String
   apellido      String
   email         String   @unique
   telefono      String
-  rol           String
+  rol           UserRol
   password      String
 
   ultimo_login  DateTime?
@@ -30,6 +74,8 @@ model usuario {
   audit_logs  audit_log[]
 }
 
+
+
 model universidad {
   codigo_universidad Int    @id @default(autoincrement())
   nombre             String @unique
@@ -37,6 +83,8 @@ model universidad {
 
   carreras carrera[]
 }
+
+
 
 model liceo {
   rbd          String @id
@@ -47,14 +95,20 @@ model liceo {
   estudiantes estudiante[]
 }
 
+
+
 model beneficio {
   codigo_beneficio Int     @id @default(autoincrement())
+  nombre           String  @unique
   proveedor        String
   tipo             String
+  descripcion      String
   monto            Decimal
 
   beneficio_estudiante beneficio_estudiante[]
 }
+
+
 
 model semestre {
   semestre_id Int    @id @default(autoincrement())
@@ -66,6 +120,8 @@ model semestre {
   entrevistas entrevista[]
 }
 
+
+
 model estudiante {
   rut_estudiante  String  @id
   nombre          String
@@ -74,7 +130,7 @@ model estudiante {
   telefono        String
   puntaje_paes    Int?
   generacion      String
-  estado          String
+  estado          EstadoEstudiante
   rbd_liceo       String
   promedios_media Decimal
 
@@ -84,12 +140,13 @@ model estudiante {
   beneficios  beneficio_estudiante[]
   carreras    carrera[]
   ramos       ramo[]
-  notas       nota[]
   entrevistas entrevista[]
-  comentarios comentario[]
 }
 
+
+
 model familiar {
+  id             Int @id @default(autoincrement())
   rut_familiar   String
   rut_estudiante String
   nombre         String
@@ -99,13 +156,15 @@ model familiar {
 
   estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
 
-  @@id([rut_familiar, rut_estudiante])
+  @@unique([rut_familiar, rut_estudiante])
 }
+
+
 
 model beneficio_estudiante {
   codigo_beneficio Int
   rut_estudiante   String
-  estado           String
+  estado           EstadoBeneficio
   inicio           DateTime
   fin              DateTime
 
@@ -114,6 +173,9 @@ model beneficio_estudiante {
 
   @@id([codigo_beneficio, rut_estudiante])
 }
+
+
+
 
 model carrera {
   codigo_carrera     Int    @id @default(autoincrement())
@@ -129,15 +191,20 @@ model carrera {
   ramos ramo[]
 }
 
+
+
+
+
 model ramo {
-  nrc            String
-  semestre_id    Int
-  rut_estudiante String
-  codigo_carrera Int
-  nombre         String
-  estado         String
-  comentario     String
-  intento        Int
+  id              Int @id @default(autoincrement())
+  nrc             String
+  semestre_id     Int
+  rut_estudiante  String
+  codigo_carrera  Int
+  nombre          String
+  estado          EstadoRamo
+  comentario      String
+  intento         Int
 
   estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
   semestre   semestre   @relation(fields: [semestre_id], references: [semestre_id])
@@ -145,60 +212,73 @@ model ramo {
 
   notas nota[]
 
-  @@id([nrc, semestre_id, rut_estudiante, codigo_carrera])
+  @@unique([nrc, semestre_id, rut_estudiante, codigo_carrera])
 }
+
+
+
+
 
 model nota {
-  nrc            String
-  semestre_id    Int
-  rut_estudiante String
-  codigo_carrera Int
-  fecha_hora     DateTime
-  nota           Decimal
+  id         Int      @id @default(autoincrement())
+  ramo_id    Int
+  fecha_hora DateTime
+  nota       Decimal
 
-  ramo ramo @relation(fields: [nrc, semestre_id, rut_estudiante, codigo_carrera], references: [nrc, semestre_id, rut_estudiante, codigo_carrera])
+  ramo ramo @relation(fields: [ramo_id], references: [id])
 
-  estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
-
-  @@id([nrc, semestre_id, rut_estudiante, codigo_carrera, fecha_hora])
+  @@unique([ramo_id, fecha_hora])
 }
+
+
+
+
+
 model entrevista {
+  id                Int @id @default(autoincrement())
   fecha_hora        DateTime
   rut_estudiante    String
   semestre_id       Int
   duracion_s        Int
   rut_entrevistador String
   resumen           String?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
 
   estudiante   estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
   semestre     semestre   @relation(fields: [semestre_id], references: [semestre_id])
   entrevistador usuario   @relation("Entrevistador", fields: [rut_entrevistador], references: [rut_usuario])
-
+  
   comentarios comentario[]
 
-  @@id([fecha_hora, rut_estudiante])
+  @@unique([rut_estudiante, rut_entrevistador, fecha_hora])
 }
+
+
+
+
 
 model comentario {
-  fecha_hora_entrevista DateTime
-  rut_estudiante        String
-  fecha_hora_comentario DateTime
-  topico                String
+  id                    Int @id @default(autoincrement())
+  entrevista_id         Int
+  topico                Topico
   texto                 String
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
 
-  entrevista entrevista @relation(fields: [fecha_hora_entrevista, rut_estudiante], references: [fecha_hora, rut_estudiante])
-
-  estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
-
-  @@id([fecha_hora_entrevista, rut_estudiante, fecha_hora_comentario, topico])
+  entrevista entrevista @relation(fields: [entrevista_id], references: [id])
+  @@unique([entrevista_id, topico])
 }
 
+
+
+
+
 model audit_log {
-  fecha_hora  DateTime
+  id          Int @id @default(autoincrement())
   rut_usuario String
   descripcion String
+  created_at  DateTime @default(now())
 
   usuario usuario @relation(fields: [rut_usuario], references: [rut_usuario])
-
-  @@id([fecha_hora, rut_usuario])
 }

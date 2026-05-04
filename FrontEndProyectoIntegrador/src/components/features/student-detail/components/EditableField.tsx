@@ -72,8 +72,8 @@ export function EditableField({
       <TableCell 
         sx={{ 
           fontWeight: 'bold', 
-          bgcolor: 'error.light',
-          color: 'error.contrastText',
+          bgcolor: 'grey.100',
+          color: 'text.primary',
           width: '30%',
         }}
       >

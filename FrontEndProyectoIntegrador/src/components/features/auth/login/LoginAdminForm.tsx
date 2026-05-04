@@ -11,6 +11,7 @@ import type { LoginCredentials } from '../../../../types';
 import { logger } from '../../../../config';
 import { isValidEmail } from '../../../../utils/validators';
 import { LoginFormContainer } from '../shared';
+import { PasswordRecoveryModal } from '../password-recovery';
 import logoFundacion from '../../../../assets/logos/logo-fundacion.png';
 
 interface LoginAdminFormProps {
@@ -24,6 +25,7 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [showPasswordRecovery, setShowPasswordRecovery] = useState(false);
 
   const navigate = useNavigate();
 
@@ -75,17 +77,24 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
 
   return (
     <LoginFormContainer
-      title="Panel de Administración"
-      subtitle="Acceso exclusivo para administradores"
-      icon={(
+      title="Acceso Administrativo"
+      subtitle="Panel de Gestión - Fundación Carmen Goudie"
+      icon={
         <Box
           component="img"
           src={logoFundacion}
-          alt="Logo Fundación"
-          sx={{ height: 160, width: 'auto', borderRadius: 3, boxShadow: 4, backgroundColor: 'rgba(255,255,255,0.98)', p: 2, mx: 'auto' }}
+          alt="Logo Fundación Carmen Goudie"
+          sx={{
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            border: '3px solid rgba(101, 179, 155, 0.3)',
+            p: 1,
+            background: 'rgba(255, 255, 255, 0.9)',
+            boxShadow: '0 8px 24px rgba(101, 179, 155, 0.2)'
+          }}
         />
-      )}
-      gradientColors={{ from: '#65B39B', to: '#C7654F' }}
+      }
     >
       <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
         <Input
@@ -159,7 +168,7 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
             component="button"
             type="button"
             variant="body2"
-            onClick={() => navigate('/solicitar-recuperacion')}
+            onClick={() => setShowPasswordRecovery(true)}
             sx={{
               color: '#65B39B',
               textDecoration: 'underline',
@@ -191,6 +200,15 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
           </Link>
         </Box>
       </Box>
+
+      <PasswordRecoveryModal
+        abierto={showPasswordRecovery}
+        onCerrar={() => setShowPasswordRecovery(false)}
+        onSuccess={() => {
+          setError('');
+          // Optionally show a success message or redirect
+        }}
+      />
     </LoginFormContainer>
   );
 };

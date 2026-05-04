@@ -44,7 +44,7 @@ class UserService extends BaseHttpClient {
   }
 
   async changeUserPassword(userId: string, newPassword: string): Promise<any> {
-    return this.request(`/users/${userId}/password`, {
+    return this.request(`/users/${userId}/change-password`, {
       method: 'PATCH',
       body: JSON.stringify({ password: newPassword }),
     });

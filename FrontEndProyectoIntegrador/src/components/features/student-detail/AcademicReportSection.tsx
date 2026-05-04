@@ -11,6 +11,20 @@ import {
   getHistorialAño,
   getHistorialSemestre
 } from '../../../utils/migration-helpers';
+import {
+  Box,
+  Button,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { DetailSectionWrapper, detailSectionStyles } from './components';
 
 interface AcademicReportSectionProps {
   estudiante: Estudiante;
@@ -328,315 +342,250 @@ export const AcademicReportSection: React.FC<AcademicReportSectionProps> = ({ es
 
   const datosPorSemestre = filas;
   return (
-    <div>
-      <div className="bg-[var(--color-turquoise)] text-white text-center font-bold text-xl py-3 mb-2">
-        Informe Académico General
-      </div>
-      <div className="bg-yellow-200 p-2 text-center font-semibold mb-4 border border-gray-300 text-sm">
-        Resumen académico
-      </div>
-
-      <table 
-        className="w-full border-collapse mb-8"
-        role="table"
-        aria-label="Resumen académico del estudiante"
-      >
-        <tbody>
-          <tr>
-            <td className="bg-rose-200 text-center align-middle font-bold text-sm p-2 border border-gray-300 w-32" rowSpan={10}>
-              {estudiante.nombre || 'Sin nombre'}
-            </td>
-            <td className="font-bold p-2 bg-rose-200 w-[30%] border border-gray-300">Nº de carrera cursada</td>
-            <td className="p-2 border border-gray-300 bg-white">
-              {modoEdicion ? (
-                <input
-                  type="number"
-                  value={resumenManual.numeroCarrera ?? ''}
-                  onChange={(e) => handleChangeResumen('numeroCarrera', e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded"
-                />
-              ) : resumenManual.numeroCarrera}
-            </td>
-          </tr>
-          <tr>
-            <td className="font-bold p-2 bg-rose-200 w-[30%] border border-gray-300">Nº semestres finalizados</td>
-            <td className="p-2 border border-gray-300 bg-white">
-              {modoEdicion ? (
-                <input
-                  type="number"
-                  value={resumenManual.semestresFinalizados ?? ''}
-                  onChange={(e) => handleChangeResumen('semestresFinalizados', e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded"
-                />
-              ) : resumenManual.semestresFinalizados}
-            </td>
-          </tr>
-          <tr>
-            <td className="font-bold p-2 bg-rose-200 w-[30%] border border-gray-300">Nº semestres suspendidos</td>
-            <td className="p-2 border border-gray-300 bg-white">
-              {modoEdicion ? (
-                <input
-                  type="number"
-                  value={resumenManual.semestresSuspendidos ?? ''}
-                  onChange={(e) => handleChangeResumen('semestresSuspendidos', e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded"
-                />
-              ) : resumenManual.semestresSuspendidos}
-            </td>
-          </tr>
-          <tr>
-            <td className="font-bold p-2 bg-rose-200 w-[30%] border border-gray-300">Nº semestres de carrera</td>
-            <td className="p-2 border border-gray-300 bg-white">
-              {modoEdicion ? (
-                <input
-                  type="number"
-                  value={resumenManual.semestresCarrera ?? ''}
-                  onChange={(e) => handleChangeResumen('semestresCarrera', e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded"
-                />
-              ) : resumenManual.semestresCarrera}
-            </td>
-          </tr>
-          <tr>
-            <td className="font-bold p-2 bg-rose-200 w-[30%] border border-gray-300">Total ramos aprobados</td>
-            <td className="p-2 border border-gray-300 bg-white">
-              {modoEdicion ? (
-                <input
-                  type="number"
-                  value={resumenManual.totalAprobados ?? ''}
-                  onChange={(e) => handleChangeResumen('totalAprobados', e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded"
-                />
-              ) : resumenManual.totalAprobados}
-            </td>
-          </tr>
-          <tr>
-            <td className="font-bold p-2 bg-rose-200 w-[30%] border border-gray-300">Total ramos reprobados</td>
-            <td className="p-2 border border-gray-300 bg-white">
-              {modoEdicion ? (
-                <input
-                  type="number"
-                  value={resumenManual.totalReprobados ?? ''}
-                  onChange={(e) => handleChangeResumen('totalReprobados', e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded"
-                />
-              ) : resumenManual.totalReprobados}
-            </td>
-          </tr>
-          <tr>
-            <td className="font-bold p-2 bg-rose-200 w-[30%] border border-gray-300">Total eliminados</td>
-            <td className="p-2 border border-gray-300 bg-white">
-              {modoEdicion ? (
-                <input
-                  type="number"
-                  value={resumenManual.totalEliminados ?? ''}
-                  onChange={(e) => handleChangeResumen('totalEliminados', e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded"
-                />
-              ) : resumenManual.totalEliminados}
-            </td>
-          </tr>
-          <tr>
-            <td className="font-bold p-2 bg-rose-200 w-[30%] border border-gray-300">% Ramos aprobados</td>
-            <td className="p-2 border border-gray-300 bg-white">
-              {modoEdicion ? (
-                <input
-                  type="number"
-                  step="0.1"
-                  value={resumenManual.porcAprobados ?? ''}
-                  onChange={(e) => handleChangeResumen('porcAprobados', e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded"
-                />
-              ) : `${resumenManual.porcAprobados ?? 0}%`}
-            </td>
-          </tr>
-          <tr>
-            <td className="font-bold p-2 bg-rose-200 w-[30%] border border-gray-300">% Reprobados</td>
-            <td className="p-2 border border-gray-300 bg-white">
-              {modoEdicion ? (
-                <input
-                  type="number"
-                  step="0.1"
-                  value={resumenManual.porcReprobados ?? ''}
-                  onChange={(e) => handleChangeResumen('porcReprobados', e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded"
-                />
-              ) : `${resumenManual.porcReprobados ?? 0}%`}
-            </td>
-          </tr>
-          <tr>
-            <td className="font-bold p-2 bg-rose-200 w-[30%] border border-gray-300">% Total cursados</td>
-            <td className="p-2 border border-gray-300 bg-white">
-              {modoEdicion ? (
-                <input
-                  type="number"
-                  step="0.1"
-                  value={resumenManual.porcTotal ?? ''}
-                  onChange={(e) => handleChangeResumen('porcTotal', e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded"
-                />
-              ) : `${resumenManual.porcTotal ?? 0}%`}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      {/* Botón de guardar resumen manual eliminado; el guardado general se encarga del resumen */}
+    <DetailSectionWrapper title="Informe Académico General">
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+          Resumen académico
+        </Typography>
+        <TableContainer sx={detailSectionStyles.tableContainer} component={Paper}>
+          <Table sx={{ width: '100%', ...detailSectionStyles.table }} aria-label="Resumen académico del estudiante">
+            <TableBody>
+              <TableRow>
+                <TableCell
+                  sx={{
+                    bgcolor: 'primary.light',
+                    color: 'primary.contrastText',
+                    fontWeight: 700,
+                    textAlign: 'center',
+                    verticalAlign: 'middle',
+                    width: 160,
+                  }}
+                  rowSpan={10}
+                >
+                  {estudiante.nombre || 'Sin nombre'}
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Nº de carrera cursada</TableCell>
+                <TableCell>
+                  {modoEdicion ? (
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={resumenManual.numeroCarrera ?? ''}
+                      onChange={(e) => handleChangeResumen('numeroCarrera', e.target.value)}
+                      fullWidth
+                    />
+                  ) : resumenManual.numeroCarrera}
+                </TableCell>
+              </TableRow>
+              {[
+                { label: 'Nº semestres finalizados', field: 'semestresFinalizados' },
+                { label: 'Nº semestres suspendidos', field: 'semestresSuspendidos' },
+                { label: 'Nº semestres de carrera', field: 'semestresCarrera' },
+                { label: 'Total ramos aprobados', field: 'totalAprobados' },
+                { label: 'Total ramos reprobados', field: 'totalReprobados' },
+                { label: 'Total eliminados', field: 'totalEliminados' },
+                { label: '% Ramos aprobados', field: 'porcAprobados' },
+                { label: '% Reprobados', field: 'porcReprobados' },
+                { label: '% Total cursados', field: 'porcTotal' },
+              ].map(({ label, field }) => (
+                <TableRow key={field}>
+                  <TableCell sx={{ fontWeight: 700 }}>{label}</TableCell>
+                  <TableCell>
+                    {modoEdicion ? (
+                      <TextField
+                        size="small"
+                        type="number"
+                        value={resumenManual[field] ?? ''}
+                        onChange={(e) => handleChangeResumen(field, e.target.value)}
+                        fullWidth
+                        inputProps={{ step: field.startsWith('porc') ? 0.1 : 1 }}
+                      />
+                    ) : (`${resumenManual[field] ?? 0}${field.startsWith('porc') ? '%' : ''}`)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
 
       {modoEdicion && (
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={handleAgregarFila}
-            className="px-3 py-2 bg-[var(--color-turquoise)] text-white font-bold rounded"
-          >
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
+          <Button variant="contained" color="primary" onClick={handleAgregarFila}>
             Agregar fila
-          </button>
-        </div>
+          </Button>
+        </Box>
       )}
 
-      <h3 className="text-base font-semibold mb-3 text-gray-900">Detalle por año y semestre</h3>
-      <table 
-        className="w-full border-collapse"
-        role="table"
-        aria-label="Detalle académico por año y semestre"
-      >
-        <thead>
-          <tr>
-            <th scope="col" className="bg-[var(--color-turquoise)] text-white p-3 text-left border border-gray-300">Año</th>
-            <th scope="col" className="bg-[var(--color-turquoise)] text-white p-3 text-left border border-gray-300">Semestre</th>
-            <th scope="col" className="bg-[var(--color-turquoise)] text-white p-3 text-left border border-gray-300">Nº Semestre Carrera</th>
-            <th scope="col" className="bg-[var(--color-turquoise)] text-white p-3 text-left border border-gray-300">Ramos Aprobados</th>
-            <th scope="col" className="bg-[var(--color-turquoise)] text-white p-3 text-left border border-gray-300">Ramos Reprobados</th>
-            <th scope="col" className="bg-[var(--color-turquoise)] text-white p-3 text-left border border-gray-300">Ramos Eliminados</th>
-            <th scope="col" className="bg-[var(--color-turquoise)] text-white p-3 text-left border border-gray-300">Total Ramos</th>
-            <th scope="col" className="bg-[var(--color-turquoise)] text-white p-3 text-left border border-gray-300">Observaciones</th>
-            {modoEdicion && (
-              <th scope="col" className="bg-[var(--color-turquoise)] text-white p-3 text-left border border-gray-300">Acciones</th>
+      <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+        Detalle por año y semestre
+      </Typography>
+
+      <TableContainer sx={detailSectionStyles.tableContainer} component={Paper}>
+        <Table sx={{ width: '100%', ...detailSectionStyles.table }} aria-label="Detalle académico por año y semestre">
+          <TableHead>
+            <TableRow>
+              {[
+                'Año',
+                'Semestre',
+                'Nº Semestre Carrera',
+                'Ramos Aprobados',
+                'Ramos Reprobados',
+                'Ramos Eliminados',
+                'Total Ramos',
+                'Observaciones',
+              ].map((header) => (
+                <TableCell key={header} sx={{ fontWeight: 700 }}>
+                  {header}
+                </TableCell>
+              ))}
+              {modoEdicion && (
+                <TableCell sx={{ fontWeight: 700 }}>Acciones</TableCell>
+              )}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {datosPorSemestre.length > 0 ? (
+              datosPorSemestre.map((fila, idx) => (
+                <TableRow key={idx} hover>
+                  <TableCell>
+                    {modoEdicion ? (
+                      <TextField
+                        size="small"
+                        type="number"
+                        value={fila.año ?? ''}
+                        onChange={(e) => handleChangeFila(idx, 'año', e.target.value)}
+                        fullWidth
+                        inputProps={{ style: { textAlign: 'center' } }}
+                      />
+                    ) : (fila.año ?? '-')}
+                  </TableCell>
+                  <TableCell>
+                    {modoEdicion ? (
+                      <TextField
+                        size="small"
+                        type="number"
+                        value={fila.semestre ?? ''}
+                        onChange={(e) => handleChangeFila(idx, 'semestre', e.target.value)}
+                        fullWidth
+                        inputProps={{ style: { textAlign: 'center' } }}
+                      />
+                    ) : (fila.semestre ?? '-')}
+                  </TableCell>
+                  <TableCell>
+                    {modoEdicion ? (
+                      <TextField
+                        size="small"
+                        type="number"
+                        value={fila.nSemestreCarrera}
+                        onChange={(e) => handleChangeFila(idx, 'nSemestreCarrera', e.target.value)}
+                        fullWidth
+                        inputProps={{ style: { textAlign: 'center' } }}
+                      />
+                    ) : fila.nSemestreCarrera}
+                  </TableCell>
+                  <TableCell>
+                    {modoEdicion ? (
+                      <TextField
+                        size="small"
+                        type="number"
+                        value={fila.ramosAprobados}
+                        onChange={(e) => handleChangeFila(idx, 'ramosAprobados', e.target.value)}
+                        fullWidth
+                        inputProps={{ style: { textAlign: 'center' } }}
+                      />
+                    ) : fila.ramosAprobados}
+                  </TableCell>
+                  <TableCell>
+                    {modoEdicion ? (
+                      <TextField
+                        size="small"
+                        type="number"
+                        value={fila.ramosReprobados}
+                        onChange={(e) => handleChangeFila(idx, 'ramosReprobados', e.target.value)}
+                        fullWidth
+                        inputProps={{ style: { textAlign: 'center' } }}
+                      />
+                    ) : fila.ramosReprobados}
+                  </TableCell>
+                  <TableCell>
+                    {modoEdicion ? (
+                      <TextField
+                        size="small"
+                        type="number"
+                        value={fila.ramosEliminados}
+                        onChange={(e) => handleChangeFila(idx, 'ramosEliminados', e.target.value)}
+                        fullWidth
+                        inputProps={{ style: { textAlign: 'center' } }}
+                      />
+                    ) : fila.ramosEliminados}
+                  </TableCell>
+                  <TableCell>
+                    {modoEdicion ? (
+                      <TextField
+                        size="small"
+                        type="number"
+                        value={fila.totalRamos}
+                        InputProps={{ readOnly: true }}
+                        fullWidth
+                        inputProps={{ style: { textAlign: 'center' } }}
+                      />
+                    ) : fila.totalRamos}
+                  </TableCell>
+                  <TableCell>
+                    {modoEdicion ? (
+                      <TextField
+                        size="small"
+                        value={fila.observaciones}
+                        onChange={(e) => handleChangeFila(idx, 'observaciones', e.target.value)}
+                        placeholder="Observaciones..."
+                        fullWidth
+                      />
+                    ) : (fila.observaciones || '-')}
+                  </TableCell>
+                  {modoEdicion && (
+                    <TableCell>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center' }}>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="primary"
+                          onClick={() => handleGuardarFila(idx)}
+                          disabled={accionFila?.index === idx}
+                        >
+                          {accionFila?.index === idx && accionFila?.tipo === 'guardar' ? 'Guardando...' : 'Guardar'}
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="error"
+                          onClick={() => handleEliminarFila(idx)}
+                          disabled={accionFila?.index === idx}
+                        >
+                          {accionFila?.index === idx && accionFila?.tipo === 'eliminar' ? 'Eliminando...' : 'Eliminar'}
+                        </Button>
+                      </Box>
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={modoEdicion ? 9 : 8} align="center" sx={{ py: 4 }}>
+                  No hay datos académicos disponibles
+                </TableCell>
+              </TableRow>
             )}
-          </tr>
-        </thead>
-        <tbody>
-          {datosPorSemestre.length > 0 ? (
-            datosPorSemestre.map((fila, idx) => (
-              <tr key={idx}>
-                <td className="p-2 text-center border">
-                  {modoEdicion ? (
-                    <input
-                      type="number"
-                      value={fila.año ?? ''}
-                      onChange={(e) => handleChangeFila(idx, 'año', e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-300 rounded text-center"
-                    />
-                  ) : (fila.año || '-')}
-                </td>
-                <td className="p-2 text-center border">
-                  {modoEdicion ? (
-                    <input
-                      type="number"
-                      value={fila.semestre ?? ''}
-                      onChange={(e) => handleChangeFila(idx, 'semestre', e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-300 rounded text-center"
-                    />
-                  ) : (fila.semestre || '-')}
-                </td>
-                <td className="p-2 text-center border">
-                  {modoEdicion ? (
-                    <input
-                      type="number"
-                      value={fila.nSemestreCarrera}
-                      onChange={(e) => handleChangeFila(idx, 'nSemestreCarrera', e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-300 rounded text-center"
-                    />
-                  ) : fila.nSemestreCarrera}
-                </td>
-                <td className="p-2 text-center border">
-                  {modoEdicion ? (
-                    <input
-                      type="number"
-                      value={fila.ramosAprobados}
-                      onChange={(e) => handleChangeFila(idx, 'ramosAprobados', e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-300 rounded text-center"
-                    />
-                  ) : fila.ramosAprobados}
-                </td>
-                <td className="p-2 text-center border">
-                  {modoEdicion ? (
-                    <input
-                      type="number"
-                      value={fila.ramosReprobados}
-                      onChange={(e) => handleChangeFila(idx, 'ramosReprobados', e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-300 rounded text-center"
-                    />
-                  ) : fila.ramosReprobados}
-                </td>
-                <td className="p-2 text-center border">
-                  {modoEdicion ? (
-                    <input
-                      type="number"
-                      value={fila.ramosEliminados}
-                      onChange={(e) => handleChangeFila(idx, 'ramosEliminados', e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-300 rounded text-center"
-                    />
-                  ) : fila.ramosEliminados}
-                </td>
-                <td className="p-2 text-center border">
-                  {modoEdicion ? (
-                    <input
-                      type="number"
-                      value={fila.totalRamos}
-                      readOnly
-                      className="w-full px-2 py-1 border border-gray-300 rounded text-center bg-gray-100"
-                    />
-                  ) : fila.totalRamos}
-                </td>
-                <td className="p-2 border">
-                  {modoEdicion ? (
-                    <input
-                      type="text"
-                      value={fila.observaciones}
-                      onChange={(e) => handleChangeFila(idx, 'observaciones', e.target.value)}
-                      placeholder="Observaciones..."
-                      className="w-full px-2 py-1 border border-gray-300 rounded"
-                    />
-                  ) : (fila.observaciones || '')}
-                </td>
-                {modoEdicion && (
-                  <td className="p-2 text-center border">
-                    <button
-                      type="button"
-                      onClick={() => handleGuardarFila(idx)}
-                      disabled={accionFila?.index === idx}
-                      className="px-3 py-1 bg-[var(--color-turquoise)] text-white rounded hover:opacity-90 disabled:opacity-60 mr-2"
-                    >
-                      {accionFila?.index === idx && accionFila?.tipo === 'guardar' ? 'Guardando...' : 'Guardar'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleEliminarFila(idx)}
-                      disabled={accionFila?.index === idx}
-                      className="px-3 py-1 bg-red-600 text-white rounded hover:opacity-90 disabled:opacity-60"
-                    >
-                      {accionFila?.index === idx && accionFila?.tipo === 'eliminar' ? 'Eliminando...' : 'Eliminar'}
-                    </button>
-                  </td>
-                )}
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={8} className="p-4 text-center text-gray-500 border">
-                No hay datos académicos disponibles
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+          </TableBody>
+        </Table>
+      </TableContainer>
+
       {(mensajeGlobal || errorGlobal) && (
-        <div className="mt-3 text-sm">
-          {mensajeGlobal && <div className="text-green-700 font-medium">{mensajeGlobal}</div>}
-          {errorGlobal && <div className="text-red-700 font-medium">{errorGlobal}</div>}
-        </div>
+        <Box sx={{ mt: 3 }}>
+          {mensajeGlobal && <Typography color="success.main">{mensajeGlobal}</Typography>}
+          {errorGlobal && <Typography color="error.main">{errorGlobal}</Typography>}
+        </Box>
       )}
-    </div>
+    </DetailSectionWrapper>
   );
 };

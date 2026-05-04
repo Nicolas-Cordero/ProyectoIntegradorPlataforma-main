@@ -7,6 +7,8 @@ import { authService } from '../../../../services/authService';
 import { logger } from '../../../../config';
 import type { LoginCredentials } from '../../../../types';
 import { LoginFormContainer } from '../shared';
+import { PasswordRecoveryModal } from '../password-recovery';
+import logoFundacion from '../../../../assets/logos/logo-fundacion.png';
 
 export function LoginForm() {
   const [credentials, setCredentials] = useState<LoginCredentials>({
@@ -15,6 +17,7 @@ export function LoginForm() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [showPasswordRecovery, setShowPasswordRecovery] = useState(false);
 
   const navigate = useNavigate();
 
@@ -68,9 +71,24 @@ export function LoginForm() {
 
   return (
     <LoginFormContainer
-      title="Iniciar Sesión"
-      subtitle="Plataforma de Gestión - Fundación"
-      icon={<LoginIcon sx={{ fontSize: 64, color: '#667eea' }} />}
+      title="Bienvenido"
+      subtitle="Plataforma de Gestión Educativa - Fundación Carmen Goudie"
+      icon={
+        <Box
+          component="img"
+          src={logoFundacion}
+          alt="Logo Fundación Carmen Goudie"
+          sx={{
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            border: '3px solid rgba(238, 179, 93, 0.3)',
+            p: 1,
+            background: 'rgba(255, 255, 255, 0.9)',
+            boxShadow: '0 8px 24px rgba(238, 179, 93, 0.2)'
+          }}
+        />
+      }
     >
       <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
         <Input
@@ -150,7 +168,7 @@ export function LoginForm() {
             component="button"
             type="button"
             variant="body2"
-            onClick={() => navigate('/solicitar-recuperacion')}
+            onClick={() => setShowPasswordRecovery(true)}
             sx={{
               color: '#667eea',
               textDecoration: 'underline',
@@ -182,6 +200,15 @@ export function LoginForm() {
           </Link>
         </Stack>
       </Box>
+
+      <PasswordRecoveryModal
+        abierto={showPasswordRecovery}
+        onCerrar={() => setShowPasswordRecovery(false)}
+        onSuccess={() => {
+          setError('');
+          // Optionally show a success message or redirect
+        }}
+      />
     </LoginFormContainer>
   );
 }

@@ -16,6 +16,7 @@ import {
   Chip
 } from '@mui/material';
 import { Input, Alert } from '../components/ui';
+import { PasswordChangeModal } from '../components/features/auth/password-recovery';
 import {
   Edit as EditIcon,
   Save as SaveIcon,
@@ -40,11 +41,6 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
   const [showChangePassword, setShowChangePassword] = useState(false);
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
 
   useEffect(() => {
     loadUserData();
@@ -67,7 +63,8 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
       const mappedProfileData = {
         ...profileData,
         nombres: (profileData as any).nombre || profileData.nombres,
-        apellidos: (profileData as any).apellido || profileData.apellidos
+        apellidos: (profileData as any).apellido || profileData.apellidos,
+        role: (profileData as any).rol || profileData.role,
       };
       
       setUser(mappedProfileData);
@@ -172,49 +169,6 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
         [field]: value
       });
     }
-  };
-
-  const handleChangePassword = async () => {
-    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-      setSnackbarMessage('Por favor completa todos los campos');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      return;
-    }
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setSnackbarMessage('Las contraseñas no coinciden');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      return;
-    }
-
-    if (passwordData.newPassword.length < 6) {
-      setSnackbarMessage('La nueva contraseña debe tener al menos 6 caracteres');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      return;
-    }
-
-    try {
-      await userService.changeOwnPassword(passwordData.currentPassword, passwordData.newPassword);
-      setSnackbarMessage('Contraseña actualizada exitosamente');
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
-      setShowChangePassword(false);
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    } catch (error: any) {
-      console.error('Error al cambiar contraseña:', error);
-      const errorMessage = error.message || 'Error al cambiar contraseña';
-      setSnackbarMessage(`Error: ${errorMessage}`);
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-    }
-  };
-
-  const handleCancelPasswordChange = () => {
-    setShowChangePassword(false);
-    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
   };
 
   const getRoleDisplayName = (role: string) => {
@@ -455,63 +409,14 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
               Cambiar Contraseña
             </Typography>
 
-            {!showChangePassword ? (
-              <Button
-                onClick={() => setShowChangePassword(true)}
-                variant="outlined"
-                color="primary"
-                startIcon={<LockIcon />}
-              >
-                Cambiar Contraseña
-              </Button>
-            ) : (
-              <>
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <Input
-                      etiqueta="Contraseña actual"
-                      tipo="password"
-                      valor={passwordData.currentPassword}
-                      onChange={(v) => setPasswordData({ ...passwordData, currentPassword: v })}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Input
-                      etiqueta="Nueva contraseña"
-                      tipo="password"
-                      valor={passwordData.newPassword}
-                      onChange={(v) => setPasswordData({ ...passwordData, newPassword: v })}
-                      ayuda="Mínimo 6 caracteres"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Input
-                      etiqueta="Confirmar nueva contraseña"
-                      tipo="password"
-                      valor={passwordData.confirmPassword}
-                      onChange={(v) => setPasswordData({ ...passwordData, confirmPassword: v })}
-                    />
-                  </Grid>
-                </Grid>
-
-                <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-                  <Button
-                    onClick={handleChangePassword}
-                    variant="contained"
-                    color="primary"
-                  >
-                    Cambiar Contraseña
-                  </Button>
-                  <Button
-                    onClick={handleCancelPasswordChange}
-                    variant="outlined"
-                    color="secondary"
-                  >
-                    Cancelar
-                  </Button>
-                </Box>
-              </>
-            )}
+            <Button
+              onClick={() => setShowChangePassword(true)}
+              variant="outlined"
+              color="primary"
+              startIcon={<LockIcon />}
+            >
+              Cambiar Contraseña
+            </Button>
           </CardContent>
         </Card>
 
@@ -563,6 +468,16 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
             onCerrar={() => setSnackbarOpen(false)}
           />
         )}
+
+        <PasswordChangeModal
+          abierto={showChangePassword}
+          onCerrar={() => setShowChangePassword(false)}
+          onSuccess={() => {
+            setSnackbarMessage('Contraseña actualizada exitosamente');
+            setSnackbarSeverity('success');
+            setSnackbarOpen(true);
+          }}
+        />
       </Container>
     </Box>
   );

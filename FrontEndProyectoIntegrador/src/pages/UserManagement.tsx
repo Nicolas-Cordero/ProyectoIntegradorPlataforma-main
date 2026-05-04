@@ -24,6 +24,7 @@ import {
   useTheme
 } from '@mui/material';
 import { Modal, Input, Select, Button, Alert } from '../components/ui';
+import { PasswordChangeModal } from '../components/features/auth/password-recovery';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -56,9 +57,8 @@ export const UserManagement: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editingUser, setEditingUser] = useState<Usuario | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
-  const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
-  const [passwordUser, setPasswordUser] = useState<Usuario | null>(null);
-  const [newPassword, setNewPassword] = useState('');
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [passwordChangeUser, setPasswordChangeUser] = useState<Usuario | null>(null);
   const [usuario, setUsuario] = useState<any>(null);
   
   const [formData, setFormData] = useState({
@@ -127,7 +127,13 @@ export const UserManagement: React.FC = () => {
   const loadUsers = async () => {
     try {
       const usersData = await userService.getAll();
-      setUsers(usersData);
+      const mappedUsers = (usersData as any[]).map((user) => ({
+        ...user,
+        role: user.rol || user.role || 'visita',
+        nombres: user.nombre || user.nombres || '',
+        apellidos: user.apellido || user.apellidos || '',
+      }));
+      setUsers(mappedUsers);
     } catch (error) {
       console.error('Error al cargar usuarios:', error);
       setSnackbar({ open: true, message: 'Error al cargar usuarios', severity: 'error' });
@@ -140,7 +146,7 @@ export const UserManagement: React.FC = () => {
     } else if (tabValue === 'tutores') {
       setFilteredUsers(users.filter(u => u.role === 'tutor'));
     } else {
-      setFilteredUsers(users.filter(u => u.role === 'invitado')); 
+      setFilteredUsers(users.filter(u => u.role === 'visita' || u.role === 'invitado'));
     }
   };
 
@@ -154,7 +160,7 @@ export const UserManagement: React.FC = () => {
         password: '',
         rut: user.rut || '',
         telefono: user.telefono || '',
-        rol: user.role as 'tutor' | 'visita'
+        rol: (user as any).rol || user.role as 'tutor' | 'visita'
       });
     } else {
       setEditingUser(null);
@@ -246,39 +252,6 @@ export const UserManagement: React.FC = () => {
         await loadUsers(); // Recargar lista
       }
     });
-  };
-
-  const handleOpenPasswordDialog = (user: Usuario) => {
-    setPasswordUser(user);
-    setNewPassword('');
-    setOpenPasswordDialog(true);
-  };
-
-  const handleClosePasswordDialog = () => {
-    setOpenPasswordDialog(false);
-    setPasswordUser(null);
-    setNewPassword('');
-  };
-
-  const handleChangePassword = async () => {
-    if (!passwordUser || !newPassword.trim()) {
-      setSnackbar({ open: true, message: 'Por favor ingresa una nueva contraseña', severity: 'error' });
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setSnackbar({ open: true, message: 'La contraseña debe tener al menos 6 caracteres', severity: 'error' });
-      return;
-    }
-
-    try {
-      await userService.changeUserPassword(passwordUser.id!, newPassword);
-      setSnackbar({ open: true, message: 'Contraseña actualizada exitosamente', severity: 'success' });
-      handleClosePasswordDialog();
-    } catch (err) {
-      console.error('Error al cambiar contraseña:', err);
-      setSnackbar({ open: true, message: 'Error al cambiar la contraseña', severity: 'error' });
-    }
   };
 
   const getRoleColor = (role: string): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' => {
@@ -594,7 +567,7 @@ export const UserManagement: React.FC = () => {
               iconPosition="start"
             />
             <Tab 
-              label={`Visitas (${users.filter(u => u.role === 'invitado').length})`}
+              label={`Visitas (${users.filter(u => u.role === 'visita' || u.role === 'invitado').length})`}
               value="visitas"
               icon={<VisibilityIcon />}
               iconPosition="start"
@@ -714,7 +687,10 @@ export const UserManagement: React.FC = () => {
                       <IconButton 
                         size="small" 
                         color="warning"
-                        onClick={() => handleOpenPasswordDialog(user)}
+                        onClick={() => {
+                          setPasswordChangeUser(user);
+                          setShowPasswordChange(true);
+                        }}
                         title="Cambiar contraseña"
                       >
                         <LockIcon fontSize="small" />
@@ -813,37 +789,20 @@ export const UserManagement: React.FC = () => {
       </Modal>
 
       {/* Modal para Cambiar Contraseña */}
-      <Modal
-        titulo={`Cambiar Contraseña - ${passwordUser?.nombres} ${passwordUser?.apellidos}`}
-        abierto={openPasswordDialog}
-        onCerrar={handleClosePasswordDialog}
-        tamanio="sm"
-      >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <Input
-            etiqueta="Nueva Contraseña"
-            tipo="password"
-            valor={newPassword}
-            onChange={setNewPassword}
-            placeholder="Mínimo 6 caracteres"
-            ayuda="La contraseña debe tener al menos 6 caracteres"
-            requerido
-          />
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
-            <Button variante="outline" tamano="md" onClick={handleClosePasswordDialog}>
-              Cancelar
-            </Button>
-            <Button
-              variante="primary"
-              tamano="md"
-              onClick={handleChangePassword}
-              deshabilitado={!newPassword.trim() || newPassword.length < 6}
-            >
-              Cambiar Contraseña
-            </Button>
-          </Box>
-        </Box>
-      </Modal>
+      <PasswordChangeModal
+        abierto={showPasswordChange}
+        onCerrar={() => {
+          setShowPasswordChange(false);
+          setPasswordChangeUser(null);
+        }}
+        userId={passwordChangeUser?.id}
+        requireCurrentPassword={false}
+        onSuccess={() => {
+          setSnackbar({ open: true, message: 'Contraseña cambiada exitosamente', severity: 'success' });
+          setShowPasswordChange(false);
+          setPasswordChangeUser(null);
+        }}
+      />
 
       {/* Snackbar */}
       {snackbar.open && (

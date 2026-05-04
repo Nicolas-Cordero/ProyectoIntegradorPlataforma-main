@@ -1,14 +1,12 @@
 import { 
-  Box, 
   Table, 
   TableBody, 
   TableCell, 
   TableContainer, 
   TableHead, 
-  TableRow,
-  Paper 
+  TableRow 
 } from '@mui/material';
-import { FamilyMemberRow } from './components';
+import { FamilyMemberRow, DetailSectionWrapper, detailSectionStyles } from './components';
 import type { Estudiante } from '../../../types';
 
 interface FamilyInfoSectionProps {
@@ -75,46 +73,18 @@ export function FamilyInfoSection({
     return '';
   };
   return (
-    <Box>
-      <Box 
-        sx={{ 
-          bgcolor: 'primary.main', 
-          color: 'primary.contrastText', 
-          textAlign: 'center', 
-          fontWeight: 700, 
-          fontSize: '1.25rem', 
-          py: 1.5, 
-          mb: 3,
-          borderRadius: 1
-        }}
-      >
-        Información Familiar
-      </Box>
-      
-      <TableContainer component={Paper} elevation={2}>
+    <DetailSectionWrapper title="Información Familiar">
+      <TableContainer sx={detailSectionStyles.tableContainer}>
         <Table 
-          sx={{ minWidth: 650 }}
+          sx={detailSectionStyles.table}
           aria-label="Tabla de información familiar del estudiante"
         >
           <TableHead>
             <TableRow>
-              <TableCell 
-                sx={{ 
-                  bgcolor: 'primary.main', 
-                  color: 'primary.contrastText', 
-                  fontWeight: 700,
-                  width: '20%'
-                }}
-              >
+              <TableCell sx={{ fontWeight: 700, width: '20%' }}>
                 Familiar
               </TableCell>
-              <TableCell 
-                sx={{ 
-                  bgcolor: 'primary.main', 
-                  color: 'primary.contrastText', 
-                  fontWeight: 700 
-                }}
-              >
+              <TableCell sx={{ fontWeight: 700 }}>
                 Observaciones
               </TableCell>
             </TableRow>
@@ -181,7 +151,7 @@ export function FamilyInfoSection({
           </TableBody>
       </Table>
       </TableContainer>
-    </Box>
+    </DetailSectionWrapper>
   );
 };
 

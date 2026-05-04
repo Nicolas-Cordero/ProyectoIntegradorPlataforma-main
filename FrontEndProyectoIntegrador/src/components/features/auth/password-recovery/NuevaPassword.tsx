@@ -68,7 +68,22 @@ export const NuevaPassword: React.FC = () => {
     <LoginFormContainer
       title="Nueva Contraseña"
       subtitle="Ingresa tu nueva contraseña"
-      icon={<LockIcon sx={{ fontSize: 64, color: '#667eea' }} />}
+      icon={
+        <Box
+          sx={{
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #C7654F 0%, #65B39B 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 8px 24px rgba(101, 179, 155, 0.3)'
+          }}
+        >
+          <LockIcon sx={{ fontSize: 40, color: 'white' }} />
+        </Box>
+      }
     >
       <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
         <TextField

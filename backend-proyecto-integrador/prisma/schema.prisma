@@ -197,7 +197,6 @@ model carrera {
 
 model ramo {
   id              Int @id @default(autoincrement())
-  nrc             String
   semestre_id     Int
   rut_estudiante  String
   codigo_carrera  Int
@@ -212,7 +211,7 @@ model ramo {
 
   notas nota[]
 
-  @@unique([nrc, semestre_id, rut_estudiante, codigo_carrera])
+  @@unique([nombre, semestre_id, rut_estudiante, codigo_carrera])
 }
 
 

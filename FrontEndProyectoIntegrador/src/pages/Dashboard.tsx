@@ -382,7 +382,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
       <DashboardNavbar usuario={usuario} onLogout={handleLogout} />
 
       {/* Barra de Navegación con Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'white' }}>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'white', display: 'flex', justifyContent: 'center' }}>
         <Tabs 
           value={activeTab} 
           onChange={(_, newValue) => setActiveTab(newValue)}
@@ -390,6 +390,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
           scrollButtons="auto"
           sx={{ 
             px: 3,
+            display: 'flex',
+            justifyContent: { xs: 'flex-start', md: 'center' },
             '& .MuiTab-root': {
               minWidth: 120,
               fontWeight: 500,
@@ -397,18 +399,38 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
             }
           }}
         >
-          <Tab label="Estadísticas Generales" />
-          <Tab label="Generaciones" />
           <Tab label="Estudiantes" />
-          <Tab label="Perfil" />
+          <Tab label="Generaciones" />
           {usuario?.role === 'admin' && <Tab label="Gestión de Usuarios" />}
+          <Tab label="Estadísticas Generales" />
+          <Tab label="Perfil" />
         </Tabs>
       </Box>
 
       {/* Contenido Principal */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-8 flex-1 w-full">
 
+        {/* Tab 0: Estudiantes */}
         {activeTab === 0 && (
+          <EstudiantesSection />
+        )}
+
+        {/* Tab 1: Generaciones */}
+        {activeTab === 1 && (
+          <GenerationsGrid
+            generaciones={generacionesOrdenadas}
+            onAddEstudiante={handleAddEstudianteToGeneracion}
+            onCreateGeneracion={() => setOpenCreateGeneracion(true)}
+          />
+        )}
+
+        {/* Tab 2: Gestión de Usuarios (solo admin) */}
+        {activeTab === 2 && usuario?.role === 'admin' && (
+          <UserManagement />
+        )}
+
+        {/* Tab 3 o 2 (si no admin): Estadísticas Generales */}
+        {((usuario?.role === 'admin' && activeTab === 3) || (usuario?.role !== 'admin' && activeTab === 2)) && (
           <>
             {/* Estadísticas + Filtros Layout */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -427,7 +449,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
                   label="Total Estudiantes" 
                   value={totalEstudiantes}
                   accentColor="#f9b150"
-                  onClick={() => setActiveTab(2)}
+                  onClick={() => setActiveTab(0)}
                   typingStartDelayMs={60}
                 />
                 <StatCard 
@@ -435,7 +457,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
                   label="Estudiantes Activos" 
                   value={totalActivos}
                   accentColor="#43b59a"
-                  onClick={() => setActiveTab(2)}
+                  onClick={() => setActiveTab(0)}
                   typingStartDelayMs={69}
                 />
               </div>
@@ -443,24 +465,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
           </>
         )}
 
-        {(activeTab === 1) && (
-          <GenerationsGrid
-            generaciones  ={generacionesOrdenadas}
-            onAddEstudiante={handleAddEstudianteToGeneracion}
-            onCreateGeneracion={() => setOpenCreateGeneracion(true)}
-          />
-        )}
-
-        {activeTab === 2 && (
-          <EstudiantesSection />
-        )}
-
-        {activeTab === 3 && (
+        {/* Tab 4 o 3 (si no admin): Perfil */}
+        {((usuario?.role === 'admin' && activeTab === 4) || (usuario?.role !== 'admin' && activeTab === 3)) && (
           <UserProfile />
-        )}
-
-        {activeTab === 4 && usuario?.role === 'admin' && (
-          <UserManagement />
         )}
       </div>
 

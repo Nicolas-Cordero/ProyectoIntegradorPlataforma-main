@@ -1,11 +1,9 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, estadisticasService } from '../services';
 import { estudianteService } from '../services';
 import { logger } from '../config';
 import { Spinner, ErrorMessage, StatCard } from '../components/ui';
-import { GradientButton } from '../components/common/GradientButton';
 import logoFundacionFooter from '../assets/logos/logo-fundacion.png';
 import marcoIzquierdo from '../assets/frames/marco-izquierda.svg';
 import marcoDerecho from '../assets/frames/mardo-derecha.svg';
@@ -13,15 +11,17 @@ import booksIcon from '../assets/icons/books.ico';
 import studentsIcon from '../assets/icons/students.ico';
 import activeStudentIcon from '../assets/icons/active-student.ico';
 import { DashboardParticles } from '../components/features/dashboard/DashboardParticles';
-import { TypingText } from '../components/common/TypingText';
 import { 
-  DashboardNavbar, 
-  FilterPanel, 
-  GenerationsGrid,
+  DashboardNavbar,
   CreateGeneracionModal,
-  CreateEstudianteModal
+  CreateEstudianteModal,
+  GenerationsGrid
 } from '../components/features/dashboard';
 import type { Estudiante, EstadisticasAdmin } from '../types';
+import { Box, Tabs, Tab } from '@mui/material';
+import { UserProfile } from './UserProfile';
+import { UserManagement } from './UserManagement';
+import { EstudiantesSection } from './EstudiantesSection';
 
 interface DashboardProps {
   onAuthChange?: (authenticated: boolean) => void;
@@ -37,7 +37,6 @@ interface GeneracionCalculada {
 
 export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
   const navigate = useNavigate();
-  const generationsSectionRef = useRef<HTMLDivElement>(null);
   const [usuario, setUsuario] = useState<any>(null);
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<'todas' | 'activas' | 'finalizadas'>('todas');
@@ -46,6 +45,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
   const [estadisticas, setEstadisticas] = useState<EstadisticasAdmin | null>(null);
   const [generaciones, setGeneraciones] = useState<GeneracionCalculada[]>([]);
   const [generacionesCreadas, setGeneracionesCreadas] = useState<number[]>([]);
+  const [allStudents, setAllStudents] = useState<Estudiante[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -53,6 +53,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
   const [openCreateGeneracion, setOpenCreateGeneracion] = useState(false);
   const [openCreateEstudiante, setOpenCreateEstudiante] = useState(false);
   const [selectedGeneracion, setSelectedGeneracion] = useState<number | null>(null);
+
+  // Estado para la tab activa
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     // Cargar generaciones creadas del localStorage
@@ -83,6 +86,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
             estadisticasService.getDashboard()
           ]);
           setEstadisticas(estadisticasData);
+          setAllStudents(estudiantesData);
           
           console.log('📊 Estudiantes cargados del backend:', {
             total: estudiantesData.length,
@@ -254,13 +258,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
     setOpenCreateEstudiante(true);
   };
 
-  const handleScrollToGeneraciones = () => {
-    generationsSectionRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
-  };
-
   const handleEstudianteCreated = async () => {
     // Recargar datos después de crear estudiante
     console.log('🔄 Recargando datos del dashboard después de crear estudiante...');
@@ -271,6 +268,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
         estadisticasService.getDashboard()
       ]);
       setEstadisticas(estadisticasData);
+      setAllStudents(estudiantesData);
       
       // Agregar automáticamente a generaciones creadas cualquier generación nueva que aparezca en los estudiantes
       const generatecionesDesdeEstudiantes = estudiantesData
@@ -383,117 +381,87 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
 
       <DashboardNavbar usuario={usuario} onLogout={handleLogout} />
 
+      {/* Barra de Navegación con Tabs */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'white' }}>
+        <Tabs 
+          value={activeTab} 
+          onChange={(_, newValue) => setActiveTab(newValue)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ 
+            px: 3,
+            '& .MuiTab-root': {
+              minWidth: 120,
+              fontWeight: 500,
+              textTransform: 'none'
+            }
+          }}
+        >
+          <Tab label="Estadísticas Generales" />
+          <Tab label="Generaciones" />
+          <Tab label="Estudiantes" />
+          <Tab label="Perfil" />
+          {usuario?.role === 'admin' && <Tab label="Gestión de Usuarios" />}
+        </Tabs>
+      </Box>
+
       {/* Contenido Principal */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-8 flex-1 w-full">
-        {/* Header */}
-        <div className="mb-8">
-          <TypingText
-            component="h2"
-            text="Dashboard Principal"
-            startDelayMs={0}
-            charDelayMs={1}
-            sx={{
-              display: 'block',
-              fontSize: '1.875rem',
-              fontWeight: 700,
-              marginBottom: '0.5rem',
-              color: '#1f2937',
-              textShadow: '0 2px 6px rgba(0, 0, 0, 0.16), 0 0 1px rgba(0, 0, 0, 0.08)',
-              letterSpacing: '-0.02em',
-            }}
-          />
-          <TypingText
-            component="p"
-            text="Gestión de estudiantes por generaciones"
-            startDelayMs={32}
-            charDelayMs={1}
-            sx={{
-              display: 'block',
-              color: '#5b6472',
-              textShadow: '0 1px 2px rgba(255, 255, 255, 0.28), 0 1px 3px rgba(0, 0, 0, 0.08)',
-              fontWeight: 500,
-              margin: 0,
-            }}
-          />
-        </div>
 
-        {/* Estadísticas + Filtros Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Columna Izquierda: Stat Cards Apiladas */}
-          <div className="flex flex-col gap-4">
-            <StatCard 
-              icon={booksIcon}
-              label="Total Generaciones" 
-              value={generaciones.length}
-              accentColor="#d55e48"
-              onClick={handleScrollToGeneraciones}
-              typingStartDelayMs={51}
-            />
-            <StatCard 
-              icon={studentsIcon}
-              label="Total Estudiantes" 
-              value={totalEstudiantes}
-              accentColor="#f9b150"
-              onClick={() => navigate('/admin/usuarios')}
-              typingStartDelayMs={60}
-            />
-            <StatCard 
-              icon={activeStudentIcon}
-              label="Estudiantes Activos" 
-              value={totalActivos}
-              accentColor="#43b59a"
-              onClick={() => navigate('/admin/usuarios')}
-              typingStartDelayMs={69}
-            />
-          </div>
+        {activeTab === 0 && (
+          <>
+            {/* Estadísticas + Filtros Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* Columna Izquierda: Stat Cards Apiladas */}
+              <div className="flex flex-col gap-4">
+                <StatCard 
+                  icon={booksIcon}
+                  label="Total Generaciones" 
+                  value={generaciones.length}
+                  accentColor="#d55e48"
+                  onClick={() => setActiveTab(1)}
+                  typingStartDelayMs={51}
+                />
+                <StatCard 
+                  icon={studentsIcon}
+                  label="Total Estudiantes" 
+                  value={totalEstudiantes}
+                  accentColor="#f9b150"
+                  onClick={() => setActiveTab(2)}
+                  typingStartDelayMs={60}
+                />
+                <StatCard 
+                  icon={activeStudentIcon}
+                  label="Estudiantes Activos" 
+                  value={totalActivos}
+                  accentColor="#43b59a"
+                  onClick={() => setActiveTab(2)}
+                  typingStartDelayMs={69}
+                />
+              </div>
+            </div>
+          </>
+        )}
 
-          {/* Columna Derecha: Filtro y Búsqueda */}
-          <div>
-            <FilterPanel
-              busqueda={busqueda}
-              filtroEstado={filtroEstado}
-              ordenarPor={ordenarPor}
-              resultadosCount={generacionesOrdenadas.length}
-              onBusquedaChange={setBusqueda}
-              onFiltroEstadoChange={setFiltroEstado}
-              onOrdenarPorChange={setOrdenarPor}
-              onLimpiarFiltros={limpiarFiltros}
-            />
-          </div>
-        </div>
-
-        {/* Generaciones Grid */}
-        <div className="mb-8" ref={generationsSectionRef}>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-            <TypingText
-              component="h3"
-              text="Generaciones"
-              startDelayMs={80}
-              charDelayMs={1}
-              sx={{
-                display: 'block',
-                fontSize: '1.5rem',
-                fontWeight: 700,
-                color: '#111827',
-                textShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
-              }}
-            />
-            <GradientButton
-              className="gradient-subtle-hover"
-              onClick={() => setOpenCreateGeneracion(true)}
-              gradientVariant={2}
-              sx={{ width: { xs: '100%', sm: 'auto' }, minWidth: { xs: '100%', sm: 240, md: 280 } }}
-            >
-              + Nueva Generación
-            </GradientButton>
-          </div>
-
-          <GenerationsGrid 
-            generaciones={generacionesOrdenadas}
-            onLimpiarFiltros={limpiarFiltros}
+        {(activeTab === 1) && (
+          <GenerationsGrid
+            generaciones  ={generacionesOrdenadas}
             onAddEstudiante={handleAddEstudianteToGeneracion}
+            onCreateGeneracion={() => setOpenCreateGeneracion(true)}
           />
-        </div>
+        )}
+
+        {activeTab === 2 && (
+          <EstudiantesSection />
+        )}
+
+        {activeTab === 3 && (
+          <UserProfile />
+        )}
+
+        {activeTab === 4 && usuario?.role === 'admin' && (
+          <UserManagement />
+        )}
       </div>
 
       <footer

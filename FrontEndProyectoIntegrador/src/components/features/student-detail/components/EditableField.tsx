@@ -24,8 +24,6 @@ export function EditableField({
   onChange,
   options,
   placeholder,
-  maxLength,
-  inputMode,
   readOnly = false,
 }: EditableFieldProps) {
   const displayValue = value || 'Sin definir';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Table, TableBody, TableContainer, Paper } from '@mui/material';
+import {Table, TableBody, TableContainer} from '@mui/material';
 import type { Estudiante } from '../../../types';
 import { DetailSectionWrapper, detailSectionStyles, EditableField, EditableTextarea } from './components';
 import { personalDataConfig, type FieldConfig } from './config/personalDataFields';

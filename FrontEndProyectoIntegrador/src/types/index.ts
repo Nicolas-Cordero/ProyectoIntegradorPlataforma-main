@@ -32,7 +32,7 @@ export interface Usuario {
   apellidos?: string;
   rut?: string;
   email: string;
-  role?: 'admin' | 'academico' | 'estudiante' | 'tutor' | 'invitado';
+  role?: 'admin' | 'academico' | 'estudiante' | 'tutor' | 'invitado' | 'visita';
   password?: string;
   telefono?: string;
   direccion?: string;

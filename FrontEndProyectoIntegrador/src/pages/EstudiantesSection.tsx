@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Estudiante } from '../types';
 import { StudentsTable} from '../components';
 import { useConfirmDialog } from '../components/ui';
 import type { UIStudent } from './GeneracionView';
@@ -23,6 +22,37 @@ export const EstudiantesSection: React.FC<EstudiantesSectionProps> = () => {
       setSortDirection('asc');
     }
   };
+
+  const sortedStudents = useMemo(() => {
+    return [...students].sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortField) {
+        case 'apellidos':
+          comparison = (a.nombre || '').localeCompare(b.nombre || '');
+          break;
+
+        case 'carrera':
+          comparison = (a.carrera || '').localeCompare(b.carrera || '');
+          break;
+
+        case 'estado':
+          comparison = (a.estado || '').localeCompare(b.estado || '');
+          break;
+
+        case 'promedio':
+          comparison = (Number(a.promedio) || 0) - (Number(b.promedio) || 0);
+          break;
+
+        default:
+          return 0;
+      }
+
+      return sortDirection === 'asc'
+        ? comparison
+        : -comparison;
+    });
+  }, [students, sortField, sortDirection]);
 
   const handleVerDetalles = (studentId: string | number) => {
     navigate(`/estudiante/${studentId}`);
@@ -60,7 +90,7 @@ export const EstudiantesSection: React.FC<EstudiantesSectionProps> = () => {
     <>
       {/* Lista de Estudiantes */}
       <StudentsTable
-          students={students}
+          students={sortedStudents}
           sortField={sortField}
           sortDirection={sortDirection}
           onSort={handleSort}

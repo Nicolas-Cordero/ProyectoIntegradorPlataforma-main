@@ -11,15 +11,9 @@ import { GenerationHeader, StudentFilterPanel, StudentsTable } from '../componen
 import { CreateEstudianteModal, DashboardNavbar } from '../components/features/dashboard';
 import { daysSince } from '../utils/dateHelpers';
 import type { Estudiante } from '../types';
-import { Box, AppBar, Toolbar, Button, Chip, useMediaQuery, useTheme } from '@mui/material';
-import {
-  AccountCircle as AccountCircleIcon,
-  Logout as LogoutIcon
-} from '@mui/icons-material';
-import { TypingText } from '../components/common/TypingText';
+import {useMediaQuery, useTheme } from '@mui/material';
 import { useConfirmDialog } from '../components/ui';
 import { DashboardParticles } from '../components/features/dashboard/DashboardParticles';
-import logoFundacion from '../assets/logos/logo.svg';
 import marcoIzquierdo from '../assets/frames/marco-izquierda.svg';
 import marcoDerecho from '../assets/frames/mardo-derecha.svg';
 import { authService } from '../services';

@@ -173,15 +173,13 @@ export const EstudiantesSection: React.FC<EstudiantesSectionProps> = () => {
     }, []);
 
   const filteredAndSortedStudents = useMemo(() => {
-    let filtered = students.filter(async student => {
-      console.log("Filtrando estudiante:", student);
+    let filtered = students.filter(student => {
       const nombre = student.nombre || student.nombres || '';
       const apellido = student.apellidos || '';
       const rut = student.rut || '';
       const carrera = student.carrera || student.institucion?.carrera_especialidad || '';
       const id = String((student as any).id_estudiante || student.id || '');
-      console.log(await estudianteService.getById(id));
-      const estado = student.estado || getEstudianteStatus(await estudianteService.getById(id)) || 'Activo';
+      const estado = student.estado || 'Activo';
       
       const matchesSearch = 
         nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||

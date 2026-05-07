@@ -435,7 +435,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
             {/* Estadísticas + Filtros Layout */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {/* Columna Izquierda: Stat Cards Apiladas */}
-              <div className="flex flex-col gap-4">
+              <div className="md:col-span-2 flex flex-col gap-4">
                 <StatCard 
                   icon={booksIcon}
                   label="Total Generaciones" 

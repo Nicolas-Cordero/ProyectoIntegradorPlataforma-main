@@ -12,8 +12,8 @@ datasource db {
 
 enum EstadoBeneficio {
   ACTIVO
-  CONGELADO
-  FIRMADO
+  SUSPENDIDO
+  FINALIZADO
   RECHAZADO
   EN_TRAMITE
 }
@@ -23,33 +23,51 @@ enum EstadoRamo {
   APROBADO
   REPROBADO
   CURSANDO
-  RETIRADO
+  ELIMINADO
 }
 
+
 enum Topico {
+  GENERAL
   ACADEMICO
-  PERSONAL
-  ECONOMICO
+  REL_INTER
   SALUD
-  FAMILIAR
-  OTRO
+  ACTS_EXTRA
 }
 
 enum EstadoEstudiante {
   ACTIVO
   CONDICIONAL
+  ELIMINADO
   SUSPENDIDO
   RETIRADO
-  CONGELADO
   EGRESADO
   TITULADO
 }
+
 
 enum UserRol {
   ADMIN
   TUTOR
   VISITA
   ESTUDIANTE
+}
+
+
+enum TipoBeneficio {
+  ARANCEL
+  MANUTENCION
+}
+
+enum TipoSemestre {
+  REGULAR
+  RECUPERATIVO
+}
+
+enum Genero {
+  MASCULINO
+  FEMENINO
+  NO_BINARIO
 }
 
 
@@ -101,7 +119,7 @@ model beneficio {
   codigo_beneficio Int     @id @default(autoincrement())
   nombre           String  @unique
   proveedor        String
-  tipo             String
+  tipo             TipoBeneficio
   descripcion      String
   monto            Decimal
 
@@ -114,7 +132,7 @@ model semestre {
   semestre_id Int    @id @default(autoincrement())
   year        Int
   semestre    String
-  tipo        String
+  tipo        TipoSemestre
 
   ramos       ramo[]
   entrevistas entrevista[]
@@ -123,16 +141,23 @@ model semestre {
 
 
 model estudiante {
-  rut_estudiante  String  @id
-  nombre          String
-  apellido        String
-  email           String  @unique
-  telefono        String
-  puntaje_paes    Int?
-  generacion      String
-  estado          EstadoEstudiante
-  rbd_liceo       String
-  promedios_media Decimal
+  rut_estudiante   String  @id
+  nombre           String
+  apellido         String
+  email            String  @unique
+  telefono         String
+  generacion       String
+  fecha_nacimiento DateTime
+  direccion        String
+  genero           Genero
+
+  rbd_liceo        String
+  puntaje_paes     Int?
+
+  foto_url         String?
+
+  estado           EstadoEstudiante
+  promedios_media  Decimal @db.Decimal(3,1)
 
   liceo liceo @relation(fields: [rbd_liceo], references: [rbd])
 

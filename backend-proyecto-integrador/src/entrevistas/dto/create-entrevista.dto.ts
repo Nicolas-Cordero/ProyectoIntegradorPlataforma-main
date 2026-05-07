@@ -3,36 +3,9 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
-  IsEnum,
   IsDate,
 } from 'class-validator';
 import { Type} from 'class-transformer';
-import { Topico } from '@prisma/client';
-
-
-
-export class CreateComentarioDto {
-
-  @IsDate()
-  @Type(() => Date)
-  fecha_entrevista!: Date;
-
-  @IsString()
-  @IsNotEmpty()
-  rut_estudiante!: string;
-
-
-  @IsEnum(Topico)
-  @IsNotEmpty()
-  topico!: Topico;
-
-
-  //Será necesario ponerle limite a cada comentario?
-  @IsString()
-  @IsNotEmpty()
-  texto!:string;
-}
-
 
 
 
@@ -44,6 +17,10 @@ export class CreateEntrevistaDto {
   @IsString()
   @IsNotEmpty()
   rut_entrevistador!: string;
+
+  @IsDate()
+  @Type(() => Date)
+  fecha_hora!: Date;
 
   @Type(() => Number)
   @IsNumber()

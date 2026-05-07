@@ -28,6 +28,8 @@ export class EntrevistasController {
   constructor(private readonly entrevistasService: EntrevistasService) {}
 
 
+
+
   //Creación de una entrevista
   @Post()
   async create(
@@ -95,6 +97,10 @@ export class EntrevistasController {
 
 
 
+
+
+
+  //Estos deberian estar en comentarios.
   @Post(':id/textos')
   async addTexto(
     @Param('id') id: string,

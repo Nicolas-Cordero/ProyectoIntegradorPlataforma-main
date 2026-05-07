@@ -23,6 +23,7 @@ import { PeriodoAcademicoModule } from './periodo-academico/periodo-academico.mo
 
 import { PrismaService } from './prisma/prisma.service';
 import { BeneficioEstudianteModule } from './beneficio-estudiante/beneficio-estudiante.module';
+import { ComentarioModule } from './comentario/comentario.module';
 
 @Module({
   imports: [
@@ -33,7 +34,8 @@ import { BeneficioEstudianteModule } from './beneficio-estudiante/beneficio-estu
       envFilePath: ['.env.local', '.env'],
     }),
     AuthModule,
-    BeneficioEstudianteModule
+    BeneficioEstudianteModule,
+    ComentarioModule
 
   ],
   providers: [PrismaService]

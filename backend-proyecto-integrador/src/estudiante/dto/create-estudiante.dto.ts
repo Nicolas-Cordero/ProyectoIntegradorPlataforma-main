@@ -2,67 +2,100 @@ import {
   IsString,
   IsNotEmpty,
   MinLength,
-  IsOptional,
-  IsDateString,
   IsEnum,
-  IsUUID,
   IsNumber,
+  IsDate,
+  Matches,
+  IsEmail,
+  Min,
+  Max,
+  IsOptional,
 } from 'class-validator';
-import { TipoEstudiante } from '../entities/estudiante.entity';
+//import { TipoEstudiante } from hay que crear el enum en el schema
+import { Type } from 'class-transformer';
+import { EstadoEstudiante, Genero } from '@prisma/client';
+
+
 
 export class CreateEstudianteDto {
   // CAMPOS OBLIGATORIOS
   @IsString()
   @IsNotEmpty()
-  @MinLength(2)
-  nombre: string;
+  rut!: string;
+
 
   @IsString()
   @IsNotEmpty()
-  rut: string;
+  @MinLength(2)
+  nombre!: string;
 
-  @IsDateString()
-  fecha_de_nacimiento: string;
-
-  @IsEnum(TipoEstudiante)
-  tipo_de_estudiante: TipoEstudiante;
-
-  // CAMPOS OPCIONALES
-  @IsOptional()
   @IsString()
-  genero?: string;
+  @IsNotEmpty()
+  @MinLength(2)
+  apellido!: string;
 
-  @IsOptional()
+
+  @IsNotEmpty({ message: 'El email es requerido' })
+  @IsEmail({}, { message: 'El email debe ser válido' })
+  email!: string;
+
+
+  @IsNotEmpty({ message: 'El teléfono es requerido' })
+  @Matches(/^\+569\s?\d{4}\s?\d{4}$/, {
+    message: 'Formato inválido. Usa +569 xxxx xxxx o +569xxxxxxxx',
+  })
+  telefono!: string;
+
+
+  @IsNotEmpty()
   @IsString()
-  generacion?: string;
+  generacion!: string;
 
-  @IsOptional()
-  @IsUUID()
-  id_institucion?: string;
 
-  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  @IsNotEmpty()
+  fecha_de_nacimiento!: Date;
+
+
+  @IsNotEmpty()
+  @IsString()
+  direccion!: string;
+
+
+  @IsEnum(Genero)
+  @IsNotEmpty()
+  genero!: Genero;
+
+
+  @IsString()
+  @IsNotEmpty()
+  rbd_liceo!: string;
+
+
+  @Type(() => Number)
   @IsNumber()
-  numero_carrera?: number;
-
   @IsOptional()
-  @IsString()
-  observaciones?: string;
+  puntaje_paes?: number;
 
-  // CAMPOS DE CONTACTO (opcionales, se crearán en informacion_contacto)
+
+  @IsString()
   @IsOptional()
-  @IsString()
-  email?: string;
+  foto_url!: string;
 
-  @IsOptional()
-  @IsString()
-  telefono?: string;
 
-  @IsOptional()
-  @IsString()
-  direccion?: string;
+  @IsNumber({ maxDecimalPlaces: 1 })
+  @Min(1.0)
+  @Max(7.0)
+  promedios_media!: number;
 
-  @IsOptional()
-  @IsString()
-  foto_url?: string;
 
+  @IsEnum(EstadoEstudiante)
+  @IsNotEmpty()
+  estado!: EstadoEstudiante;
+
+
+
+  // @IsEnum(TipoEstudiante)
+  // tipo_de_estudiante: TipoEstudiante;
 }

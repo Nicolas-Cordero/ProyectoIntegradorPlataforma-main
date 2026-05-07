@@ -1,5 +1,5 @@
 import { IsString, IsNotEmpty, MinLength, IsEmail, IsEnum, IsOptional, Matches } from 'class-validator';
-import { UserRole } from '../interfaces/auth.interfaces';
+import { UserRol } from '@prisma/client';
 
 export class LoginDto {
   @IsEmail({}, { message: 'El email debe ser válido' })
@@ -50,11 +50,9 @@ export class RegisterDto {
 
 
   @IsOptional()
-  @IsEnum(UserRole, { message: 'El rol debe ser Admin, Tutor o Visita' })
-  rol!: UserRole;
+  @IsEnum(UserRol, { message: 'El rol debe ser Admin, Tutor o Visita' })
+  rol!: UserRol;
 }
-
-
 
 
 

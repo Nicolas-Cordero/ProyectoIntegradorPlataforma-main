@@ -24,6 +24,7 @@ import { Modal, Input, Select, Button, Alert } from '../components/ui';
 import { PasswordChangeModal } from '../components/features/auth/password-recovery';
 import {
   Add as AddIcon,
+  Clear as ClearIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   SupervisorAccount as TutorIcon,
@@ -260,27 +261,7 @@ export const UserManagement: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#FFFBF0' }}>
-      {/* Marcos de fondo */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
-      >
-        <img
-          src={marcoIzquierdo}
-          alt=""
-          className="absolute left-0 top-0 h-screen w-auto max-w-none opacity-35 select-none hidden md:block"
-        />
-        <img
-          src={marcoDerecho}
-          alt=""
-          className="absolute right-0 top-0 h-screen w-auto max-w-none opacity-35 select-none hidden md:block"
-        />
-      </div>
-
-      {/* Partículas */}
-      <DashboardParticles />
-
+    <Box className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Contenido Principal */}
       <div className="relative z-10 flex-1 max-w-7xl mx-auto px-6 lg:px-8 py-8 w-full">
         {/* Título */}
@@ -303,9 +284,9 @@ export const UserManagement: React.FC = () => {
           </Typography>
         </div>
 
-        {/* Navbar de Tabs estilo Dashboard */}
-        <Paper sx={{ 
-          mb: 6, 
+        <Paper
+        sx={{
+          mb: 6,
           borderRadius: 2,
           background: `
             linear-gradient(135deg, rgba(238, 179, 93, 0.15) 0%, rgba(238, 179, 93, 0.08) 100%),
@@ -314,63 +295,86 @@ export const UserManagement: React.FC = () => {
           backdropFilter: 'blur(10px)',
           border: '1px solid rgba(238, 179, 93, 0.3)',
           boxShadow: '0 8px 32px rgba(238, 179, 93, 0.12)'
-        }}>
-          <Tabs 
-            value={tabValue} 
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: 2
+          }}
+        >
+          {/* Tabs izquierda */}
+          <Tabs
+            value={tabValue}
             onChange={(_, newValue) => setTabValue(newValue)}
-            sx={{ 
+            sx={{
+              flex: 1,
+
               borderBottom: '2px solid',
               borderColor: 'rgba(238, 179, 93, 0.2)',
+
               '& .MuiTab-root': {
                 textTransform: 'none',
                 fontWeight: 600,
                 fontSize: '0.95rem',
                 transition: 'all 0.3s ease',
                 color: 'rgba(31, 41, 55, 0.6)',
+
                 '&.Mui-selected': {
                   color: '#EEB35D',
                   fontWeight: 700
                 },
+
                 '&:hover': {
                   backgroundColor: 'rgba(238, 179, 93, 0.08)',
                   color: 'rgba(238, 179, 93, 0.9)'
                 }
               },
+
               '& .MuiTabs-indicator': {
-                background: 'linear-gradient(135deg, #f9b150 0%, #EEB35D 100%)',
+                background:
+                  'linear-gradient(135deg, #f9b150 0%, #EEB35D 100%)',
                 height: 3,
                 borderRadius: '3px 3px 0 0'
               }
             }}
           >
             <Tab label={`Todos (${users.length})`} value="todos" />
-            <Tab 
-              label={`Tutores (${users.filter(u => u.role === 'tutor').length})`} 
+
+            <Tab
+              label={`Tutores (${users.filter(u => u.role === 'tutor').length})`}
               value="tutores"
               icon={<TutorIcon />}
               iconPosition="start"
             />
-            <Tab 
+
+            <Tab
               label={`Visitas (${users.filter(u => u.role === 'visita' || u.role === 'invitado').length})`}
               value="visitas"
               icon={<VisibilityIcon />}
               iconPosition="start"
             />
           </Tabs>
-        </Paper>
+
+          {/* Botón derecha */}
+          <Box sx={{ ml: 2, flexShrink: 0 }}>
+            <GradientButton
+              fullWidth
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenDialog()}
+              solidColor={'#65B39B'}
+              sx={{ minHeight: { xs: 48, md: 56 } }}
+            >
+              Agregar Estudiante
+            </GradientButton>
+          </Box>
+        </Box>
+      </Paper>
 
         {/* Botón Agregar Usuario */}
-        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'flex-end' }}>
-          <GradientButton
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-            fullWidth={false}
-            gradientVariant={2}
-            sx={{ minHeight: { xs: 40, sm: 48, md: 56 }, minWidth: { xs: 140, sm: 180, md: 240 } }}
-          >
-            Agregar Usuario
-          </GradientButton>
-        </Box>
+        
 
         {/* Table */}
         <TableContainer component={Paper} sx={{ 
@@ -597,7 +601,7 @@ export const UserManagement: React.FC = () => {
         />
       )}
       <ConfirmDialog/>
-    </div>
+    </Box>
   );
 };
 

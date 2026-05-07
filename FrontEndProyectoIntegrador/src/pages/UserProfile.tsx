@@ -213,14 +213,13 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
   return (
     <Box sx={{ 
       minHeight: '100vh', 
-      backgroundColor: '#FFFBF0',
       py: 4
     }}>
       <Container maxWidth="md">
         {/* Header */}
         <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
           <Button 
-            variant="outlined" 
+            variant="contained" 
             onClick={() => navigate('/dashboard')}
             sx={{ minWidth: 'auto', px: 2 }}
           >

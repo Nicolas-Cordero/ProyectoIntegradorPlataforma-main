@@ -178,10 +178,12 @@ export default function GeneracionViewSimple(){
   // Filtrar y ordenar estudiantes
   const filteredAndSortedStudents = useMemo(() => {
     let filtered = students.filter(student => {
+      console.log("Filtrando estudiante:", student);
       const nombre = student.nombre || student.nombres || '';
       const apellido = student.apellidos || '';
       const rut = student.rut || '';
       const carrera = student.carrera || student.institucion?.carrera_especialidad || '';
+      console.log(student.estado);
       const estado = student.estado || 'Activo';
       
       const matchesSearch = 
@@ -269,9 +271,15 @@ export default function GeneracionViewSimple(){
     }
   }, [enrichStudentsWithStats, generationId, id]);
 
+  const user = () => {
+    const currentUser = authService.getCurrentUser();
+    setUsuario(currentUser);
+  }
+
   useEffect(() => {
+    user();
     loadStudents();
-  }, [loadStudents]);
+  }, [user, loadStudents]);
 
   const handleAddStudent = () => {
     setOpenCreateEstudiante(true);

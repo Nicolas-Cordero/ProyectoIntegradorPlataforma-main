@@ -131,7 +131,7 @@ export function GenerationCard({
               fullWidth
               startIcon={<AddIcon />}
               onClick={handleAddEstudiante}
-              solidColor={iconColor}
+              solidColor={'#65B39B'}
               sx={{ minHeight: { xs: 48, md: 56 } }}
             >
               Agregar Estudiante

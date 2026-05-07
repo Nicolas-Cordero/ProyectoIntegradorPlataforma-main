@@ -64,8 +64,8 @@ export function GenerationsGrid({
         startIcon={<PeopleIcon />}
         onClick={onCreateGeneracion}
         fullWidth={false}
-        gradientVariant={1}
-        sx={{ minHeight: { xs: 40, sm: 48, md: 72 }, minWidth: { xs: 100, sm: 150, md: 280 }, fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.875rem' }, flexShrink: 0 }}>
+        solidColor='#65B39B'
+        sx={{ mb: 2, minHeight: { xs: 40, sm: 48, md: 72 }, minWidth: { xs: 100, sm: 150, md: 280 }, fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.875rem' }, flexShrink: 0 }}>
         Crear Nueva Generación
       </GradientButton>
     <Box

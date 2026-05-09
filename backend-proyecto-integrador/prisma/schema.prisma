@@ -70,6 +70,26 @@ enum Genero {
   NO_BINARIO
 }
 
+enum Parentesco {
+  PADRE
+  MADRE
+  ABUELO
+  ABUELA
+  HERMANO
+  HERMANA
+  TIO
+  TIA
+  PRIMO
+  PRIMA
+  OTRO
+}
+
+enum ViaAcceso {
+  ESPECIAL
+  REGULAR
+  PACE
+}
+
 
 
 model usuario {
@@ -97,7 +117,7 @@ model usuario {
 model universidad {
   codigo_universidad Int    @id @default(autoincrement())
   nombre             String @unique
-  comuna             Int
+  comuna             String
 
   carreras carrera[]
 }
@@ -166,6 +186,7 @@ model estudiante {
   carreras    carrera[]
   ramos       ramo[]
   entrevistas entrevista[]
+  contactos_emergencia contacto_emergencia[]
 }
 
 
@@ -176,12 +197,24 @@ model familiar {
   rut_estudiante String
   nombre         String
   telefono       String
-  parentesco     String
-  observacion    String
+  parentesco     Parentesco
+  observacion    String?
 
   estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
 
+  contactos_emergencia contacto_emergencia[]
+
   @@unique([rut_familiar, rut_estudiante])
+}
+
+
+model contacto_emergencia {
+  id              Int    @id @default(autoincrement())
+  id_familiar     Int
+  rut_estudiante  String
+
+  estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
+  familiar   familiar   @relation(fields: [id_familiar], references: [id])
 }
 
 
@@ -208,7 +241,7 @@ model carrera {
   rut_estudiante     String
   duracion_sem       Int
   codigo_universidad Int
-  via_acceso         String
+  via_acceso         ViaAcceso
 
   estudiante  estudiante  @relation(fields: [rut_estudiante], references: [rut_estudiante])
   universidad universidad @relation(fields: [codigo_universidad], references: [codigo_universidad])

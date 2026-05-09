@@ -21,7 +21,7 @@ export class CreateEstudianteDto {
   // CAMPOS OBLIGATORIOS
   @IsString()
   @IsNotEmpty()
-  rut!: string;
+  rut_estudiante!: string;
 
 
   @IsString()
@@ -55,7 +55,7 @@ export class CreateEstudianteDto {
   @Type(() => Date)
   @IsDate()
   @IsNotEmpty()
-  fecha_de_nacimiento!: Date;
+  fecha_nacimiento!: Date;
 
 
   @IsNotEmpty()
@@ -80,13 +80,14 @@ export class CreateEstudianteDto {
 
 
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   foto_url!: string;
 
 
   @IsNumber({ maxDecimalPlaces: 1 })
   @Min(1.0)
   @Max(7.0)
+  @IsNotEmpty()  
   promedios_media!: number;
 
 

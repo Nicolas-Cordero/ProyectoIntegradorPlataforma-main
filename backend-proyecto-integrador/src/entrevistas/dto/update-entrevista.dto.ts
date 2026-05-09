@@ -1,21 +1,12 @@
-import {
-  IsString,
-  IsOptional,
-  IsNumber,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+import { PartialType, PickType } from '@nestjs/mapped-types';
+import { CreateEntrevistaDto } from './create-entrevista.dto';
 
 
 
-export class UpdateEntrevistaDto {
-
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  duracion_s?: number;
-
-
-  @IsString()
-  @IsOptional()
-  resumen?: string;
-}
+export class UpdateEntrevistaDto extends PartialType(
+  PickType(CreateEntrevistaDto,
+    [
+      'duracion_s',
+      'resumen',
+    ]
+  )) {}

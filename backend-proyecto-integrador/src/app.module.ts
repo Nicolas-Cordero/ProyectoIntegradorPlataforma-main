@@ -24,6 +24,10 @@ import { PeriodoAcademicoModule } from './periodo-academico/periodo-academico.mo
 import { PrismaService } from './prisma/prisma.service';
 import { BeneficioEstudianteModule } from './beneficio-estudiante/beneficio-estudiante.module';
 import { ComentarioModule } from './comentario/comentario.module';
+import { LiceoModule } from './liceo/liceo.module';
+import { RamoModule } from './ramo/ramo.module';
+import { CarreraModule } from './carrera/carrera.module';
+import { UniversidadModule } from './universidad/universidad.module';
 
 @Module({
   imports: [
@@ -35,7 +39,11 @@ import { ComentarioModule } from './comentario/comentario.module';
     }),
     AuthModule,
     BeneficioEstudianteModule,
-    ComentarioModule
+    ComentarioModule,
+    LiceoModule,
+    RamoModule,
+    CarreraModule,
+    UniversidadModule
 
   ],
   providers: [PrismaService]

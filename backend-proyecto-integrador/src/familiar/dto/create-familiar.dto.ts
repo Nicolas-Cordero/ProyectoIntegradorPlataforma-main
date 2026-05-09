@@ -1,31 +1,36 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { Parentesco } from '@prisma/client';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
+
 
 export class CreateFamiliarDto {
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
-  estudiante_id: string;
+  rut_estudiante!: string;
 
-  @IsUUID()
+
+  @IsString()
   @IsNotEmpty()
-  tipo_familiar_id: string;
+  rut_familiar!: string;
+
 
   @IsString()
-  @IsOptional()
-  nombres: string;
+  @IsNotEmpty()
+  nombre!: string;
 
+
+  @IsNotEmpty({ message: 'El teléfono es requerido' })
+  @Matches(/^\+569\s?\d{4}\s?\d{4}$/, {
+    message: 'Formato inválido. Usa +569 xxxx xxxx o +569xxxxxxxx',
+  })
+  telefono!: string;
+
+
+  @IsNotEmpty()
+  @IsEnum(Parentesco)
+  parentesco!: Parentesco;
+
+  
   @IsString()
   @IsOptional()
-  ocupacion?: string;
-
-  @IsString()
-  @IsOptional()
-  nivel_educacional?: string;
-
-  @IsString()
-  @IsOptional()
-  descripcion?: string;
-
-  @IsString()
-  @IsOptional()
-  observaciones?: string;
+  observacion?: string;
 }

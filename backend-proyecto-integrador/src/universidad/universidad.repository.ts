@@ -46,8 +46,19 @@ export class UniversidadRepository{
     }
   }
 
+
+
+  
   async findAll(): Promise<universidad[]>{
     return this.prisma.universidad.findMany()
+  }
+
+  async findOne(id_universidad: number): Promise<universidad| null>{
+    return this.prisma.universidad.findUnique({
+      where: {
+        codigo_universidad: id_universidad,
+      },
+    })
   }
 
   async findByComuna(comuna: string): Promise<universidad[]>{

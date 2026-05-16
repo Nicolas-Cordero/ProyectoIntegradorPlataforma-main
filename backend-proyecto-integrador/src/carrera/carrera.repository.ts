@@ -5,7 +5,7 @@ import { carrera, ViaAcceso } from "@prisma/client";
 
 
 @Injectable()
-export class Carrera{
+export class CarreraRepository{
   constructor(
     private readonly prisma: PrismaService,
   ){}
@@ -55,6 +55,8 @@ export class Carrera{
     });
   }
 
+
+  //esta si 
   async findAllByEstudiante(rut_estudiante: string): Promise<carrera[]>{
     return this.prisma.carrera.findMany({
       where:{
@@ -63,6 +65,8 @@ export class Carrera{
     });
   }
 
+
+  //quiza no sea necesario
   async findAllByAcceso(via_acceso: ViaAcceso):Promise<carrera[]>{
     return this.prisma.carrera.findMany({
       where:{
@@ -71,6 +75,8 @@ export class Carrera{
     });
   }
 
+
+  // quiza no sea necesario
   async findAllByUniversidad(id_universidad: number): Promise<carrera[]>{
     return this.prisma.carrera.findMany({
       where: {

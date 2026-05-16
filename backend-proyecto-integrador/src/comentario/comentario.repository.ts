@@ -54,7 +54,7 @@ export class ComentarioRepository{
     });
   }
 
-  async findAllByEstudiante(rut_estudiante){
+  async findAllByEstudiante(rut_estudiante: string): Promise<comentario[]>{
     return this.prisma.comentario.findMany({
       where:{
         entrevista: {
@@ -64,4 +64,14 @@ export class ComentarioRepository{
     })
 
   }
+
+  async findOne(id_comentario: number): Promise<comentario|null>{
+    return this.prisma.comentario.findUnique({
+      where:{
+        id: id_comentario,
+      },
+    });
+  }
+
+
 }

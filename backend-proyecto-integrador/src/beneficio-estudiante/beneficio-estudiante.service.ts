@@ -15,12 +15,12 @@ export class BeneficioEstudianteService {
   ){}
 
 
-  async createAsociation(createBeneficioEstudianteDto: CreateBeneficioEstudianteDto) {
-    return await this.asociationRepo.asociateBeneficioEstudiante(createBeneficioEstudianteDto) ;
+  createAsociation(createBeneficioEstudianteDto: CreateBeneficioEstudianteDto) {
+    return this.asociationRepo.asociateBeneficioEstudiante(createBeneficioEstudianteDto) ;
   }
 
-  async findAllAsociations() {
-    return await this.asociationRepo.findAllAsociations();
+  findAllAsociations() {
+    return this.asociationRepo.findAllAsociations();
   }
 
 
@@ -60,6 +60,8 @@ export class BeneficioEstudianteService {
   }
 
   remove(codigo_beneficio: number, rut_estudiante: string) {
+    //al remover una asociación, no se elimina ni el beneficio ni el estudiante, solo la relación entre ambos
+    //hay que revisar si es necesario eliminar algo mas
     return this.asociationRepo.deletAsociation(codigo_beneficio, rut_estudiante);
   }
 }

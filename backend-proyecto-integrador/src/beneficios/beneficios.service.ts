@@ -44,6 +44,7 @@ export class BeneficiosService {
   }
 
   async removeBeneficio(id: number): Promise<beneficio> {
+    //al remover un beneficio no se estan eliminando las asociaciones a ese beneficio
     return this.beneficioRepo.deleteBeneficioByID(id);
   }
 

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { UniversidadService } from './universidad.service';
 import { CreateUniversidadDto } from './dto/create-universidad.dto';
 import { UpdateUniversidadDto } from './dto/update-universidad.dto';
@@ -17,18 +17,28 @@ export class UniversidadController {
     return this.universidadService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.universidadService.findOne(+id);
+  @Get(':id_universidad')
+  findOne(@Param('id_universidad', ParseIntPipe) id_universidad: number) {
+    return this.universidadService.findOne(id_universidad);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUniversidadDto: UpdateUniversidadDto) {
-    return this.universidadService.update(+id, updateUniversidadDto);
+  @Get(':comuna')
+  findByComuna(@Param('comuna') comuna: string) {
+    return this.universidadService.findByComuna(comuna);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.universidadService.remove(+id);
+  @Get('estudiante/:rut_estudiante')
+  findByEstudiante(@Param('rut_estudiante') rut_estudiante: string) {
+    return this.universidadService.findByEstudiante(rut_estudiante);
+  }
+
+  @Patch(':id_universidad')
+  update(@Param('id_universidad', ParseIntPipe) id_universidad: number, @Body() updateUniversidadDto: UpdateUniversidadDto) {
+    return this.universidadService.update(id_universidad, updateUniversidadDto);
+  }
+
+  @Delete(':id_universidad')
+  remove(@Param('id_universidad', ParseIntPipe) id_universidad: number) {
+    return this.universidadService.remove(id_universidad);
   }
 }

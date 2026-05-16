@@ -17,6 +17,26 @@ export class EstudianteRepository{
     });
   }
 
+  async findEstudianteByRutComplete(rut_estudiante: string): Promise<estudiante | null>{
+    return this.prisma.estudiante.findUnique({
+      where: {
+        rut_estudiante: rut_estudiante,
+      },
+      include: {
+        carreras: {
+          include: {
+            universidad: true,
+          },
+        },
+        estado_academico: true,
+        familiares: true,
+        beneficios: true,
+        ramos: true,
+        contactos_emergencia: true,
+      },
+    });
+  }
+
 
   async findEstudianteByGeneracion(generacion: string): Promise<estudiante[]>{
     return this.prisma.estudiante.findMany({

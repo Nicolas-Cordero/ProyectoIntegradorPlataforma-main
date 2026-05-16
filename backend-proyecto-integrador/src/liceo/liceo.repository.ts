@@ -4,7 +4,7 @@ import { CreateLiceoDto, UpdateLiceoDto } from "./dto";
 import { liceo } from "@prisma/client";
 
 @Injectable()
-export class Liceo{
+export class LiceoRepository {
   constructor(
     private readonly prisma: PrismaService,
   ){}
@@ -47,6 +47,14 @@ export class Liceo{
 
   async findAll(): Promise<liceo[]>{
     return this.prisma.liceo.findMany()
+  }
+
+  async findOne(rbd: string): Promise<liceo | null>{
+    return this.prisma.liceo.findUnique({
+      where: {
+        rbd: rbd,
+      },
+    });
   }
 
   async findByComuna(comuna: string): Promise<liceo[]>{

@@ -1,26 +1,46 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUniversidadDto } from './dto/create-universidad.dto';
 import { UpdateUniversidadDto } from './dto/update-universidad.dto';
+import { UniversidadRepository } from './universidad.repository';
+import { universidad } from '@prisma/client';
 
 @Injectable()
 export class UniversidadService {
-  create(createUniversidadDto: CreateUniversidadDto) {
-    return 'This action adds a new universidad';
+  constructor(
+    private readonly universidadRepo: UniversidadRepository,
+  ) {}
+
+
+  create(createUniversidadDto: CreateUniversidadDto): Promise<universidad> {
+    return this.universidadRepo.create(createUniversidadDto);
   }
 
-  findAll() {
-    return `This action returns all universidad`;
+  findAll(): Promise<universidad[]> {
+    return this.universidadRepo.findAll();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} universidad`;
+  async findOne(id_universidad: number): Promise<universidad> {
+    const universidad = await this.universidadRepo.findOne(id_universidad);
+    if (!universidad) {
+      throw new Error(`Universidad con id ${id_universidad} no encontrada`);
+    } 
+    return universidad;
   }
 
-  update(id: number, updateUniversidadDto: UpdateUniversidadDto) {
-    return `This action updates a #${id} universidad`;
+  findByComuna(comuna: string): Promise<universidad[]> {
+    return this.universidadRepo.findByComuna(comuna);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} universidad`;
+  findByEstudiante(rut_estudiante: string): Promise<universidad[]> {
+    return this.universidadRepo.findByEstudiante(rut_estudiante);
+  }
+
+  update(id_universidad: number, updateUniversidadDto: UpdateUniversidadDto): Promise<universidad> {
+    return this.universidadRepo.update(id_universidad, updateUniversidadDto);
+  }
+
+  remove(id_universidad: number): Promise<universidad> {
+    //Las universidades son independientes, pero no tiene sentido eliminar ninguna.
+    return this.universidadRepo.remove(id_universidad);
   }
 }

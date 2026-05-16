@@ -11,9 +11,6 @@ export { EstudianteModule } from './estudiante.module';
 export { EstudianteRepository } from '../estudiante/estudiante.repository';
 
 
-// Entities
-export type { Estudiante } from './entities/estudiante.entity';
-
 // DTOs
 export type { CreateEstudianteDto } from './dto/create-estudiante.dto';
 export type { UpdateEstudianteDto } from './dto/update-estudiante.dto';

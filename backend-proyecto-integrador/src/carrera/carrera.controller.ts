@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { CarreraService } from './carrera.service';
 import { CreateCarreraDto } from './dto/create-carrera.dto';
 import { UpdateCarreraDto } from './dto/update-carrera.dto';
@@ -12,23 +12,32 @@ export class CarreraController {
     return this.carreraService.create(createCarreraDto);
   }
 
-  @Get()
-  findAll() {
-    return this.carreraService.findAll();
+
+  
+  //la dejaremos comentada por ahora.
+  // @Get()
+  // findAll() {
+  //   return this.carreraService.findAll();
+  // }
+
+
+  @Get(':estudiante')
+  findByEstudiante(@Param('estudiante') rut_estudiante: string) {
+    return this.carreraService.findByEstudiante(rut_estudiante);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.carreraService.findOne(+id);
+  @Get(':codigoCarrera')
+  findOne(@Param('codigoCarrera', ParseIntPipe) codigo_carrera: number) {
+    return this.carreraService.findOne(+codigo_carrera);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCarreraDto: UpdateCarreraDto) {
-    return this.carreraService.update(+id, updateCarreraDto);
+  @Patch(':codigoCarrera')
+  update(@Param('codigoCarrera', ParseIntPipe) codigo_carrera: number, @Body() updateCarreraDto: UpdateCarreraDto) {
+    return this.carreraService.update(codigo_carrera, updateCarreraDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.carreraService.remove(+id);
+  @Delete(':codigoCarrera')
+  remove(@Param('codigoCarrera', ParseIntPipe) codigo_carrera: number) {
+    return this.carreraService.remove(codigo_carrera);
   }
 }

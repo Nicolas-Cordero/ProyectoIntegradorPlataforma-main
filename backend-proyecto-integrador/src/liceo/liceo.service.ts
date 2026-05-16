@@ -1,26 +1,36 @@
 import { Injectable } from '@nestjs/common';
-import { CreateLiceoDto } from './dto/create-liceo.dto';
-import { UpdateLiceoDto } from './dto/update-liceo.dto';
+import { CreateLiceoDto, UpdateLiceoDto } from './dto';
+import { LiceoRepository } from './liceo.repository';
+import { liceo } from '@prisma/client';
 
 @Injectable()
 export class LiceoService {
-  create(createLiceoDto: CreateLiceoDto) {
-    return 'This action adds a new liceo';
+  constructor(
+    private readonly liceoRepo: LiceoRepository,
+  ) {}
+
+  create(createLiceoDto: CreateLiceoDto): Promise<liceo> {
+    return this.liceoRepo.create(createLiceoDto);
   }
 
-  findAll() {
-    return `This action returns all liceo`;
+  findAll(): Promise<liceo[]> {
+    return this.liceoRepo.findAll();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} liceo`;
+  async findOne(rbd_liceo: string): Promise<liceo> {
+    const liceo = await this.liceoRepo.findOne(rbd_liceo);
+    if (!liceo) {
+      throw new Error(`Liceo con RBD ${rbd_liceo} no encontrado`);
+    }
+    return liceo
   }
 
-  update(id: number, updateLiceoDto: UpdateLiceoDto) {
-    return `This action updates a #${id} liceo`;
+  update(rbd_liceo: string, updateLiceoDto: UpdateLiceoDto) {
+    return this.liceoRepo.update(rbd_liceo, updateLiceoDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} liceo`;
+  remove(rbd_liceo: string) {
+    //liceo es independiente.
+    return this.liceoRepo.remove(rbd_liceo);
   }
 }

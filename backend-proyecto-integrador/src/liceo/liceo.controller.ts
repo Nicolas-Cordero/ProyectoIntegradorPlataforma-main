@@ -17,18 +17,18 @@ export class LiceoController {
     return this.liceoService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.liceoService.findOne(+id);
+  @Get(':rbd_liceo')
+  findOne(@Param('rbd_liceo') rbd_liceo: string) {
+    return this.liceoService.findOne(rbd_liceo);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateLiceoDto: UpdateLiceoDto) {
-    return this.liceoService.update(+id, updateLiceoDto);
+  @Patch(':rbd_liceo')
+  update(@Param('rbd_liceo') rbd_liceo: string, @Body() updateLiceoDto: UpdateLiceoDto) {
+    return this.liceoService.update(rbd_liceo, updateLiceoDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.liceoService.remove(+id);
+  @Delete(':rbd_liceo')
+  remove(@Param('rbd_liceo') rbd_liceo: string) {
+    return this.liceoService.remove(rbd_liceo);
   }
 }

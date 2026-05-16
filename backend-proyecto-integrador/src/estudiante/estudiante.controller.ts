@@ -17,29 +17,41 @@ export class EstudianteController {
     return this.estudianteService.findAll();
   }
 
-  @Get('estadisticas')
-  findStadistics(){
-    return this.estudianteService.findStadistics();
-  }
 
-  @Get('generacion/:generation')
+  @Get('generaciones/:generation')
   findByGeneration(@Param('generation') generation: string) {
     return this.estudianteService.findByGeneration(generation);
   }
 
-// Revisar las de abajo
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.estudianteService.findOne(id);
+  @Get('generaciones/')
+  findAllGenerations() {
+    return this.estudianteService.findSortedByGeneration();
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateEstudianteDto: UpdateEstudianteDto) {
-    return this.estudianteService.update(id, updateEstudianteDto);
+// Revisar las de abajo
+  @Get(':rut_estudiante/simple')
+  findOne(@Param('rut_estudiante') rut_estudiante: string) {
+    return this.estudianteService.findOneSimple(rut_estudiante);
+  }
+
+  @Get(':rut_estudiante/complete')
+  findOneComplete(@Param('rut_estudiante') rut_estudiante: string) {
+    return this.estudianteService.findOneComplete(rut_estudiante);
+  }
+
+  @Patch(':rut_estudiante')
+  update(@Param('rut_estudiante') rut_estudiante: string, @Body() updateEstudianteDto: UpdateEstudianteDto) {
+    return this.estudianteService.update(rut_estudiante, updateEstudianteDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.estudianteService.remove(id);
   }
+
+
+  // @Get('estadisticas')
+  // findStadistics(){
+  //   return this.estudianteService.findStadistics();
+  // }
 }

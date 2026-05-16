@@ -10,7 +10,7 @@ export class RamoRepository{
     private readonly prisma: PrismaService,
   ){}
 
-  async create(createRamoDto: CreateRamoDto){
+  create(createRamoDto: CreateRamoDto){
     try {
       return this.prisma.ramo.create({
         data: createRamoDto,
@@ -20,7 +20,7 @@ export class RamoRepository{
     }
   }
 
-  async update(id_ramo: number, updateRamoDto: UpdateRamoDto){
+  update(id_ramo: number, updateRamoDto: UpdateRamoDto){
     try {
       return this.prisma.ramo.update({
         where: {
@@ -33,7 +33,7 @@ export class RamoRepository{
     }
   }
 
-  async remove(id_ramo: number){
+  remove(id_ramo: number){
     try {
       return this.prisma.ramo.delete({
         where: {
@@ -45,10 +45,29 @@ export class RamoRepository{
     }
   }
 
-  async findAllByEstudiante(rut_estudiante: string): Promise<ramo[]>{
+  findAllByEstudiante(rut_estudiante: string): Promise<ramo[]>{
     return this.prisma.ramo.findMany({
       where: {
         rut_estudiante: rut_estudiante,
+      },
+    });
+  }
+
+  findOne(id_ramo: number): Promise<ramo | null> {
+    return this.prisma.ramo.findUnique({
+      where: {
+        id: id_ramo,
+      },
+    });
+  }
+
+  async findOneWithNotas(id_ramo: number) {
+    return this.prisma.ramo.findUnique({
+      where: {
+        id: id_ramo,
+      },
+      include: {
+        notas: true,
       },
     });
   }

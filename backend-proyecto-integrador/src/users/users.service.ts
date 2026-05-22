@@ -4,179 +4,134 @@ import {
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import { UsersRepository } from './users.repository';
+import { usuario } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    private readonly usersRepo: UsersRepository,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
-    // Verificar si ya existe un usuario con el mismo email o username
-    const existingUser = await this.usersRepository.findOne({
-      where: [
-        { email: createUserDto.email },
-        { username: createUserDto.username },
-      ],
-    });
-
+  async create(createUserDto: CreateUserDto): Promise<usuario> {
+    // Verificar si el email ya existe
+    const existingUser = await this.usersRepo.findByEmail(createUserDto.email);
+    const existingRut = await this.usersRepo.findByRut(createUserDto.rut_usuario);
+    if (existingRut) {
+      throw new ConflictException('El RUT ya está en uso');
+    }
     if (existingUser) {
-      throw new ConflictException('El email o username ya está en uso');
+      throw new ConflictException('El email ya está en uso');
     }
+    // Hash de la contraseña
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
+    createUserDto.password = hashedPassword;
 
-    // Hash del password
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-
-    const user = this.usersRepository.create({
-      ...createUserDto,
-      password: hashedPassword,
-    });
-
-    return this.usersRepository.save(user);
+    return this.usersRepo.create(createUserDto);
   }
 
-  async findAll(filters: Partial<User> = {}): Promise<User[]> {
-    // Limpiar campos nulos del filtro para evitar problemas con TypeORM
-    const cleanFilters: any = {};
-    Object.keys(filters).forEach((key) => {
-      const value = filters[key as keyof User];
-      if (value !== null && value !== undefined) {
-        cleanFilters[key] = value;
-      }
-    });
 
-    return this.usersRepository.find({
-      where: cleanFilters,
-      select: [
-        'id',
-        'username',
-        'email',
-        'nombre',
-        'apellido',
-        'rol',
-        'activo',
-        'ultimo_login',
-        'createdAt',
-        'updatedAt',
-      ],
-    });
+
+  async findAll(): Promise<usuario[]> {
+    return this.usersRepo.findAll();
   }
 
-  async findOne(id: string): Promise<User> {
-    const user = await this.usersRepository.findOne({
-      where: { id },
-      select: [
-        'id',
-        'username',
-        'email',
-        'nombre',
-        'apellido',
-        'rol',
-        'activo',
-        'ultimo_login',
-        'createdAt',
-        'updatedAt',
-      ],
-    });
 
+
+  async findOne(rut: string): Promise<usuario> {
+    const user = await this.usersRepo.findByRut(rut);
     if (!user) {
-      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+      throw new NotFoundException(`Usuario con RUT ${rut} no encontrado`);
     }
+    return user;
+  }
+  
 
+
+
+  async findByEmail(email: string): Promise<usuario> {
+    const user = await this.usersRepo.findByEmail(email);
+    if (!user) {
+      throw new NotFoundException(`Usuario con email ${email} no encontrado`);
+    } 
     return user;
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { email } });
-  }
 
-  async findByUsername(username: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { username } });
-  }
-
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    const user = await this.usersRepository.findOne({ where: { id } });
+  async update(rut: string, updateUserDto: UpdateUserDto): Promise<usuario> {
+    const user = await this.usersRepo.findByRut(rut);
 
     if (!user) {
-      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+      throw new NotFoundException(`Usuario con RUT ${rut} no encontrado`);
     }
-
-    // Si se está actualizando el password, hashearlo
-    if (updateUserDto.password) {
-      updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
-    }
-
     // Verificar si el nuevo email o username ya existe (si se está actualizando)
-    if (updateUserDto.email || updateUserDto.username) {
-      const existingUser = await this.usersRepository.findOne({
-        where: [
-          { email: updateUserDto.email, id: Not(id) },
-          { username: updateUserDto.username, id: Not(id) },
-        ],
-      });
+    if (updateUserDto.email) {
+      const existingUser = await this.usersRepo.findByEmail(updateUserDto.email);
 
       if (existingUser) {
         throw new ConflictException('El email o username ya está en uso');
       }
     }
 
-    await this.usersRepository.update(id, updateUserDto);
-    return this.findOne(id);
+    return this.usersRepo.update(rut, updateUserDto);
   }
 
-  async remove(id: string): Promise<void> {
-    const result = await this.usersRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+
+  async remove(rut: string): Promise<usuario> {
+    const result = await this.usersRepo.delete(rut);
+    if (!result) {
+      throw new NotFoundException(`Usuario con RUT ${rut} no encontrado`);
     }
+    return result;
   }
 
-  async updateLastLogin(id: string): Promise<void> {
-    await this.usersRepository.update(id, {
-      ultimo_login: new Date(),
-    });
+  async updateLastLogin(rut: string): Promise<void> {
+    await this.usersRepo.updateLastLogin(rut);
   }
 
-  async updateRefreshToken(id: string, refreshToken: string | null): Promise<void> {
-    await this.usersRepository.update(id, {
-      refreshToken: refreshToken || undefined,
-    });
+
+  async updateResetToken(rut: string, refreshToken: string): Promise<void> {
+    const expireDate =  new Date(Date.now() + 15* 60 * 1000); // Expira en 15 minutos
+    await this.usersRepo.updateResetToken(rut, refreshToken, expireDate);
   }
 
-  async validateUser(username: string, password: string): Promise<User | null> {
-    const user = await this.usersRepository.findOne({ where: { username } });
+
+
+  async validateUser(rut: string, password: string): Promise<usuario | null> {
+    const user = await this.usersRepo.findByRut(rut);
     if (user && (await bcrypt.compare(password, user.password))) {
       return user;
     }
     return null;
   }
 
-  async changePassword(userId: string, newPassword: string): Promise<void> {
-    const user = await this.usersRepository.findOne({ where: { id: userId } });
+
+
+  async changePassword(rut: string, newPassword: string): Promise<void> {
+    const user = await this.usersRepo.findByRut(rut);
     
     if (!user) {
-      throw new NotFoundException(`Usuario con ID ${userId} no encontrado`);
+      throw new NotFoundException(`Usuario con RUT ${rut} no encontrado`);
     }
 
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
-    await this.usersRepository.update(userId, {
+    await this.usersRepo.update(rut, {
       password: hashedPassword,
     });
   }
 
-  async changeOwnPassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
-    const user = await this.usersRepository.findOne({ where: { id: userId } });
+
+  async changeOwnPassword(rut: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await this.usersRepo.findByRut(rut);
     
     if (!user) {
-      throw new NotFoundException(`Usuario no encontrado`);
+      throw new NotFoundException(`Usuario con RUT ${rut} no encontrado`);
     }
 
     // Verificar contraseña actual
@@ -189,7 +144,7 @@ export class UsersService {
     const saltRounds = 10;
     const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
 
-    await this.usersRepository.update(userId, {
+    await this.usersRepo.update(rut, {
       password: hashedNewPassword,
     });
   }

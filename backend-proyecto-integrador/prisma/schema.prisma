@@ -156,6 +156,8 @@ model semestre {
 
   ramos       ramo[]
   entrevistas entrevista[]
+
+  @@unique([year, semestre])
 }
 
 
@@ -251,7 +253,7 @@ model carrera {
 
 
 
-
+ 
 
 model ramo {
   id              Int @id @default(autoincrement())

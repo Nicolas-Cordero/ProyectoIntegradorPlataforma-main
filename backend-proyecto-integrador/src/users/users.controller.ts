@@ -9,8 +9,6 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
-  Query,
-  NotFoundException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -18,82 +16,77 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { UserRol, usuario } from '@prisma/client';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+
   @Post()
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRol.ADMIN)
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createUserDto: CreateUserDto): Promise<User> {
+  async create(@Body() createUserDto: CreateUserDto): Promise<usuario> {
     return this.usersService.create(createUserDto);
   }
 
+
+
   @Get()
-  @Roles(UserRole.ADMIN, UserRole.TUTOR)
-  async findAll(
-    @Query('activo') activo?: string,
-    @Query('rol') rol?: string,
-  ): Promise<User[]> {
-    const filters: Partial<User> = {};
-    if (activo !== undefined) {
-      filters.activo = activo === 'true';
-    }
-    if (rol) {
-      filters.rol = rol as UserRole;
-    }
-    return this.usersService.findAll(filters);
+  @Roles(UserRol.ADMIN, UserRol.TUTOR)
+  findAll(): Promise<usuario[]> {
+    return this.usersService.findAll();
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<User> {
-    return this.usersService.findOne(id);
+
+  @Get(':rut')
+  async findOne(@Param('rut') rut: string): Promise<usuario> {
+    return this.usersService.findOne(rut);
   }
 
-  @Get('username/:username')
-  async findByUsername(@Param('username') username: string): Promise<User> {
-    const user = await this.usersService.findByUsername(username);
-    if (!user) {
-      throw new NotFoundException(`Usuario ${username} no encontrado`);
-    }
-    return user;
-  }
 
-  @Patch(':id')
+  @Patch(':rut')
+  @HttpCode(HttpStatus.OK)
   async update(
-    @Param('id') id: string,
+    @Param('rut') rut: string,
     @Body() updateUserDto: UpdateUserDto,
-  ): Promise<User> {
-    return this.usersService.update(id, updateUserDto);
+  ): Promise<usuario> {
+    return this.usersService.update(rut, updateUserDto);
   }
 
-  @Delete(':id')
+
+  @Delete(':rut')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id') id: string): Promise<void> {
-    return this.usersService.remove(id);
+  async remove(@Param('rut') rut: string): Promise<{message: string}> {
+    await this.usersService.remove(rut);
+    return { message: 'Usuario eliminado exitosamente' };
   }
 
-  @Patch(':id/password')
-  @Roles(UserRole.ADMIN)
+
+  @Patch(':rut/password')
+  @Roles(UserRol.ADMIN)
   @HttpCode(HttpStatus.OK)
   async changePassword(
-    @Param('id') id: string,
+    @Param('rut') rut: string,
     @Body() changePasswordDto: { password: string },
   ): Promise<{ message: string }> {
-    await this.usersService.changePassword(id, changePasswordDto.password);
+    await this.usersService.changePassword(rut, changePasswordDto.password);
     return { message: 'Contraseña actualizada exitosamente' };
   }
 
-  @Patch('profile/password')
+
+  @Patch(':rut/password/change')
   @HttpCode(HttpStatus.OK)
   async changeOwnPassword(
-    @CurrentUser() user: any,
-    @Body() changePasswordDto: { currentPassword: string; newPassword: string },
+    @Param('rut') rut: string,
+    @Body() changeOwnPasswordDto: { currentPassword: string; newPassword: string },
   ): Promise<{ message: string }> {
-    await this.usersService.changeOwnPassword(user.id, changePasswordDto.currentPassword, changePasswordDto.newPassword);
+    await this.usersService.changeOwnPassword(
+      rut,
+      changeOwnPasswordDto.currentPassword,
+      changeOwnPasswordDto.newPassword,
+    );
     return { message: 'Contraseña actualizada exitosamente' };
   }
 }

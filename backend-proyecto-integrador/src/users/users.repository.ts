@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { audit_log, usuario } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
-import { User } from "./interfaces/user.interface";
+import { CreateUserDto } from "./dto";
 
 
 //TODO: revisar el tema del tipado de las clases del repository
@@ -9,46 +9,56 @@ import { User } from "./interfaces/user.interface";
 
 @Injectable()
 export class UsersRepository{
-  constructor(private readonly prisma: PrismaService,) {}
+  constructor(
+    private readonly prisma: PrismaService,
+  ) {}
 
-  async registerNewUser(data: User): Promise<usuario>{
+  create(createUserDto: CreateUserDto): Promise<usuario>{
     try {
-      const user = await this.prisma.usuario.create({
-        data: data
+      const user = this.prisma.usuario.create({
+        data: createUserDto,
       });
 
-      return user
+      return user;
     } catch (error) {
-      throw new Error("No se pudo crear el usuario")
+      // ejemplo: usuario ya existe
+      throw new Error('No se pudo crear el usuario');
     }
   }
 
 
-  async updatePassword(
-    rut_usuario: string,
-    password: string
-  ): Promise<usuario>{
+  update(rut_usuario: string, updateUserDto: Partial<CreateUserDto>): Promise<usuario>{
     try {
-      const user = await this.prisma.usuario.update({
+      const user = this.prisma.usuario.update({
+        where: { rut_usuario },
+        data: updateUserDto,
+      });
+
+      return user;
+    } catch (error) {
+      // ejemplo: usuario no existe
+      throw new Error('No se pudo actualizar el usuario');
+    } 
+  }
+
+  updatePassword(rut_usuario: string, changePassWordDto: { password: string }): Promise<usuario>{
+    try {
+      const user = this.prisma.usuario.update({
         where: { rut_usuario },
         data: {
-          password: password,
+          password: changePassWordDto.password,
         },
       });
 
-      return user; // si llegas acá, funcionó
+      return user;
     } catch (error) {
-      // ejemplo: usuario no existe
-      throw new Error('No se pudo actualizar el token');
+
+      throw new Error('No se pudo actualizar la contraseña');
     }
   }
 
-  
-  async updateResetToken(
-    rut_usuario: string,
-    hashed_token: string | null,
-    expireDate: Date | null
-  ):Promise<usuario> {
+
+  async updateResetToken(rut_usuario: string, hashed_token: string | null, expireDate: Date | null):Promise<usuario> {
     try {
       const user = await this.prisma.usuario.update({
         where: { rut_usuario },
@@ -110,6 +120,8 @@ export class UsersRepository{
     });
   } 
 
+
+
   async findByEmail(email: string): Promise<usuario | null>{
     return this.prisma.usuario.findFirst({
       where:{
@@ -122,6 +134,17 @@ export class UsersRepository{
 //Metodo de testeo    
   async findAll(): Promise<usuario[]>{
     return this.prisma.usuario.findMany();
+  }
+
+  delete(rut_usuario: string): Promise<usuario> {
+    try {
+      return this.prisma.usuario.delete({
+        where: { rut_usuario },
+      });
+    } catch (error) {
+      // ejemplo: usuario no existe
+      throw new Error('No se pudo eliminar el usuario');
+    }
   }
 
 

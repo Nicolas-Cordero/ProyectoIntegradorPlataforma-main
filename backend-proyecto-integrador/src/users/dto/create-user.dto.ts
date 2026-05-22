@@ -1,44 +1,47 @@
+import { UserRol } from '@prisma/client';
 import {
   IsString,
   IsEmail,
   IsNotEmpty,
   MinLength,
-  IsOptional,
-  IsBoolean,
   IsEnum,
+  Matches
 } from 'class-validator';
-import { UserRole } from '../entities/user.entity';
 
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
-  @MinLength(4)
-  username: string;
+  rut_usuario!: string;
+
 
   @IsString()
   @IsNotEmpty()
-  @MinLength(2)
-  nombre: string;
+  nombre!: string;
+
 
   @IsString()
   @IsNotEmpty()
-  @MinLength(2)
-  apellido: string;
+  apellido!: string;
 
-  @IsEmail()
+
+  @IsNotEmpty({ message: 'El email es requerido' })
+  @IsEmail({}, { message: 'El email debe ser válido' })
+  email!: string;
+
+
+  @IsNotEmpty({ message: 'El teléfono es requerido' })
+  @Matches(/^\+569\s?\d{4}\s?\d{4}$/, {
+    message: 'Formato inválido. Usa +569 xxxx xxxx o +569xxxxxxxx',
+  })
+  telefono!: string;
+
+
   @IsNotEmpty()
-  email: string;
+  @IsEnum(UserRol)
+  rol!: UserRol;
 
   @IsString()
   @IsNotEmpty()
   @MinLength(6)
-  password: string;
-
-  @IsOptional()
-  @IsBoolean()
-  activo?: boolean;
-
-  @IsOptional()
-  @IsEnum(UserRole)
-  rol?: UserRole;
+  password!: string;
 }

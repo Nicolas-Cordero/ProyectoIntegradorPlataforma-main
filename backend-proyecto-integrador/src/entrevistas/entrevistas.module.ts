@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { EntrevistasService } from './entrevistas.service';
 import { EntrevistasController } from './entrevistas.controller';
 import { AuthModule } from '../auth/auth.module';
-import { PrismaService } from '../prisma/prisma.service';
+import { EntrevistaRepository } from './entrevista.repository';
 
 @Module({
   imports: [
@@ -10,7 +10,7 @@ import { PrismaService } from '../prisma/prisma.service';
   ],
   providers: [
     EntrevistasService,
-    PrismaService
+    EntrevistaRepository,
   ],
   controllers: [EntrevistasController],
   exports: [EntrevistasService],

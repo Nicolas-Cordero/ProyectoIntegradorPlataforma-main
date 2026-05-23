@@ -1,7 +1,8 @@
 import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { TipoBeneficio } from '@prisma/client';
-import { Beneficios } from '..';
+import { Beneficios } from '../beneficios.enum';
+
 
 export class CreateBeneficioDto {
   @IsEnum(Beneficios)
@@ -15,7 +16,7 @@ export class CreateBeneficioDto {
   @Type(()=>Number)
   @IsNumber()
   @IsNotEmpty()
-  monto!: string;
+  monto!: number;
 
   @IsString()
   @IsNotEmpty()

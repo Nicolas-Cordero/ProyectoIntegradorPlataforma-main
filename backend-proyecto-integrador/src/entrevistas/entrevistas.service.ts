@@ -2,7 +2,7 @@ import {
   Injectable,
   BadRequestException,
 } from '@nestjs/common';
-import { EntrevistaRepository } from './entrevistas.repository';
+import { EntrevistaRepository } from './entrevista.repository';
 import { entrevista } from '@prisma/client';
 import { UpdateEntrevistaDto, CreateEntrevistaDto  } from './dto';
 

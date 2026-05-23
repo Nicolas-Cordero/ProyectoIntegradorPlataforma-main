@@ -1,17 +1,14 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module} from '@nestjs/common';
 import { EstudianteService } from './estudiante.service';
 import { EstudianteController } from './estudiante.controller';
-import { EntrevistasModule } from '../entrevistas/entrevistas.module';
-import { PrismaService } from '../prisma/prisma.service';
+import { EstudianteRepository } from './estudiante.repository';
 
 @Module({
-  imports: [
-    forwardRef(() => EntrevistasModule),
-  ],
+  imports: [],
   controllers: [EstudianteController],
   providers: [
     EstudianteService,
-    PrismaService,
+    EstudianteRepository,
   ],
   exports: [EstudianteService],
 })

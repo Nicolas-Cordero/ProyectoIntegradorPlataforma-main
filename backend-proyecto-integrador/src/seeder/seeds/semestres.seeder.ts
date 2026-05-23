@@ -1,7 +1,7 @@
-import { PrismaClient, TipoSemestre } from '@prisma/client';
-import { Semestre } from '../../semestre';
+import { TipoSemestre } from '@prisma/client';
+import { Semestre } from '../../semestre/semestre.enum';
+import { prisma } from '../prisma-client';
 
-const prisma = new PrismaClient();
 
 export async function semestresSeeder() {
   for (let year = 2000; year <= 2100; year++) {

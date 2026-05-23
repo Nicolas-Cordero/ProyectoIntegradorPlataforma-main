@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from '../prisma-client';
 import { beneficiosData } from "../data";
-
-const prisma = new PrismaClient();
 
 export async function beneficiosSeeder() {
 

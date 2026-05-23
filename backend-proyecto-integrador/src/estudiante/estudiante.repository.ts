@@ -28,7 +28,6 @@ export class EstudianteRepository{
             universidad: true,
           },
         },
-        estado_academico: true,
         familiares: true,
         beneficios: true,
         ramos: true,

@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { CreateEntrevistaDto, UpdateEntrevistaDto } from "./dto/";
+import { CreateEntrevistaDto, UpdateEntrevistaDto } from "./dto";
 import { entrevista } from "@prisma/client";
 
 @Injectable()

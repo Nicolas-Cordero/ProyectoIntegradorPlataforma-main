@@ -1,5 +1,5 @@
 export * from './entrevistas.module';
 export * from './entrevistas.service';
 export * from './entrevistas.controller';
-export * from './entrevistas.repository';
+export * from './entrevista.repository';
 export * from './dto';

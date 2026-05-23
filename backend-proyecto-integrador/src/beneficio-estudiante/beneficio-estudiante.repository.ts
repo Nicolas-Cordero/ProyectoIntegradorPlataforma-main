@@ -6,7 +6,9 @@ import { CreateBeneficioEstudianteDto, UpdateBeneficioEstudianteDto } from "./dt
 
 @Injectable()
 export class BeneficioEstudianteRepository{
-  constructor(private readonly prisma: PrismaService,) {}
+  constructor(
+    private readonly prisma: PrismaService,
+  ) {}
 
 
   async asociateBeneficioEstudiante(createBeneficioEstudianteDto: CreateBeneficioEstudianteDto): Promise<beneficio_estudiante>{

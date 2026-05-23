@@ -6,11 +6,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
 
-  const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [
-    'https://api.cloudinary.com', //imagenes
-    'http://localhost:5173', // Vite dev
-    'http://localhost:3000',
-  ];
+const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [
+  'https://api.cloudinary.com',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:3001',
+];
 
   app.enableCors({
     origin: (

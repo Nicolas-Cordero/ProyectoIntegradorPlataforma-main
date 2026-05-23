@@ -77,7 +77,7 @@ class EstudianteService extends BaseHttpClient {
       activos: number;
     }>;
   }> {
-    return await this.request('/estudiante/estadisticas');
+    return await this.request('/estudiante/');
   }
 
   /**

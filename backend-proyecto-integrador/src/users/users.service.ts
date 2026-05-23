@@ -31,7 +31,7 @@ export class UsersService {
     const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
     createUserDto.password = hashedPassword;
 
-    return this.usersRepo.create(createUserDto);
+    return this.usersRepo.registerNewUser(createUserDto);
   }
 
 

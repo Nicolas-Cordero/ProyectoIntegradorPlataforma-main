@@ -13,7 +13,7 @@ export class UsersRepository{
     private readonly prisma: PrismaService,
   ) {}
 
-  create(createUserDto: CreateUserDto): Promise<usuario>{
+  registerNewUser(createUserDto: CreateUserDto): Promise<usuario>{
     try {
       const user = this.prisma.usuario.create({
         data: createUserDto,
@@ -99,7 +99,7 @@ export class UsersRepository{
       const audit = this.prisma.audit_log.create({
         data:{
           rut_usuario: rut_usuario,
-          fecha_hora: new Date(),
+          created_at: new Date(),
           descripcion: 'login', //deuda tecnica
         },
       });

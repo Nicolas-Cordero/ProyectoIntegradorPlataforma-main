@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { BeneficiosService } from './beneficios.service';
 import { BeneficiosController } from './beneficios.controller';
 import { BeneficiosRepository } from './beneficios.repository';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Module({
   imports: [],
@@ -10,7 +11,7 @@ import { BeneficiosRepository } from './beneficios.repository';
   ],
   providers: [
     BeneficiosService,
-    BeneficiosRepository
+    BeneficiosRepository,
   ],
   exports: [
     BeneficiosService

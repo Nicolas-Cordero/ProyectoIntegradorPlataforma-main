@@ -1,9 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../prisma-client';
 import * as bcrypt from 'bcrypt';
 
 import { usersData } from '../data/users.data';
-
-const prisma = new PrismaClient();
 
 export async function usersSeeder() {
   const saltRounds = 10;

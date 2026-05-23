@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './prisma-client';
 
 import { 
   usersSeeder,
@@ -8,7 +8,6 @@ import {
   semestresSeeder,
   } from './seeds';
 
-const prisma = new PrismaClient();
 
 async function main() {
   console.log('Starting seeders...');

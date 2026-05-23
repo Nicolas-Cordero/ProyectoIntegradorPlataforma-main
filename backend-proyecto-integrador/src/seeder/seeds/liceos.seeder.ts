@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from '../prisma-client';
 import { liceosData } from "../data";
-
-const prisma = new PrismaClient();
 
 export async function liceosSeeder() {
 

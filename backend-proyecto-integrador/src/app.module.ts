@@ -17,6 +17,7 @@ import { RamoModule } from './ramo';
 import { UniversidadModule } from './universidad/universidad.module';
 import { UsersModule } from './users';
 import { SemestreModule } from './semestre/semestre.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 
 
@@ -30,6 +31,7 @@ import { SemestreModule } from './semestre/semestre.module';
       load: [appConfig, jwtConfig],
       envFilePath: ['.env.local', '.env'],
     }),
+    PrismaModule,
     AuthModule,
     BeneficioEstudianteModule,
     BeneficiosModule,

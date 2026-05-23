@@ -1,5 +1,5 @@
-
-import { TableRow, TableCell, TextField, MenuItem, Typography } from '@mui/material';
+import { TableRow, TableCell, Typography } from '@mui/material';
+import { Input, Select } from '../../../ui';
 
 export type FieldType = 'text' | 'email' | 'tel' | 'date' | 'select' | 'number';
 
@@ -24,8 +24,6 @@ export function EditableField({
   onChange,
   options,
   placeholder,
-  maxLength,
-  inputMode,
   readOnly = false,
 }: EditableFieldProps) {
   const displayValue = value || 'Sin definir';
@@ -40,40 +38,29 @@ export function EditableField({
     }
 
     if (type === 'select' && options) {
+      const opciones = options.map(opt => ({
+        valor: opt.value,
+        etiqueta: opt.label
+      }));
       return (
-        <TextField
-          select
-          fullWidth
-          size="small"
-          value={value || ''}
-          onChange={(e) => onChange(e.target.value)}
-          variant="outlined"
-        >
-          <MenuItem value="">
-            <em>Seleccionar...</em>
-          </MenuItem>
-          {options.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </TextField>
+        <Select
+          opciones={opciones}
+          valor={String(value || '')}
+          onChange={(v) => onChange(String(v))}
+          tamano="small"
+        />
       );
     }
 
+    // Mapear date a text para Input
+    const inputType = type === 'date' ? 'text' : type;
+
     return (
-      <TextField
-        fullWidth
-        size="small"
-        type={type}
-        value={value || ''}
-        onChange={(e) => onChange(e.target.value)}
+      <Input
+        tipo={inputType as 'text' | 'email' | 'number' | 'tel' | 'url' | 'password'}
+        valor={String(value || '')}
+        onChange={onChange}
         placeholder={placeholder}
-        variant="outlined"
-        inputProps={{
-          maxLength,
-          inputMode,
-        }}
       />
     );
   };
@@ -83,8 +70,8 @@ export function EditableField({
       <TableCell 
         sx={{ 
           fontWeight: 'bold', 
-          bgcolor: 'error.light',
-          color: 'error.contrastText',
+          bgcolor: 'grey.100',
+          color: 'text.primary',
           width: '30%',
         }}
       >

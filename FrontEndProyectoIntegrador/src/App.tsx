@@ -3,8 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { authService } from './services/authService';
 import { logger } from './config';
 import { LoginAdminForm } from './components/features/auth/login/LoginAdminForm';
-import { SolicitarRecuperacion, VerificarCodigo, NuevaPassword } from './components/features/auth/password-recovery';
-import { LoadingSpinner } from './components/ui';
+import { Spinner } from './components/ui';
 
 // Lazy loading de componentes pesados para mejor rendimiento
 const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -38,12 +37,12 @@ function App() {
   };
 
   if (isLoading) {
-    return <LoadingSpinner fullScreen message="Verificando autenticación..." />;
+    return <Spinner fullScreen message="Verificando autenticación..." />;
   }
 
   return (
     <Router>
-      <Suspense fallback={<LoadingSpinner fullScreen message="Cargando página..." />}>
+      <Suspense fallback={<Spinner fullScreen message="Cargando página..." />}>
         <Routes>
           <Route 
             path="/" 
@@ -52,18 +51,6 @@ function App() {
                 <Navigate to="/dashboard" replace /> : 
                 <LoginAdminForm onAuthChange={handleAuthChange} />
             }
-          />
-          <Route 
-            path="/solicitar-recuperacion" 
-            element={<SolicitarRecuperacion />}
-          />
-          <Route 
-            path="/verificar-codigo" 
-            element={<VerificarCodigo />}
-          />
-          <Route 
-            path="/nueva-password" 
-            element={<NuevaPassword />}
           />
           <Route 
             path="/dashboard" 

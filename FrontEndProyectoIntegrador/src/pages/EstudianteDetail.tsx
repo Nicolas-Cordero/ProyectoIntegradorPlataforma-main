@@ -1,4 +1,4 @@
-﻿import { LoadingSpinner, ErrorMessage } from '../components/ui';
+﻿import { Spinner, ErrorMessage } from '../components/ui';
 import {
   StudentHeader,
   TabNavigation,
@@ -12,7 +12,10 @@ import {
   useStudentDetail
 } from '../components/features/student-detail';
 import { NuevoSemestreModal } from '../components/features/student-detail/components';
-import { Snackbar, Alert } from '@mui/material';
+import { DashboardParticles } from '../components/features/dashboard/DashboardParticles';
+import { Snackbar, Alert, Box } from '@mui/material';
+import marcoIzquierdo from '../assets/frames/marco-izquierda.svg';
+import marcoDerecho from '../assets/frames/mardo-derecha.svg';
 
 export default function EstudianteDetail() {
 
@@ -57,7 +60,7 @@ export default function EstudianteDetail() {
 
 
   if (loading) {
-    return <LoadingSpinner fullScreen message="Cargando datos del estudiante..." />;
+    return <Spinner fullScreen message="Cargando datos del estudiante..." />;
   }
 
   if (error || !estudiante || !estudianteConEdiciones) {
@@ -72,84 +75,107 @@ export default function EstudianteDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header del estudiante */}
-      <StudentHeader
-        nombres={estudianteConEdiciones.nombre || ''}
-        estado={estudianteConEdiciones.status || 'activo'}
-        modoEdicion={modoEdicion}
-        hayCambiosPendientes={hayCambiosPendientes}
-        isGuardando={isGuardando}
-        onToggleEdicion={handleToggleEdicion}
-        onGuardar={handleGuardar}
-        canEdit={canEdit}
-      />
+    <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#FFFBF0' }}>
+      {/* Marcos de fondo */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+      >
+        <img
+          src={marcoIzquierdo}
+          alt=""
+          className="absolute left-0 top-0 h-screen w-auto max-w-none opacity-35 select-none hidden md:block"
+        />
+        <img
+          src={marcoDerecho}
+          alt=""
+          className="absolute right-0 top-0 h-screen w-auto max-w-none opacity-35 select-none hidden md:block"
+        />
+      </div>
 
-      {/* Navegación por tabs */}
-      <TabNavigation
-        seccionActiva={seccionActiva}
-        onSeccionChange={handleSeccionChange}
-        canViewInterviews={canViewInterviews}
-      />
+      {/* Partículas */}
+      <DashboardParticles />
 
-      {/* Contenido principal */}
-      <div className="p-8 max-w-[1400px] mx-auto">
-        {/* Perfil General */}
-        {seccionActiva === 'perfil' && (
-          <ProfileSection estudiante={estudianteConEdiciones} />
-        )}
+      {/* Contenedor principal con z-index relativo */}
+      <div className="relative z-10 flex flex-col flex-grow">
+        {/* Header del estudiante */}
+        <StudentHeader
+          nombres={estudianteConEdiciones.nombre || ''}
+          estado={estudianteConEdiciones.status || 'activo'}
+          modoEdicion={modoEdicion}
+          hayCambiosPendientes={hayCambiosPendientes}
+          isGuardando={isGuardando}
+          onToggleEdicion={handleToggleEdicion}
+          onGuardar={handleGuardar}
+          canEdit={canEdit}
+        />
 
-        {/*  Datos Personales - Con callback para cambios */}
-        {seccionActiva === 'personal' && (
-          <PersonalDataSection
-            estudiante={estudianteConEdiciones}
-            modoEdicion={modoEdicion && canEdit}
-            onCampoChange={handleCampoChange}
-          />
-        )}
+        {/* Navegación por tabs */}
+        <TabNavigation
+          seccionActiva={seccionActiva}
+          onSeccionChange={handleSeccionChange}
+          canViewInterviews={canViewInterviews}
+        />
 
-        {/* Información Familiar */}
-        {seccionActiva === 'familiar' && (
-          <FamilyInfoSection
-            estudiante={estudianteConEdiciones}
-            modoEdicion={modoEdicion && canEdit}
-            onFamiliaChange={handleFamiliaChange}
-          />
-        )}
+        {/* Contenido principal */}
+        <div className="p-8 max-w-[1400px] mx-auto w-full relative z-10">
+          {/* Perfil General */}
+          {seccionActiva === 'perfil' && (
+            <ProfileSection estudiante={estudianteConEdiciones} />
+          )}
 
-        {/* Informe Académico */}
-        {seccionActiva === 'informe' && (
-          <AcademicReportSection
-            estudiante={estudianteConEdiciones}
-            modoEdicion={modoEdicion && canEdit}
-            historialesExternos={informesGuardados}
-          />
-        )}
+          {/*  Datos Personales - Con callback para cambios */}
+          {seccionActiva === 'personal' && (
+            <PersonalDataSection
+              estudiante={estudianteConEdiciones}
+              modoEdicion={modoEdicion && canEdit}
+              onCampoChange={handleCampoChange}
+            />
+          )}
 
-        {/* Desempeño por Semestre */}
-        {seccionActiva === 'desempeno' && (
-          <SemesterPerformanceSection
-            estudiante={estudiante}
-            modoEdicion={modoEdicion && canEdit}
-            onCambioDesempeno={registrarCambioSemestre}
-          />
-        )}
+          {/* Información Familiar */}
+          {seccionActiva === 'familiar' && (
+            <FamilyInfoSection
+              estudiante={estudianteConEdiciones}
+              modoEdicion={modoEdicion && canEdit}
+              onFamiliaChange={handleFamiliaChange}
+            />
+          )}
 
-        {/* Avance Curricular */}
-        {seccionActiva === 'avance' && (
-          <AvanceCurricularSection
-            estudiante={estudianteConEdiciones}
-            modoEdicion={modoEdicion && canEdit}
-          />
-        )}
+          {/* Informe Académico */}
+          {seccionActiva === 'informe' && (
+            <AcademicReportSection
+              estudiante={estudianteConEdiciones}
+              modoEdicion={modoEdicion && canEdit}
+              historialesExternos={informesGuardados}
+            />
+          )}
 
-        {/* Entrevistas - Solo para administradores */}
-        {seccionActiva === 'entrevistas' && canViewInterviews && (
-          <InterviewsSection
-            estudianteId={estudiante.id_estudiante}
-            estudiante={estudiante}
-          />
-        )}
+          {/* Desempeño por Semestre */}
+          {seccionActiva === 'desempeno' && (
+            <SemesterPerformanceSection
+              estudiante={estudiante}
+              modoEdicion={modoEdicion && canEdit}
+              onCambioDesempeno={registrarCambioSemestre}
+            />
+          )}
+
+          {/* Avance Curricular */}
+          {seccionActiva === 'avance' && (
+            <AvanceCurricularSection
+              estudiante={estudianteConEdiciones}
+              modoEdicion={modoEdicion && canEdit}
+            />
+          )}
+
+          {/* Entrevistas - Solo para administradores */}
+          {seccionActiva === 'entrevistas' && canViewInterviews && (
+            <InterviewsSection
+              estudianteId={estudiante.id_estudiante}
+              estudiante={estudiante}
+            />
+          )}
+        </div>
       </div>
 
       {/* Modal para crear nuevo semestre */}

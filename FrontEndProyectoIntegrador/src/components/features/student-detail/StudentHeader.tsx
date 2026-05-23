@@ -38,7 +38,10 @@ export function StudentHeader({
         px: 4, 
         py: 2, 
         borderBottom: 2, 
-        borderColor: 'grey.200'
+        borderColor: 'grey.200',
+        position: 'relative',
+        zIndex: 10,
+        backgroundColor: '#FFFBF0'
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

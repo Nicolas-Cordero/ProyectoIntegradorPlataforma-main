@@ -54,7 +54,22 @@ export const VerificarCodigo: React.FC = () => {
     <LoginFormContainer
       title="Verificar Código"
       subtitle="Ingresa el código que recibiste en tu email"
-      icon={<KeyIcon sx={{ fontSize: 64, color: '#667eea' }} />}
+      icon={
+        <Box
+          sx={{
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #EEB35D 0%, #C7654F 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 8px 24px rgba(199, 101, 79, 0.3)'
+          }}
+        >
+          <KeyIcon sx={{ fontSize: 40, color: 'white' }} />
+        </Box>
+      }
     >
       <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
         {email && (

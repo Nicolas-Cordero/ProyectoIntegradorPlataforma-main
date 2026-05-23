@@ -1,8 +1,8 @@
 /**
  * Modal para crear nuevo semestre
  */
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, IconButton, Box, MenuItem } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
+import { Box } from '@mui/material';
+import { Modal, Input, Select, Button } from '../../../ui';
 
 interface NuevoSemestreData {
   año: number;
@@ -30,112 +30,105 @@ export function NuevoSemestreModal({
   setNuevoSemestreData, 
   onCrearSemestre 
 }: NuevoSemestreModalProps) {
+  const SEMESTRES = [
+    { valor: '1', etiqueta: 'Primer Semestre' },
+    { valor: '2', etiqueta: 'Segundo Semestre' }
+  ];
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
-        ➕ Crear Nuevo Semestre
-        <IconButton onClick={onClose} size="small">
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-
-      <DialogContent>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-            <TextField
-              label="Año"
-              type="number"
-              value={nuevoSemestreData.año}
-              onChange={(e) => setNuevoSemestreData(prev => ({
-                ...prev,
-                año: parseInt(e.target.value) || new Date().getFullYear()
-              }))}
-              required
-              inputProps={{ min: 2020, max: 2030 }}
-            />
-
-            <TextField
-              label="Semestre"
-              select
-              value={nuevoSemestreData.semestre}
-              onChange={(e) => setNuevoSemestreData(prev => ({
-                ...prev,
-                semestre: parseInt(e.target.value)
-              }))}
-              required
-            >
-              <MenuItem value={1}>Primer Semestre</MenuItem>
-              <MenuItem value={2}>Segundo Semestre</MenuItem>
-            </TextField>
-          </Box>
-
-          <TextField
-            label="Nivel Educativo"
-            value={nuevoSemestreData.nivel_educativo}
-            onChange={(e) => setNuevoSemestreData(prev => ({
+    <Modal
+      titulo="➕ Crear Nuevo Semestre"
+      abierto={open}
+      onCerrar={onClose}
+      tamanio="sm"
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+          <Input
+            etiqueta="Año"
+            tipo="number"
+            valor={String(nuevoSemestreData.año)}
+            onChange={(v) => setNuevoSemestreData(prev => ({
               ...prev,
-              nivel_educativo: e.target.value
+              año: parseInt(v) || new Date().getFullYear()
             }))}
-            placeholder="Ej: Superior, Media, Técnico"
+            requerido
           />
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2 }}>
-            <TextField
-              label="Ramos Aprobados"
-              type="number"
-              value={nuevoSemestreData.ramos_aprobados}
-              onChange={(e) => setNuevoSemestreData(prev => ({
-                ...prev,
-                ramos_aprobados: parseInt(e.target.value) || 0
-              }))}
-              inputProps={{ min: 0 }}
-            />
-
-            <TextField
-              label="Ramos Reprobados"
-              type="number"
-              value={nuevoSemestreData.ramos_reprobados}
-              onChange={(e) => setNuevoSemestreData(prev => ({
-                ...prev,
-                ramos_reprobados: parseInt(e.target.value) || 0
-              }))}
-              inputProps={{ min: 0 }}
-            />
-
-            <TextField
-              label="Ramos Eliminados"
-              type="number"
-              value={nuevoSemestreData.ramos_eliminados}
-              onChange={(e) => setNuevoSemestreData(prev => ({
-                ...prev,
-                ramos_eliminados: parseInt(e.target.value) || 0
-              }))}
-              inputProps={{ min: 0 }}
-            />
-          </Box>
-
-          <TextField
-            label="Promedio del Semestre"
-            type="number"
-            value={nuevoSemestreData.promedio_semestre}
-            onChange={(e) => setNuevoSemestreData(prev => ({
+          <Select
+            etiqueta="Semestre"
+            opciones={SEMESTRES}
+            valor={String(nuevoSemestreData.semestre)}
+            onChange={(v) => setNuevoSemestreData(prev => ({
               ...prev,
-              promedio_semestre: parseFloat(e.target.value) || 0
+              semestre: parseInt(v as string)
             }))}
-            inputProps={{ min: 1.0, max: 7.0, step: 0.1 }}
-            placeholder="Ej: 5.5"
+            requerido
           />
         </Box>
-      </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} variant="outlined" color="inherit">
-          Cancelar
-        </Button>
-        <Button onClick={onCrearSemestre} variant="contained" color="primary">
-          Crear Semestre
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <Input
+          etiqueta="Nivel Educativo"
+          valor={nuevoSemestreData.nivel_educativo}
+          onChange={(v) => setNuevoSemestreData(prev => ({
+            ...prev,
+            nivel_educativo: v
+          }))}
+          placeholder="Ej: Superior, Media, Técnico"
+        />
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2 }}>
+          <Input
+            etiqueta="Ramos Aprobados"
+            tipo="number"
+            valor={String(nuevoSemestreData.ramos_aprobados)}
+            onChange={(v) => setNuevoSemestreData(prev => ({
+              ...prev,
+              ramos_aprobados: parseInt(v) || 0
+            }))}
+          />
+
+          <Input
+            etiqueta="Ramos Reprobados"
+            tipo="number"
+            valor={String(nuevoSemestreData.ramos_reprobados)}
+            onChange={(v) => setNuevoSemestreData(prev => ({
+              ...prev,
+              ramos_reprobados: parseInt(v) || 0
+            }))}
+          />
+
+          <Input
+            etiqueta="Ramos Eliminados"
+            tipo="number"
+            valor={String(nuevoSemestreData.ramos_eliminados)}
+            onChange={(v) => setNuevoSemestreData(prev => ({
+              ...prev,
+              ramos_eliminados: parseInt(v) || 0
+            }))}
+          />
+        </Box>
+
+        <Input
+          etiqueta="Promedio del Semestre"
+          tipo="number"
+          valor={String(nuevoSemestreData.promedio_semestre)}
+          onChange={(v) => setNuevoSemestreData(prev => ({
+            ...prev,
+            promedio_semestre: parseFloat(v) || 0
+          }))}
+          placeholder="Ej: 5.5"
+        />
+
+        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+          <Button variante="outline" tamano="md" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button variante="primary" tamano="md" onClick={onCrearSemestre}>
+            Crear Semestre
+          </Button>
+        </Box>
+      </Box>
+    </Modal>
   );
 }

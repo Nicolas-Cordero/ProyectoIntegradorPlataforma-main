@@ -14,6 +14,7 @@ interface GradientButtonProps extends Omit<ButtonProps, 'variant'> {
   startIcon?: React.ReactNode;
   fullWidth?: boolean;
   gradientVariant?: 1 | 2 | 3 | 4 | 5 | 6;
+  solidColor?: string;
 }
 
 const gradientVariants = {
@@ -31,11 +32,12 @@ export const GradientButton: React.FC<GradientButtonProps> = ({
   startIcon: _startIcon,
   fullWidth = false,
   gradientVariant = 1,
+  solidColor,
   ...props
 }) => {
   void _startIcon;
 
-  const backgroundImage = gradientVariants[gradientVariant];
+  const backgroundImage = !solidColor ? gradientVariants[gradientVariant] : undefined;
 
   return (
     <Button
@@ -53,46 +55,49 @@ export const GradientButton: React.FC<GradientButtonProps> = ({
         px: 0,
         py: 0,
         border: 'none',
-        backgroundColor: 'transparent',
+        backgroundColor: solidColor || 'transparent',
         color: 'white',
         textTransform: 'none',
         fontWeight: 600,
         borderRadius: '999px',
         fontSize: { xs: '14px', sm: '16px' },
         lineHeight: 1,
-        boxShadow: 'none',
+        boxShadow: solidColor ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none',
         '&:hover': {
-          backgroundColor: 'transparent',
-          boxShadow: 'none',
+          backgroundColor: solidColor ? solidColor : 'transparent',
+          boxShadow: solidColor ? '0 6px 16px rgba(0, 0, 0, 0.2)' : 'none',
+          opacity: solidColor ? 0.9 : 1,
         },
         ...props.sx,
       }}
     >
-      <Box
-        component="span"
-        sx={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: '999px',
-          overflow: 'hidden',
-          pointerEvents: 'none',
-        }}
-      >
+      {!solidColor && (
         <Box
-          component="img"
-          src={backgroundImage}
-          alt=""
-          aria-hidden="true"
+          component="span"
           sx={{
-            width: '100%',
-            height: '100%',
-            display: 'block',
-            objectFit: 'cover',
-            objectPosition: 'center',
-            userSelect: 'none',
+            position: 'absolute',
+            inset: 0,
+            borderRadius: '999px',
+            overflow: 'hidden',
+            pointerEvents: 'none',
           }}
-        />
-      </Box>
+        >
+          <Box
+            component="img"
+            src={backgroundImage}
+            alt=""
+            aria-hidden="true"
+            sx={{
+              width: '100%',
+              height: '100%',
+              display: 'block',
+              objectFit: 'cover',
+              objectPosition: 'center',
+              userSelect: 'none',
+            }}
+          />
+        </Box>
+      )}
 
       <Box
         component="span"

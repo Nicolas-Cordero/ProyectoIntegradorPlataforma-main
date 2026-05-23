@@ -2,17 +2,16 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
-  TextField, 
-  Button, 
-  Alert,
   Link,
   CircularProgress
 } from '@mui/material';
+import { Input, Alert, Button } from '../../../../components/ui';
 import { authService } from '../../../../services/authService';
 import type { LoginCredentials } from '../../../../types';
 import { logger } from '../../../../config';
 import { isValidEmail } from '../../../../utils/validators';
 import { LoginFormContainer } from '../shared';
+import { PasswordRecoveryModal } from '../password-recovery';
 import logoFundacion from '../../../../assets/logos/logo-fundacion.png';
 
 interface LoginAdminFormProps {
@@ -26,14 +25,15 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [showPasswordRecovery, setShowPasswordRecovery] = useState(false);
 
   const navigate = useNavigate();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+  const handleInputChangeSimple = (field: string, value: string) => {
+    const { name } = { name: field } as any;
     setCredentials(prev => ({
       ...prev,
-      [name]: value
+      [field]: value
     }));
     if (error) setError('');
   };
@@ -77,86 +77,68 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
 
   return (
     <LoginFormContainer
-      title="Panel de Administración"
-      subtitle="Acceso exclusivo para administradores"
-      icon={(
+      title="Acceso Administrativo"
+      subtitle="Panel de Gestión - Fundación Carmen Goudie"
+      icon={
         <Box
           component="img"
           src={logoFundacion}
-          alt="Logo Fundación"
-          sx={{ height: 160, width: 'auto', borderRadius: 3, boxShadow: 4, backgroundColor: 'rgba(255,255,255,0.98)', p: 2, mx: 'auto' }}
+          alt="Logo Fundación Carmen Goudie"
+          sx={{
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            border: '3px solid rgba(101, 179, 155, 0.3)',
+            p: 1,
+            background: 'rgba(255, 255, 255, 0.9)',
+            boxShadow: '0 8px 24px rgba(101, 179, 155, 0.2)'
+          }}
         />
-      )}
-      gradientColors={{ from: '#65B39B', to: '#C7654F' }}
+      }
     >
       <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-        <TextField
-          fullWidth
-          type="email"
-          id="email"
-          name="email"
-          label="Email de Administrador"
-          value={credentials.email}
-          onChange={handleInputChange}
+        <Input
+          tipo="email"
+          etiqueta="Email de Administrador"
+          valor={credentials.email}
+          onChange={(v) => handleInputChangeSimple('email', v)}
           placeholder="admin@fundacion.cl"
-          disabled={loading}
-          required
-          autoComplete="email"
-          variant="outlined"
+          deshabilitado={loading}
+          requerido
           error={!!error}
           sx={{
-            '& .MuiOutlinedInput-root': {
-              backgroundColor: '#f8f9fa',
-              '&:hover': {
-                backgroundColor: '#FFFEF5'
-              },
-              '&.Mui-focused': {
-                backgroundColor: '#FFFEF5'
-              }
-            }
+            backgroundColor: '#f8f9fa'
           }}
         />
 
-        <TextField
-          fullWidth
-          type="password"
-          id="password"
-          name="password"
-          label="Contraseña de Administrador"
-          value={credentials.password}
-          onChange={handleInputChange}
+        <Input
+          tipo="password"
+          etiqueta="Contraseña de Administrador"
+          valor={credentials.password}
+          onChange={(v) => handleInputChangeSimple('password', v)}
           placeholder="Contraseña segura"
-          disabled={loading}
-          required
-          autoComplete="current-password"
-          variant="outlined"
+          deshabilitado={loading}
+          requerido
           error={!!error}
           sx={{
-            '& .MuiOutlinedInput-root': {
-              backgroundColor: '#f8f9fa',
-              '&:hover': {
-                backgroundColor: '#FFFEF5'
-              },
-              '&.Mui-focused': {
-                backgroundColor: '#FFFEF5'
-              }
-            }
+            backgroundColor: '#f8f9fa'
           }}
         />
 
         {error && (
-          <Alert severity="error" sx={{ mt: 1 }}>
-            {error}
-          </Alert>
+          <Alert 
+            tipo="error" 
+            mensaje={error}
+            onCerrar={() => {}}
+            sx={{ mt: 1 }}
+          />
         )}
 
         <Button
-          fullWidth
-          type="submit"
-          variant="contained"
-          size="large"
-          disabled={loading}
-          startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+          variante="primary"
+          tamano="lg"
+          deshabilitado={loading}
+          onClick={(e: any) => { e.preventDefault(); handleSubmit(e as any); }}
           sx={{
             mt: 1,
             py: 1.5,
@@ -186,7 +168,7 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
             component="button"
             type="button"
             variant="body2"
-            onClick={() => navigate('/solicitar-recuperacion')}
+            onClick={() => setShowPasswordRecovery(true)}
             sx={{
               color: '#65B39B',
               textDecoration: 'underline',
@@ -218,6 +200,15 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
           </Link>
         </Box>
       </Box>
+
+      <PasswordRecoveryModal
+        abierto={showPasswordRecovery}
+        onCerrar={() => setShowPasswordRecovery(false)}
+        onSuccess={() => {
+          setError('');
+          // Optionally show a success message or redirect
+        }}
+      />
     </LoginFormContainer>
   );
 };

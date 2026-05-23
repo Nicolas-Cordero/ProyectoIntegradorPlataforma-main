@@ -5,8 +5,6 @@
 import { useNavigate } from 'react-router-dom';
 import { AppBar, Toolbar, Box, Button, Chip, useMediaQuery, useTheme } from '@mui/material';
 import {
-  People as PeopleIcon,
-  AccountCircle as AccountCircleIcon,
   Logout as LogoutIcon
 } from '@mui/icons-material';
 import logoFundacion from '../../../assets/logos/logo.svg';
@@ -134,22 +132,6 @@ export function DashboardNavbar({ usuario, onLogout }: DashboardNavbarProps) {
               />
             </Box>
           </Box>
-
-          {/* Gestión de Usuarios - Empujado a la derecha */}
-          {isAdmin && (
-            <Box sx={{ ml: 'auto', flexShrink: 0 }}>
-              <GradientButton
-                className="gradient-subtle-hover"
-                startIcon={<PeopleIcon />}
-                onClick={() => navigate('/admin/usuarios')}
-                fullWidth={false}
-                gradientVariant={1}
-                sx={{ minHeight: { xs: 40, sm: 48, md: 72 }, minWidth: { xs: 100, sm: 150, md: 280 }, fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.875rem' }, flexShrink: 0 }}
-              >
-                Gestión de Usuarios
-              </GradientButton>
-            </Box>
-          )}
         </Box>
 
         {/* Fila 2: Información de usuario y acciones */}
@@ -182,56 +164,6 @@ export function DashboardNavbar({ usuario, onLogout }: DashboardNavbarProps) {
               }}
             />
           )}
-
-          <Button
-            variant="text"
-            className="navbar-button button-wave-effect"
-            startIcon={<AccountCircleIcon />}
-            onClick={() => navigate('/perfil')}
-            title="Ver perfil"
-            sx={{
-              color: 'white',
-              textTransform: 'none',
-              background: 'rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              minHeight: { xs: 38, sm: 42, md: 44 },
-              px: { xs: 0.5, sm: 1, md: 1.5 },
-              fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.875rem' },
-              flex: { xs: 1, md: 'none' },
-              '& .MuiButton-startIcon': {
-                mr: { xs: 0.3, sm: 0.5, md: 0.75 },
-                '& svg': {
-                  fontSize: { xs: '0.9rem', sm: '1rem', md: '1.25rem' },
-                },
-              },
-              whiteSpace: 'nowrap',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              position: 'relative',
-              overflow: 'hidden',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: '-100%',
-                width: '100%',
-                height: '100%',
-                background: 'rgba(255, 255, 255, 0.06)',
-                transition: 'left 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
-              },
-              '&:hover': {
-                background: 'rgba(255, 255, 255, 0.15)',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
-                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
-                transform: 'translateY(-1px)',
-                '&::before': {
-                  left: '100%'
-                }
-              }
-            }}
-          >
-            Perfil
-          </Button>
 
           <Button
             variant="contained"

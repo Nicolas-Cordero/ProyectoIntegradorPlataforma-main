@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, TextField, Typography, MenuItem } from '@mui/material';
+import { Box, Typography } from '@mui/material';
+import { Input, Select } from '../../../ui';
 
 interface PersonalDataFormProps {
   formData: {
@@ -14,10 +15,8 @@ interface PersonalDataFormProps {
 }
 
 export const PersonalDataForm: React.FC<PersonalDataFormProps> = ({ formData, onChange }) => {
-  const handleChange = (field: string) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    onChange(field, e.target.value);
+  const handleChange = (field: string) => (valor: string | number) => {
+    onChange(field, String(valor));
   };
 
   return (
@@ -26,62 +25,62 @@ export const PersonalDataForm: React.FC<PersonalDataFormProps> = ({ formData, on
         Información personal del estudiante
       </Typography>
 
-      <TextField
-        fullWidth
-        label="Nombre Completo *"
-        value={formData.nombre}
+      <Input
+        etiqueta="Nombre Completo"
+        valor={formData.nombre}
         onChange={handleChange('nombre')}
         placeholder="Ej: Juan Pérez González"
+        requerido
       />
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-        <TextField
-          fullWidth
-          label="RUT *"
-          value={formData.rut}
+        <Input
+          etiqueta="RUT"
+          valor={formData.rut}
           onChange={handleChange('rut')}
           placeholder="Ej: 12.345.678-9"
+          requerido
         />
 
-        <TextField
-          fullWidth
-          label="Email *"
-          type="email"
-          value={formData.email}
+        <Input
+          etiqueta="Email"
+          tipo="email"
+          valor={formData.email}
           onChange={handleChange('email')}
           placeholder="ejemplo@correo.com"
+          requerido
         />
       </Box>
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-        <TextField
-          fullWidth
-          label="Teléfono"
-          value={formData.telefono}
+        <Input
+          etiqueta="Teléfono"
+          tipo="tel"
+          valor={formData.telefono}
           onChange={handleChange('telefono')}
           placeholder="+56912345678"
         />
 
-        <TextField
-          fullWidth
-          label="Fecha de Nacimiento *"
-          type="date"
-          value={formData.fecha_de_nacimiento}
+        <Input
+          etiqueta="Fecha de Nacimiento"
+          tipo="text"
+          valor={formData.fecha_de_nacimiento}
           onChange={handleChange('fecha_de_nacimiento')}
-          InputLabelProps={{ shrink: true }}
+          placeholder="YYYY-MM-DD"
+          requerido
         />
       </Box>
 
-      <TextField
-        fullWidth
-        select
-        label="Tipo de Estudiante *"
-        value={formData.tipo_de_estudiante}
+      <Select
+        etiqueta="Tipo de Estudiante"
+        opciones={[
+          { valor: 'media', etiqueta: 'Enseñanza Media' },
+          { valor: 'universitario', etiqueta: 'Universitario' }
+        ]}
+        valor={formData.tipo_de_estudiante}
         onChange={handleChange('tipo_de_estudiante')}
-      >
-        <MenuItem value="media">Enseñanza Media</MenuItem>
-        <MenuItem value="universitario">Universitario</MenuItem>
-      </TextField>
+        requerido
+      />
     </Box>
   );
 };

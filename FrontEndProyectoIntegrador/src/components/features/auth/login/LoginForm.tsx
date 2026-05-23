@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, TextField, Button, Alert, Link, CircularProgress, Stack } from '@mui/material';
+import { Box, Link, CircularProgress, Stack } from '@mui/material';
 import { Login as LoginIcon } from '@mui/icons-material';
+import { Input, Alert, Button } from '../../../ui';
 import { authService } from '../../../../services/authService';
 import { logger } from '../../../../config';
 import type { LoginCredentials } from '../../../../types';
 import { LoginFormContainer } from '../shared';
+import { PasswordRecoveryModal } from '../password-recovery';
+import logoFundacion from '../../../../assets/logos/logo-fundacion.png';
 
 export function LoginForm() {
   const [credentials, setCredentials] = useState<LoginCredentials>({
@@ -14,17 +17,9 @@ export function LoginForm() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [showPasswordRecovery, setShowPasswordRecovery] = useState(false);
 
   const navigate = useNavigate();
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setCredentials(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    if (error) setError('');
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,78 +71,74 @@ export function LoginForm() {
 
   return (
     <LoginFormContainer
-      title="Iniciar Sesión"
-      subtitle="Plataforma de Gestión - Fundación"
-      icon={<LoginIcon sx={{ fontSize: 64, color: '#667eea' }} />}
-    >
-      <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-        <TextField
-          fullWidth
-          type="email"
-          id="email"
-          name="email"
-          label="Email"
-          value={credentials.email}
-          onChange={handleInputChange}
-          placeholder="tu@email.com"
-          disabled={loading}
-          required
-          autoComplete="email"
-          variant="outlined"
-          error={!!error}
+      title="Bienvenido"
+      subtitle="Plataforma de Gestión Educativa - Fundación Carmen Goudie"
+      icon={
+        <Box
+          component="img"
+          src={logoFundacion}
+          alt="Logo Fundación Carmen Goudie"
           sx={{
-            '& .MuiOutlinedInput-root': {
-              backgroundColor: '#f8f9fa',
-              '&:hover': {
-                backgroundColor: '#FFFEF5'
-              },
-              '&.Mui-focused': {
-                backgroundColor: '#FFFEF5'
-              }
-            }
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            border: '3px solid rgba(238, 179, 93, 0.3)',
+            p: 1,
+            background: 'rgba(255, 255, 255, 0.9)',
+            boxShadow: '0 8px 24px rgba(238, 179, 93, 0.2)'
           }}
         />
-
-        <TextField
-          fullWidth
-          type="password"
-          id="password"
-          name="password"
-          label="Contraseña"
-          value={credentials.password}
-          onChange={handleInputChange}
-          placeholder="Tu contraseña"
-          disabled={loading}
-          required
-          autoComplete="current-password"
-          variant="outlined"
-          error={!!error}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              backgroundColor: '#f8f9fa',
-              '&:hover': {
-                backgroundColor: '#FFFEF5'
-              },
-              '&.Mui-focused': {
-                backgroundColor: '#FFFEF5'
-              }
-            }
+      }
+    >
+      <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+        <Input
+          etiqueta="Email"
+          tipo="email"
+          valor={credentials.email}
+          onChange={(valor) => {
+            setCredentials(prev => ({
+              ...prev,
+              email: valor
+            }));
+            if (error) setError('');
           }}
+          placeholder="tu@email.com"
+          deshabilitado={loading}
+          requerido
+          error={!!error}
+        />
+
+        <Input
+          etiqueta="Contraseña"
+          tipo="password"
+          valor={credentials.password}
+          onChange={(valor) => {
+            setCredentials(prev => ({
+              ...prev,
+              password: valor
+            }));
+            if (error) setError('');
+          }}
+          placeholder="Tu contraseña"
+          deshabilitado={loading}
+          requerido
+          error={!!error}
         />
 
         {error && (
-          <Alert severity="error" sx={{ mt: 1 }}>
-            {error}
-          </Alert>
+          <Alert 
+            tipo="error" 
+            mensaje={error}
+            onCerrar={() => {}}
+            sx={{ mt: 1 }}
+          />
         )}
 
         <Button
-          fullWidth
-          type="submit"
-          variant="contained"
-          size="large"
-          disabled={loading}
-          startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+          variante="primary"
+          tamano="lg"
+          deshabilitado={loading}
+          onClick={(e: any) => { e.preventDefault(); handleSubmit(e as any); }}
           sx={{
             mt: 1,
             py: 1.5,
@@ -177,7 +168,7 @@ export function LoginForm() {
             component="button"
             type="button"
             variant="body2"
-            onClick={() => navigate('/solicitar-recuperacion')}
+            onClick={() => setShowPasswordRecovery(true)}
             sx={{
               color: '#667eea',
               textDecoration: 'underline',
@@ -209,6 +200,15 @@ export function LoginForm() {
           </Link>
         </Stack>
       </Box>
+
+      <PasswordRecoveryModal
+        abierto={showPasswordRecovery}
+        onCerrar={() => setShowPasswordRecovery(false)}
+        onSuccess={() => {
+          setError('');
+          // Optionally show a success message or redirect
+        }}
+      />
     </LoginFormContainer>
   );
 }

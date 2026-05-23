@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatDateChilean } from '../../../utils/dateHelpers';
+import { Button, DateLabel } from '../../../components/ui';
 import type { Estudiante } from '../../../types';
 
 type UIStudent = Estudiante & {
@@ -141,7 +141,7 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
                   {promedioValor !== undefined ? promedioValor.toFixed(1) : 'N/A'}
                 </td>
                 <td className="py-3 px-3 border-b border-gray-300 text-center text-sm">
-                  {formatDateChilean(student.ultimaEntrevista)}
+                  <DateLabel fecha={student.ultimaEntrevista} modo="chileno" />
                 </td>
                 <td className="py-3 px-3 border-b border-gray-300 text-center font-bold">
                   {student.totalEntrevistasAno || 0}
@@ -177,18 +177,20 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
                 </td>
                 <td className="py-3 px-3 border-b border-gray-300 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <button
+                      <Button
+                        variante="primary"
+                        tamano="sm"
                         onClick={() => onViewDetails((student as any).id_estudiante || student.id)}
-                        className="px-3 py-1.5 bg-[var(--color-turquoise)] text-white rounded hover:bg-[var(--color-turquoise-light)] transition-colors text-xs font-bold"
                       >
                         Ver Detalles
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variante="danger"
+                        tamano="sm"
                         onClick={() => onDelete((student as any).id_estudiante || student.id)}
-                        className="px-3 py-1.5 bg-[var(--color-coral-dark)] text-white rounded hover:bg-red-500 transition-colors text-xs font-bold"
                       >
                         Eliminar
-                      </button>
+                      </Button>
                     </div>
                 </td>
               </tr>

@@ -25,8 +25,8 @@ export const EditableTextarea: React.FC<EditableTextareaProps> = ({
       <TableCell 
         sx={{ 
           fontWeight: 'bold', 
-          bgcolor: 'error.light',
-          color: 'error.contrastText',
+          bgcolor: 'grey.100',
+          color: 'text.primary',
           width: '30%',
           verticalAlign: 'top',
           pt: 2,

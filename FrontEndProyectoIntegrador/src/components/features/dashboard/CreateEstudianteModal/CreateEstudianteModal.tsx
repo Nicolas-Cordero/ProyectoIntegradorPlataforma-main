@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  Alert,
   Box,
   Typography
 } from '@mui/material';
+import { Modal, Alert } from '../../../../components/ui';
 import { estudianteService } from '../../../../services';
 import { PersonalDataForm } from './PersonalDataForm';
 import { StepperNavigation } from './StepperNavigation';
@@ -137,34 +134,33 @@ export const CreateEstudianteModal: React.FC<CreateEstudianteModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
-          Agregar Nuevo Estudiante - Generación {generacion}
-        </Typography>
-      </DialogTitle>
-
-      <DialogContent>
-        <Box sx={{ pt: 2 }}>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          <PersonalDataForm
-            formData={{
-              nombre: formData.nombre,
-              rut: formData.rut,
-              email: formData.email,
-              telefono: formData.telefono,
-              fecha_de_nacimiento: formData.fecha_de_nacimiento,
-              tipo_de_estudiante: formData.tipo_de_estudiante
-            }}
-            onChange={handleFieldChange}
+    <Modal 
+      titulo={`Agregar Nuevo Estudiante - Generación ${generacion}`}
+      abierto={open} 
+      onCerrar={handleClose}
+      tamanio="md"
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {error && (
+          <Alert 
+            tipo="error" 
+            mensaje={error}
+            onCerrar={() => setError('')}
           />
-        </Box>
-      </DialogContent>
+        )}
+
+        <PersonalDataForm
+          formData={{
+            nombre: formData.nombre,
+            rut: formData.rut,
+            email: formData.email,
+            telefono: formData.telefono,
+            fecha_de_nacimiento: formData.fecha_de_nacimiento,
+            tipo_de_estudiante: formData.tipo_de_estudiante
+          }}
+          onChange={handleFieldChange}
+        />
+      </Box>
 
       <StepperNavigation
         activeStep={0}
@@ -175,6 +171,6 @@ export const CreateEstudianteModal: React.FC<CreateEstudianteModalProps> = ({
         onCancel={handleClose}
         onSubmit={handleSubmit}
       />
-    </Dialog>
+    </Modal>
   );
 };

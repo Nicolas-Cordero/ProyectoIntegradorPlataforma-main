@@ -8,16 +8,15 @@ import {
   Typography,
   Avatar,
   Button,
-  TextField,
   Grid as GridBase,
   Divider,
   IconButton,
   Card,
   CardContent,
-  Chip,
-  Alert,
-  Snackbar
+  Chip
 } from '@mui/material';
+import { Input, Alert } from '../components/ui';
+import { PasswordChangeModal } from '../components/features/auth/password-recovery';
 import {
   Edit as EditIcon,
   Save as SaveIcon,
@@ -42,11 +41,6 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
   const [showChangePassword, setShowChangePassword] = useState(false);
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
 
   useEffect(() => {
     loadUserData();
@@ -69,7 +63,8 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
       const mappedProfileData = {
         ...profileData,
         nombres: (profileData as any).nombre || profileData.nombres,
-        apellidos: (profileData as any).apellido || profileData.apellidos
+        apellidos: (profileData as any).apellido || profileData.apellidos,
+        role: (profileData as any).rol || profileData.role,
       };
       
       setUser(mappedProfileData);
@@ -84,7 +79,8 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
         const mappedCurrentUser = {
           ...currentUser,
           nombres: (currentUser as any).nombre || currentUser.nombres,
-          apellidos: (currentUser as any).apellido || currentUser.apellidos
+          apellidos: (currentUser as any).apellido || currentUser.apellidos,
+          role: (currentUser as any).rol || currentUser.role,
         };
         setUser(mappedCurrentUser);
         setEditedUser({ ...mappedCurrentUser });
@@ -176,49 +172,6 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
     }
   };
 
-  const handleChangePassword = async () => {
-    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-      setSnackbarMessage('Por favor completa todos los campos');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      return;
-    }
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setSnackbarMessage('Las contraseñas no coinciden');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      return;
-    }
-
-    if (passwordData.newPassword.length < 6) {
-      setSnackbarMessage('La nueva contraseña debe tener al menos 6 caracteres');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      return;
-    }
-
-    try {
-      await userService.changeOwnPassword(passwordData.currentPassword, passwordData.newPassword);
-      setSnackbarMessage('Contraseña actualizada exitosamente');
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
-      setShowChangePassword(false);
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    } catch (error: any) {
-      console.error('Error al cambiar contraseña:', error);
-      const errorMessage = error.message || 'Error al cambiar contraseña';
-      setSnackbarMessage(`Error: ${errorMessage}`);
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-    }
-  };
-
-  const handleCancelPasswordChange = () => {
-    setShowChangePassword(false);
-    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-  };
-
   const getRoleDisplayName = (role: string) => {
     const roleMap: { [key: string]: string } = {
       'admin': 'Administrador',
@@ -248,7 +201,11 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
   if (!user) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-        <Alert severity="error">Error al cargar el perfil del usuario</Alert>
+        <Alert 
+          tipo="error" 
+          mensaje="Error al cargar el perfil del usuario"
+          onCerrar={() => {}}
+        />
       </Box>
     );
   }
@@ -382,13 +339,11 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
                     </Typography>
                   </Box>
                   {isEditing ? (
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={editedUser?.nombres || ''}
-                      onChange={(e) => handleInputChange('nombres', e.target.value)}
+                    <Input
+                      etiqueta=""
+                      valor={editedUser?.nombres || ''}
+                      onChange={(v) => handleInputChange('nombres', v)}
                       placeholder="Nombres"
-                      sx={{ mb: 2 }}
                     />
                   ) : (
                     <Typography variant="body1" sx={{ mb: 2, ml: 4 }}>
@@ -405,13 +360,11 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
                     </Typography>
                   </Box>
                   {isEditing ? (
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={editedUser?.apellidos || ''}
-                      onChange={(e) => handleInputChange('apellidos', e.target.value)}
+                    <Input
+                      etiqueta=""
+                      valor={editedUser?.apellidos || ''}
+                      onChange={(v) => handleInputChange('apellidos', v)}
                       placeholder="Apellidos"
-                      sx={{ mb: 2 }}
                     />
                   ) : (
                     <Typography variant="body1" sx={{ mb: 2, ml: 4 }}>
@@ -428,14 +381,12 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
                     </Typography>
                   </Box>
                   {isEditing ? (
-                    <TextField
-                      fullWidth
-                      size="small"
-                      type="email"
-                      value={editedUser?.email || ''}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
+                    <Input
+                      etiqueta=""
+                      tipo="email"
+                      valor={editedUser?.email || ''}
+                      onChange={(v) => handleInputChange('email', v)}
                       placeholder="correo@ejemplo.com"
-                      sx={{ mb: 2 }}
                     />
                   ) : (
                     <Typography variant="body1" sx={{ mb: 2, ml: 4 }}>
@@ -459,69 +410,14 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
               Cambiar Contraseña
             </Typography>
 
-            {!showChangePassword ? (
-              <Button
-                onClick={() => setShowChangePassword(true)}
-                variant="outlined"
-                color="primary"
-                startIcon={<LockIcon />}
-              >
-                Cambiar Contraseña
-              </Button>
-            ) : (
-              <>
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      type="password"
-                      label="Contraseña actual"
-                      value={passwordData.currentPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                      variant="outlined"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      type="password"
-                      label="Nueva contraseña"
-                      value={passwordData.newPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                      variant="outlined"
-                      helperText="Mínimo 6 caracteres"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      type="password"
-                      label="Confirmar nueva contraseña"
-                      value={passwordData.confirmPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                      variant="outlined"
-                    />
-                  </Grid>
-                </Grid>
-
-                <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-                  <Button
-                    onClick={handleChangePassword}
-                    variant="contained"
-                    color="primary"
-                  >
-                    Cambiar Contraseña
-                  </Button>
-                  <Button
-                    onClick={handleCancelPasswordChange}
-                    variant="outlined"
-                    color="secondary"
-                  >
-                    Cancelar
-                  </Button>
-                </Box>
-              </>
-            )}
+            <Button
+              onClick={() => setShowChangePassword(true)}
+              variant="outlined"
+              color="primary"
+              startIcon={<LockIcon />}
+            >
+              Cambiar Contraseña
+            </Button>
           </CardContent>
         </Card>
 
@@ -566,20 +462,23 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
         </Card>
 
         {/* Snackbar for notifications */}
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={3000}
-          onClose={() => setSnackbarOpen(false)}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        >
+        {snackbarOpen && (
           <Alert 
-            onClose={() => setSnackbarOpen(false)} 
-            severity={snackbarSeverity}
-            variant="filled"
-          >
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
+            tipo={snackbarSeverity === 'error' ? 'error' : 'exito'} 
+            mensaje={snackbarMessage}
+            onCerrar={() => setSnackbarOpen(false)}
+          />
+        )}
+
+        <PasswordChangeModal
+          abierto={showChangePassword}
+          onCerrar={() => setShowChangePassword(false)}
+          onSuccess={() => {
+            setSnackbarMessage('Contraseña actualizada exitosamente');
+            setSnackbarSeverity('success');
+            setSnackbarOpen(true);
+          }}
+        />
       </Container>
     </Box>
   );

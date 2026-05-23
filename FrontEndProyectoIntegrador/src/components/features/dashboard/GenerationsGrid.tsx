@@ -5,8 +5,9 @@
 
 import { useNavigate } from 'react-router-dom';
 import { Box, Paper, Typography, Button } from '@mui/material';
-import { Search as SearchIcon, Clear as ClearIcon } from '@mui/icons-material';
+import { Search as SearchIcon, Clear as ClearIcon, People as PeopleIcon } from '@mui/icons-material';
 import { GenerationCard } from './GenerationCard';
+import { GradientButton } from '../../common/GradientButton';
 
 interface Generacion {
   año: number;
@@ -17,14 +18,14 @@ interface Generacion {
 
 interface GenerationsGridProps {
   generaciones: Generacion[];
-  onLimpiarFiltros: () => void;
   onAddEstudiante?: (año: number) => void;
+  onCreateGeneracion?: () => void;
 }
 
 export function GenerationsGrid({
   generaciones,
-  onLimpiarFiltros,
-  onAddEstudiante
+  onAddEstudiante,
+  onCreateGeneracion
 }: GenerationsGridProps) {
   const navigate = useNavigate();
 
@@ -44,23 +45,12 @@ export function GenerationsGrid({
         <Typography variant="h5" fontWeight="bold" gutterBottom>
           No se encontraron generaciones
         </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          Intenta ajustar los filtros de búsqueda para encontrar lo que buscas.
-        </Typography>
         <Button
-          variant="contained"
+          variant="outlined"
           startIcon={<ClearIcon />}
-          onClick={onLimpiarFiltros}
-          sx={{
-            backgroundColor: '#65B39B',
-            textTransform: 'none',
-            fontWeight: 500,
-            '&:hover': {
-              backgroundColor: '#8FD4BB'
-            }
-          }}
+          onClick={onCreateGeneracion}
         >
-          Limpiar filtros
+          Crear nueva generación
         </Button>
       </Paper>
     );
@@ -68,6 +58,16 @@ export function GenerationsGrid({
 
   // Grid de generaciones
   return (
+    <>
+      <GradientButton
+        className="gradient-subtle-hover"
+        startIcon={<PeopleIcon />}
+        onClick={onCreateGeneracion}
+        fullWidth={false}
+        gradientVariant={1}
+        sx={{ minHeight: { xs: 40, sm: 48, md: 72 }, minWidth: { xs: 100, sm: 150, md: 280 }, fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.875rem' }, flexShrink: 0 }}>
+        Crear Nueva Generación
+      </GradientButton>
     <Box
       sx={{
         display: 'grid',
@@ -94,5 +94,6 @@ export function GenerationsGrid({
         />
       ))}
     </Box>
+    </>
   );
 }

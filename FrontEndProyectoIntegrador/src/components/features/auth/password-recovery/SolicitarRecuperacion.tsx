@@ -48,7 +48,22 @@ export const SolicitarRecuperacion: React.FC = () => {
     <LoginFormContainer
       title="Recuperar Contraseña"
       subtitle="Ingresa tu email para recibir un código de recuperación"
-      icon={<MailIcon sx={{ fontSize: 64, color: '#667eea' }} />}
+      icon={
+        <Box
+          sx={{
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #65B39B 0%, #EEB35D 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 8px 24px rgba(238, 179, 93, 0.3)'
+          }}
+        >
+          <MailIcon sx={{ fontSize: 40, color: 'white' }} />
+        </Box>
+      }
     >
       <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
         <TextField

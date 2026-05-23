@@ -1,7 +1,7 @@
 import React from 'react';
-import { Box, Table, TableBody, TableContainer, Paper } from '@mui/material';
+import {Table, TableBody, TableContainer} from '@mui/material';
 import type { Estudiante } from '../../../types';
-import { SectionDivider, EditableField, EditableTextarea } from './components';
+import { DetailSectionWrapper, detailSectionStyles, EditableField, EditableTextarea } from './components';
 import { personalDataConfig, type FieldConfig } from './config/personalDataFields';
 import { 
   getEstudianteEmail,
@@ -181,16 +181,15 @@ export const PersonalDataSection: React.FC<PersonalDataSectionProps> = ({
   return (
     <>
       {personalDataConfig.map((section) => (
-        <Box key={section.id} sx={{ mb: 4 }}>
-          {section.titulo && <SectionDivider titulo={section.titulo} />}
-          <TableContainer component={Paper} elevation={2}>
-            <Table size="small">
+        <DetailSectionWrapper key={section.id} title={section.titulo}>
+          <TableContainer sx={detailSectionStyles.tableContainer}>
+            <Table size="small" sx={detailSectionStyles.table}>
               <TableBody>
                 {section.campos.map(field => renderField(field))}
               </TableBody>
             </Table>
           </TableContainer>
-        </Box>
+        </DetailSectionWrapper>
       ))}
     </>
   );

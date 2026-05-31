@@ -10,9 +10,9 @@ import {
   InterviewsSection,
   AvanceCurricularSection,
   useStudentDetail
-} from '../components/features/student-detail';
-import { NuevoSemestreModal } from '../components/features/student-detail/components';
-import { DashboardParticles } from '../components/features/dashboard/DashboardParticles';
+} from '../components/features/estudiante-detalles';
+import { NuevoSemestreModal } from '../components/features/estudiante-detalles/components';
+import { DashboardParticles } from '../components/common/Particles';
 import { Snackbar, Alert, Box } from '@mui/material';
 import marcoIzquierdo from '../assets/frames/marco-izquierda.svg';
 import marcoDerecho from '../assets/frames/mardo-derecha.svg';

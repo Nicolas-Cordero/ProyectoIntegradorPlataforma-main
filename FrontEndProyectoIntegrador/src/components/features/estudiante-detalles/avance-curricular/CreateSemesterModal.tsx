@@ -4,7 +4,7 @@ import {
   Box,
   Divider
 } from '@mui/material';
-import { Modal, Input, Button } from '../../../components/ui';
+import { Modal, Input, Button } from '../../../ui';
 import AddIcon from '@mui/icons-material/Add';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 

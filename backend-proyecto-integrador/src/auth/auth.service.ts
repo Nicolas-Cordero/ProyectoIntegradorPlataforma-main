@@ -27,7 +27,7 @@ export class AuthService {
 
 
 
-    async login(loginDto: LoginDto): Promise<AuthResponseDto> {
+  async login(loginDto: LoginDto): Promise<AuthResponseDto> {
 
     const user = await this.validateCredentials(loginDto);
     await this.updateLastLogin(user.rut_usuario);

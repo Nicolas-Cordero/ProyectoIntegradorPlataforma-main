@@ -169,7 +169,7 @@ class AuthService {
       email: authResponse.user.email,
       nombres: userAny.nombre || userAny.nombres || '',
       apellidos: userAny.apellido || userAny.apellidos || '',
-      role: (userAny.rol || userAny.role || 'invitado') as 'admin' | 'tutor' | 'invitado' | 'academico' | 'estudiante',
+      role: (userAny.rol || userAny.role || 'invitado').toLowerCase() as 'admin' | 'tutor' | 'invitado' | 'academico' | 'estudiante',
       rut: userAny.rut || '',
       telefono: userAny.telefono || '',
       direccion: userAny.direccion || '',

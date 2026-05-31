@@ -17,7 +17,7 @@
     "test": "ts-node -r tsconfig-paths/register src/test/full-database.test.ts",
     "db:create": "ts-node -r tsconfig-paths/register scripts/create-db.ts",
     "db:migrate:status-detalle": "ts-node -r tsconfig-paths/register scripts/migrate-status-detalle.ts",
-    "seed": "ts-node -r tsconfig-paths/register src/seeder/index.ts",
+    "seed": "ts-node -r tsconfig-paths/register src/seeder/seed.ts",
     "seed:old": "ts-node -r tsconfig-paths/register src/seed.ts"
   },
   "dependencies": {

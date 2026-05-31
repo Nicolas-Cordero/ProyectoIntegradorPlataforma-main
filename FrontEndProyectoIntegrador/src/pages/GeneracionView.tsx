@@ -18,7 +18,7 @@ import {
 } from '@mui/icons-material';
 import { TypingText } from '../components/common/TypingText';
 import { useConfirmDialog } from '../components/ui';
-import { DashboardParticles } from '../components/features/dashboard/DashboardParticles';
+import { DashboardParticles } from '../components/common/Particles';
 import logoFundacion from '../assets/logos/logo.svg';
 import marcoIzquierdo from '../assets/frames/marco-izquierda.svg';
 import marcoDerecho from '../assets/frames/mardo-derecha.svg';

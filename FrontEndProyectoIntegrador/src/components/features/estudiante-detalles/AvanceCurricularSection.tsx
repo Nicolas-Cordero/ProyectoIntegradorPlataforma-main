@@ -24,7 +24,7 @@ import {
   AddSubjectModal,
   SemesterModal,
   CreateSemesterModal 
-} from '../avance-curricular';
+} from './avance-curricular';
 
 const toIdOrUndefined = (value: unknown): string | number | undefined => {
   if (value === null || value === undefined) return undefined;

@@ -4,7 +4,7 @@ import {
   Box,
   Chip
 } from '@mui/material';
-import { Modal, Input, Select, Button } from '../../../components/ui';
+import { Modal, Input, Select, Button } from '../../../ui';
 import EditIcon from '@mui/icons-material/Edit';
 
 interface Ramo {

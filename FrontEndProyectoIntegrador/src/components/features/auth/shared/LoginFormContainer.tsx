@@ -3,7 +3,7 @@ import { Box, Container, Paper, Typography, AppBar, Toolbar } from '@mui/materia
 import { Logout as LogoutIcon } from '@mui/icons-material';
 import { GradientButton } from '../../../common/GradientButton';
 import { TypingText } from '../../../common/TypingText';
-import { DashboardParticles } from '../../dashboard/DashboardParticles';
+import { BackgroundParticles } from '../../../common/Particles';
 import logoFundacion from '../../../../assets/logos/logo-fundacion.png';
 import marcoIzquierdo from '../../../../assets/frames/marco-izquierda.svg';
 import marcoDerecho from '../../../../assets/frames/mardo-derecha.svg';
@@ -58,7 +58,7 @@ export function LoginFormContainer({
         <img src={marcoDerecho} alt="" className="absolute right-0 top-0 h-screen w-auto max-w-none opacity-35 select-none hidden md:block" />
       </div>
 
-      <DashboardParticles />
+      <BackgroundParticles />
 
       {/* Navbar opcional */}
       {showLogoutButton && (

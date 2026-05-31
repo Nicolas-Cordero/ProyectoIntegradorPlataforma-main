@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography } from '@mui/material';
-import { Modal, Input, Select, Button } from '../../ui';
+import { Modal, Input, Select, Button } from '../../../ui';
 
 interface Ramo {
   nombre: string;

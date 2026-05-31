@@ -4,12 +4,10 @@ import {
   Box,
   Divider
 } from '@mui/material';
-import { Modal, Input, Button } from '../../../components/ui';
+import { Modal, Input, Button, useConfirmDialog } from '../../../ui';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import { useConfirmDialog } from '../../ui';
-
 interface Ramo {
   id?: number;
   codigo: string;

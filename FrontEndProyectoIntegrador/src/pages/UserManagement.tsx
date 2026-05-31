@@ -36,7 +36,7 @@ import {
 import { GradientButton } from '../components/common/GradientButton';
 import { TypingText } from '../components/common/TypingText';
 import { useConfirmDialog } from '../components/ui';
-import { DashboardParticles } from '../components/features/dashboard/DashboardParticles';
+import { BackgroundParticles } from '../components/common/Particles';
 import marcoIzquierdo from '../assets/frames/marco-izquierda.svg';
 import marcoDerecho from '../assets/frames/mardo-derecha.svg';
 import userSvg from '../assets/icons/user.svg';
@@ -279,7 +279,7 @@ export const UserManagement: React.FC = () => {
       </div>
 
       {/* Partículas */}
-      <DashboardParticles />
+      <BackgroundParticles />
 
       {/* Contenido Principal */}
       <div className="relative z-10 flex-1 max-w-7xl mx-auto px-6 lg:px-8 py-8 w-full">

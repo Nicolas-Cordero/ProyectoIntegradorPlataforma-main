@@ -55,7 +55,7 @@ function createParticles(): Particle[] {
   });
 }
 
-export const DashboardParticles: React.FC = () => {
+export const BackgroundParticles: React.FC = () => {
   const particles = useMemo(() => createParticles(), []);
 
   return (

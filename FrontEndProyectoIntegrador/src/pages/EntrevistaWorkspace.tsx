@@ -7,7 +7,7 @@ import { logger } from '../config';
 import type { Estudiante } from '../types';
 import { useWorkspaceTabs } from '../hooks';
 import { sidebarSections } from '../config/workspaceSections';
-import { LoadingState, ErrorState } from '../components/features/entrevista-workspace';
+import { LoadingState, ErrorState } from '../components/features/estudiante-detalles/entrevista-workspace';
 
 import { TopNavbar, Sidebar, TabManager } from '../components/features/interview-workspace';
 

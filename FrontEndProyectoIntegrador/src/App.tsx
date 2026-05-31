@@ -1,12 +1,12 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { authService } from './services/authService';
 import { logger } from './config';
 import { LoginAdminForm } from './components/features/auth/login/LoginAdminForm';
 import { Spinner } from './components/ui';
+import { MainLayout } from './components/common/MainLayout';
 
-// Lazy loading de componentes pesados para mejor rendimiento
-const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
+const EstudiantesSection = lazy(() => import('./pages/EstudiantesSection').then(m => ({ default: m.EstudiantesSection })));
 const GeneracionView = lazy(() => import('./pages/GeneracionView'));
 const EstudianteDetail = lazy(() => import('./pages/EstudianteDetail'));
 const EntrevistaWorkspace = lazy(() => import('./pages/EntrevistaWorkspace').then(m => ({ default: m.EntrevistaWorkspace })));
@@ -14,23 +14,66 @@ const UserProfile = lazy(() => import('./pages/UserProfile').then(m => ({ defaul
 const UserManagement = lazy(() => import('./pages/UserManagement'));
 const DebugPermissions = lazy(() => import('./pages/DebugPermissions'));
 
+
+//Aqui se ingresan los links de la navbar.
+const NAV_LINKS = [
+  { label: 'Estudiantes', path: '/estudiantes' },
+  { label: 'Generaciones', path: '/generaciones' },
+  { label: 'Estadisticas', path: '/estadisticas' },
+  { label: 'Perfil', path: '/perfil' },
+  { label: 'Gestion Usuarios', path: '/admin/usuarios' },
+
+];
+
+function AppRoutes({ onAuthChange }: { onAuthChange: (v: boolean) => void }) {
+  const navigate = useNavigate();
+  const [usuario, setUsuario] = useState<any>(null);
+
+  useEffect(() => {
+    const user = authService.getCurrentUser();
+    if (user) setUsuario(user);
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      onAuthChange(false);
+      navigate('/');
+    } catch (error) {
+      logger.error('❌ Error al cerrar sesión:', error);
+    }
+  };
+
+  const withLayout = (children: React.ReactNode) => (
+    <MainLayout usuario={usuario} onLogout={handleLogout} links={NAV_LINKS}>
+      {children}
+    </MainLayout>
+  );
+
+  return (
+    <Routes>
+      <Route path="/estudiantes" element={withLayout(<EstudiantesSection />)} />
+      <Route path="/perfil" element={withLayout(<UserProfile />)} />
+      <Route path="/generacion/:id" element={withLayout(<GeneracionView />)} />
+      <Route path="/estudiante/:id" element={<EstudianteDetail />} />
+      <Route path="/entrevista/:id" element={<EntrevistaWorkspace />} />
+      <Route path="/admin/usuarios" element={withLayout(<UserManagement />)} />
+      <Route path="/debug-permissions" element={<DebugPermissions />} />
+    </Routes>
+  );
+}
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Verificar autenticación al cargar la app
   useEffect(() => {
-    const checkAuth = () => {
-      const authenticated = authService.isAuthenticated();
-      logger.log('🔐 Estado de autenticación:', authenticated);
-      setIsAuthenticated(authenticated);
-      setIsLoading(false);
-    };
-    
-    checkAuth();
+    const authenticated = authService.isAuthenticated();
+    logger.log('🔐 Estado de autenticación:', authenticated);
+    setIsAuthenticated(authenticated);
+    setIsLoading(false);
   }, []);
 
-  // Función para actualizar el estado de autenticación
   const handleAuthChange = (authenticated: boolean) => {
     logger.log('🔄 Cambiando estado de autenticación a:', authenticated);
     setIsAuthenticated(authenticated);
@@ -44,101 +87,20 @@ function App() {
     <Router>
       <Suspense fallback={<Spinner fullScreen message="Cargando página..." />}>
         <Routes>
-          <Route 
-            path="/" 
+          <Route
+            path="/"
             element={
-              isAuthenticated ? 
-                <Navigate to="/dashboard" replace /> : 
+              isAuthenticated ?
+                <Navigate to="/estudiantes" replace /> :
                 <LoginAdminForm onAuthChange={handleAuthChange} />
             }
           />
-          <Route 
-            path="/dashboard" 
+          <Route
+            path="/*"
             element={
-              isAuthenticated ? 
-                <Dashboard onAuthChange={handleAuthChange} /> : 
+              isAuthenticated ?
+                <AppRoutes onAuthChange={handleAuthChange} /> :
                 <Navigate to="/" replace />
-            }
-          />
-          <Route 
-            path="/generacion/:id" 
-            element={
-              isAuthenticated ? 
-                <GeneracionView /> : 
-                <Navigate to="/" replace />
-            }
-          />
-          <Route 
-            path="/estudiante/:id" 
-            element={
-              isAuthenticated ? 
-                <EstudianteDetail /> : 
-                <Navigate to="/" replace />
-            }
-          />
-          <Route 
-            path="/entrevista/:id" 
-            element={
-              isAuthenticated ? 
-                <EntrevistaWorkspace /> : 
-                <Navigate to="/" replace />
-            }
-          />
-          <Route 
-            path="/perfil" 
-            element={
-              isAuthenticated ? 
-                <UserProfile /> : 
-                <Navigate to="/" replace />
-            }
-          />
-          <Route 
-            path="/admin/usuarios" 
-            element={
-              isAuthenticated ? 
-                <UserManagement /> : 
-                <Navigate to="/" replace />
-            }
-          />
-          <Route 
-            path="/debug-permissions" 
-            element={
-              isAuthenticated ? 
-                <DebugPermissions /> : 
-                <Navigate to="/" replace />
-            }
-          />
-          <Route 
-            path="/test" 
-            element={
-              <div className="min-h-screen bg-[var(--color-turquoise)] p-8 text-black">
-                <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
-                  <h1 className="text-3xl font-bold mb-4">🔧 Página de Debug</h1>
-                  <h2 className="text-xl font-semibold mb-3">Estado actual:</h2>
-                  <ul className="space-y-2 mb-6 text-sm">
-                    <li className="p-2 bg-gray-100 rounded">
-                      <strong>Token:</strong> {localStorage.getItem('token') || '❌ No existe'}
-                    </li>
-                    <li className="p-2 bg-gray-100 rounded">
-                      <strong>Usuario:</strong> {localStorage.getItem('user') || '❌ No existe'}
-                    </li>
-                    <li className="p-2 bg-gray-100 rounded">
-                      <strong>Autenticado:</strong> {isAuthenticated ? '✅ SÍ' : '❌ NO'}
-                    </li>
-                  </ul>
-                  <button 
-                    onClick={() => {
-                      localStorage.clear();
-                      setIsAuthenticated(false);
-                      window.location.href = '/';
-                    }}
-                    className="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
-                    aria-label="Limpiar almacenamiento local y volver al login"
-                  >
-                    🗑️ Limpiar localStorage y ir al login
-                  </button>
-                </div>
-              </div>
             }
           />
         </Routes>

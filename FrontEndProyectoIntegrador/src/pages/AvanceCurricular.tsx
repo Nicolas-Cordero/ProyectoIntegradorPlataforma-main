@@ -33,7 +33,7 @@ import {
   AddSubjectModal,
   SemesterModal,
   CreateSemesterModal
-} from '../components/features/avance-curricular';
+} from '../components/features/estudiante-detalles/avance-curricular';
 
 //  INTERFACES PARA AVANCE CURRICULAR
 interface MallaCurricular {

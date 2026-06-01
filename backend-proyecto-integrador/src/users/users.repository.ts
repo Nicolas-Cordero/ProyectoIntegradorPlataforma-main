@@ -136,13 +136,16 @@ export class UsersRepository{
     return this.prisma.usuario.findMany();
   }
 
-  delete(rut_usuario: string): Promise<usuario> {
+  async delete(rut_usuario: string): Promise<usuario> {
     try {
-      return this.prisma.usuario.delete({
-        where: { rut_usuario },
+      await this.prisma.audit_log.deleteMany({
+        where: { rut_usuario }
+      });
+
+      return await this.prisma.usuario.delete({
+        where: { rut_usuario }
       });
     } catch (error) {
-      // ejemplo: usuario no existe
       throw new Error('No se pudo eliminar el usuario');
     }
   }

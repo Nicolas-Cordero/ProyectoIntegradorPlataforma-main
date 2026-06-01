@@ -40,6 +40,7 @@ import { BackgroundParticles } from '../components/common/Particles';
 import marcoIzquierdo from '../assets/frames/marco-izquierda.svg';
 import marcoDerecho from '../assets/frames/mardo-derecha.svg';
 import userSvg from '../assets/icons/user.svg';
+import {UserRol, type UserRolType} from '../types';
 
 export const UserManagement: React.FC = () => {
   const navigate = useNavigate();
@@ -64,7 +65,7 @@ export const UserManagement: React.FC = () => {
     password: '',
     rut: '',
     telefono: '',
-    rol: 'tutor' as 'tutor' | 'visita'
+    rol: UserRol.TUTOR as UserRolType
   });
 
   useEffect(() => {
@@ -125,7 +126,7 @@ export const UserManagement: React.FC = () => {
       const usersData = await userService.getAll();
       const mappedUsers = (usersData as any[]).map((user) => ({
         ...user,
-        role: user.rol || user.role || 'visita',
+        role: user.rol || user.role || UserRol.VISITA,
         nombres: user.nombre || user.nombres || '',
         apellidos: user.apellido || user.apellidos || '',
       }));
@@ -140,9 +141,9 @@ export const UserManagement: React.FC = () => {
     if (tabValue === 'todos') {
       setFilteredUsers(users);
     } else if (tabValue === 'tutores') {
-      setFilteredUsers(users.filter(u => u.role === 'tutor'));
+      setFilteredUsers(users.filter(u => u.rol === UserRol.TUTOR));
     } else {
-      setFilteredUsers(users.filter(u => u.role === 'visita' || u.role === 'invitado'));
+      setFilteredUsers(users.filter(u => u.rol === UserRol.VISITA || u.rol === UserRol.INVITADO));
     }
   };
 
@@ -150,13 +151,13 @@ export const UserManagement: React.FC = () => {
     if (user) {
       setEditingUser(user);
       setFormData({
-        nombres: user.nombres || '',
-        apellidos: user.apellidos || '',
+        nombres: user.nombre || '',
+        apellidos: user.apellido || '',
         email: user.email,
         password: '',
-        rut: user.rut || '',
+        rut: user.rut_usuario || '',
         telefono: user.telefono || '',
-        rol: (user as any).rol || user.role as 'tutor' | 'visita'
+        rol: (user as any).rol || user.rol as UserRolType
       });
     } else {
       setEditingUser(null);
@@ -167,7 +168,7 @@ export const UserManagement: React.FC = () => {
         password: '',
         rut: '',
         telefono: '',
-        rol: 'tutor'
+        rol: UserRol.TUTOR
       });
     }
     setOpenDialog(true);
@@ -183,7 +184,7 @@ export const UserManagement: React.FC = () => {
       password: '',
       rut: '',
       telefono: '',
-      rol: 'tutor'
+      rol: UserRol.TUTOR
     });
   };
 
@@ -202,13 +203,13 @@ export const UserManagement: React.FC = () => {
     try {
       // Mapear datos del frontend al formato del backend
       const userData = {
-        username: formData.email, // Usar email como username
+        rut_usuario: formData.rut,
         nombre: formData.nombres,
         apellido: formData.apellidos,
         email: formData.email,
+        telefono: formData.telefono,
+        rol: formData.rol as UserRolType, // El backend espera 'TUTOR' o 'VISITA' en mayúsculas
         password: formData.password,
-        rol: formData.rol, // El backend espera 'tutor' o 'visita' en minúsculas
-        activo: true
       };
 
       console.log('📤 Enviando datos de usuario:', userData);
@@ -219,12 +220,13 @@ export const UserManagement: React.FC = () => {
         if (!updateData.password) {
           delete (updateData as any).password; // No enviar password vacío en actualizaciones
         }
-        await userService.update(editingUser.id!, updateData);
+        await userService.update(editingUser.rut_usuario!, updateData);
         setSnackbar({ open: true, message: 'Usuario actualizado exitosamente', severity: 'success' });
       } else {
         // Crear nuevo usuario
         await userService.create(userData);
-        setSnackbar({ open: true, message: `${formData.rol === 'tutor' ? 'Tutor' : 'Visitante'} creado exitosamente`, severity: 'success' });
+        console.log(userData);
+        setSnackbar({ open: true, message: `${formData.rol === UserRol.TUTOR ? 'Tutor' : 'Visitante'} creado exitosamente`, severity: 'success' });
       }
       
       handleCloseDialog();
@@ -250,13 +252,16 @@ export const UserManagement: React.FC = () => {
     });
   };
 
-  const getRoleColor = (role: string): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' => {
-    const colorMap: { [key: string]: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' } = {
-      'admin': 'error',
-      'tutor': 'primary',
-      'visita': 'info'
+  const getRoleColor = (role: UserRolType): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' => {
+    const colorMap: { [key in UserRolType]: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' } = {
+      [UserRol.ADMIN]: 'error',
+      [UserRol.TUTOR]: 'primary',
+      [UserRol.VISITA]: 'info',
+      [UserRol.ACADEMICO]: 'success',
+      [UserRol.ESTUDIANTE]: 'warning',
+      [UserRol.INVITADO]: 'secondary',
     };
-    return colorMap[role] || 'secondary';
+    return colorMap[role] ?? 'secondary';
   };
 
   return (
@@ -345,13 +350,13 @@ export const UserManagement: React.FC = () => {
           >
             <Tab label={`Todos (${users.length})`} value="todos" />
             <Tab 
-              label={`Tutores (${users.filter(u => u.role === 'tutor').length})`} 
+              label={`Tutores (${users.filter(u => u.rol === 'TUTOR').length})`} 
               value="tutores"
               icon={<TutorIcon />}
               iconPosition="start"
             />
             <Tab 
-              label={`Visitas (${users.filter(u => u.role === 'visita' || u.role === 'invitado').length})`}
+              label={`Visitas (${users.filter(u => u.rol === UserRol.VISITA || u.rol === UserRol.INVITADO).length})`}
               value="visitas"
               icon={<VisibilityIcon />}
               iconPosition="start"
@@ -415,7 +420,7 @@ export const UserManagement: React.FC = () => {
                 </TableRow>
               ) : (
                 filteredUsers.map((user) => (
-                  <TableRow key={user.id} hover sx={{ '&:hover': { backgroundColor: 'rgba(101, 179, 155, 0.04)' } }}>
+                  <TableRow key={user.rut_usuario} hover sx={{ '&:hover': { backgroundColor: 'rgba(101, 179, 155, 0.04)' } }}>
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Avatar sx={{ width: 40, height: 40, bgcolor: 'rgba(101, 179, 155, 0.2)' }}>
@@ -432,29 +437,21 @@ export const UserManagement: React.FC = () => {
                         </Avatar>
                         <Box>
                           <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1f2937' }}>
-                            {user.nombres} {user.apellidos}
+                            {user.nombre} {user.apellido}
                           </Typography>
                           <Typography variant="caption" color="textSecondary">
-                            {user.fecha_creacion && `Desde ${new Date(user.fecha_creacion).toLocaleDateString('es-CL')}`}
+                            {user.created_at && `Desde ${new Date(user.created_at).toLocaleDateString('es-CL')}`}
                           </Typography>
                         </Box>
                       </Box>
                     </TableCell>
                     <TableCell sx={{ color: '#6b7280' }}>{user.email}</TableCell>
-                    <TableCell sx={{ color: '#6b7280' }}>{user.rut || '-'}</TableCell>
+                    <TableCell sx={{ color: '#6b7280' }}>{user.rut_usuario || '-'}</TableCell>
                     <TableCell sx={{ color: '#6b7280' }}>{user.telefono || '-'}</TableCell>
                     <TableCell>
                       <Chip 
-                        label={(user.role || '').charAt(0).toUpperCase() + (user.role || '').slice(1)}
-                        color={getRoleColor(user.role || '')}
-                        size="small"
-                        sx={{ fontWeight: 600 }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={user.activo ? 'Activo' : 'Inactivo'}
-                        color={user.activo ? 'success' : 'default'}
+                        label={(user.rol || '').charAt(0).toUpperCase() + (user.rol || '').slice(1)}
+                        color={getRoleColor(user.rol as UserRolType)}
                         size="small"
                         sx={{ fontWeight: 600 }}
                       />
@@ -482,7 +479,7 @@ export const UserManagement: React.FC = () => {
                       <IconButton 
                         size="small" 
                         color="error"
-                        onClick={() => handleDeleteUser(user.id)}
+                        onClick={() => handleDeleteUser(user.rut_usuario!)}
                         title="Eliminar usuario"
                       >
                         <DeleteIcon fontSize="small" />
@@ -549,11 +546,11 @@ export const UserManagement: React.FC = () => {
           <Select
             etiqueta="Rol"
             opciones={[
-              { valor: 'tutor', etiqueta: 'Tutor' },
-              { valor: 'visita', etiqueta: 'Visita' }
+              { valor: UserRol.TUTOR, etiqueta: 'Tutor' },
+              { valor: UserRol.VISITA, etiqueta: 'Visita' }
             ]}
             valor={formData.rol}
-            onChange={(v) => setFormData({ ...formData, rol: v as 'tutor' | 'visita' })}
+            onChange={(v) => setFormData({ ...formData, rol: v as UserRolType })}
             requerido
           />
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
@@ -579,7 +576,7 @@ export const UserManagement: React.FC = () => {
           setShowPasswordChange(false);
           setPasswordChangeUser(null);
         }}
-        userId={passwordChangeUser?.id}
+        userId={passwordChangeUser?.rut_usuario}
         requireCurrentPassword={false}
         onSuccess={() => {
           setSnackbar({ open: true, message: 'Contraseña cambiada exitosamente', severity: 'success' });

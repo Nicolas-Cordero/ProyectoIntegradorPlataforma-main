@@ -2,56 +2,56 @@
 // SERVICIO DE USUARIOS
 // =====================================
 
+import type { Usuario } from '../types';
 import { BaseHttpClient } from './base.http';
 
 class UserService extends BaseHttpClient {
   
-  async getAll(): Promise<any[]> {
-    return await this.request<any[]>('/users');
+  async getAll(): Promise<Usuario[]> {
+    return await this.request<Usuario[]>('/users');
   }
 
-  async create(data: any): Promise<any> {
+  async create(data: Partial<Usuario>): Promise<Usuario> {
     return this.request('/users', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async update(id: string, data: any): Promise<any> {
-    return this.request(`/users/${id}`, {
+  async update(rut: string, data: Partial<Usuario>): Promise<Usuario> {
+    return this.request(`/users/${rut}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   }
 
-  async delete(id: string): Promise<void> {
-    return this.request(`/users/${id}`, {
+  async delete(rut: string): Promise<any> {
+    return this.request(`/users/${rut}`, {
       method: 'DELETE',
     });
   }
 
-  async getCurrentProfile(): Promise<any> {
-    return await this.request('/auth/profile');
+  async getCurrentProfile(rut: string): Promise<Usuario> {
+    return await this.request(`/users/${rut}`);
   }
 
-  async updateCurrentProfile(data: any): Promise<any> {
-    // Obtener el usuario actual para conseguir su ID
-    const currentUser = await this.getCurrentProfile();
-    return this.request(`/users/${currentUser.id}`, {
+  async updateCurrentProfile(rut: string, data: Partial<Usuario>): Promise<Usuario> {
+    console.log(rut, data);
+    return this.request(`/users/${rut}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   }
 
-  async changeUserPassword(userId: string, newPassword: string): Promise<any> {
-    return this.request(`/users/${userId}/change-password`, {
+  async changeUserPassword(rut: string, newPassword: string): Promise<Usuario> {
+    return this.request(`/users/${rut}/password`, {
       method: 'PATCH',
       body: JSON.stringify({ password: newPassword }),
     });
   }
 
-  async changeOwnPassword(currentPassword: string, newPassword: string): Promise<any> {
-    return this.request('/users/profile/password', {
+  async changeOwnPassword(rut: string, currentPassword: string, newPassword: string): Promise<Usuario> {
+    return this.request(`/users/${rut}/password/change`, {
       method: 'PATCH',
       body: JSON.stringify({ 
         currentPassword,

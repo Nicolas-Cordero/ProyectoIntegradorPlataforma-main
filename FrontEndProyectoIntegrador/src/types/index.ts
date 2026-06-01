@@ -1,4 +1,19 @@
-﻿// Tipos literales del backend
+﻿export const UserRol = {
+  ADMIN: 'ADMIN',
+  ACADEMICO: 'ACADEMICO',
+  ESTUDIANTE: 'ESTUDIANTE',
+  TUTOR: 'TUTOR',
+  INVITADO: 'INVITADO',
+  VISITA: 'VISITA',
+} as const;
+
+export type UserRolType = typeof UserRol[keyof typeof UserRol];
+
+// ============================================
+
+
+
+// Tipos literales del backend
 export type TipoEstudiante = 'media' | 'universitario';
 
 export const TipoEstudiante = {
@@ -27,20 +42,16 @@ export type TipoBeneficio = typeof TipoBeneficio[keyof typeof TipoBeneficio];
 // ============================================
 
 export interface Usuario {
-  id: string;
-  nombres?: string;
-  apellidos?: string;
-  rut?: string;
+  nombre?: string;
+  apellido?: string;
+  rut_usuario: string;
   email: string;
-  role?: 'admin' | 'academico' | 'estudiante' | 'tutor' | 'invitado' | 'visita';
+  rol?: UserRolType;
   password?: string;
   telefono?: string;
-  direccion?: string;
-  fecha_nacimiento?: string;
-  activo?: boolean;
-  creado_por?: string;
-  fecha_creacion?: string;
-  fecha_actualizacion?: string;
+  ultimo_login?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Estudiante {

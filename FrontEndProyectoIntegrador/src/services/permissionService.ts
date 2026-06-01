@@ -3,17 +3,9 @@
  * Centraliza la lógica de autorización de la aplicación
  */
 
-import type { Usuario } from '../types';
+import type { Usuario, UserRolType } from '../types';
+import { UserRol } from '../types';
 
-/**
- * Roles disponibles en el sistema
- */
-export const UserRole = {
-  ADMIN: 'admin',
-  TUTOR: 'tutor',
-  INVITADO: 'invitado'
-} as const;
-export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 /**
  * Servicio de permisos
@@ -28,8 +20,8 @@ export default class PermissionService {
       console.log('🔴 isAdmin: usuario es null');
       return false;
     }
-    console.log('🔍 isAdmin - Role:', user.role);
-    return user.role === 'admin';
+    console.log('🔍 isAdmin - Role:', user.rol);
+    return user.rol === UserRol.ADMIN;
   }
 
   /**
@@ -37,7 +29,7 @@ export default class PermissionService {
    */
   static isTutor(user: Usuario | null): boolean {
     if (!user) return false;
-    return user.role === 'tutor';
+    return user.rol === UserRol.TUTOR;
   }
 
   /**
@@ -45,7 +37,7 @@ export default class PermissionService {
    */
   static isInvitado(user: Usuario | null): boolean {
     if (!user) return false;
-    return user.role === 'invitado';
+    return user.rol === UserRol.INVITADO;
   }
 
   /**
@@ -104,7 +96,7 @@ export default class PermissionService {
   static canEditInterview(user: Usuario | null, interviewCreatorId?: string): boolean {
     if (!user) return false;
     if (this.isAdmin(user)) return true;
-    if (interviewCreatorId && user.id === interviewCreatorId) return true;
+    if (interviewCreatorId && user.rut_usuario === interviewCreatorId) return true;
     return false;
   }
 
@@ -161,9 +153,9 @@ export default class PermissionService {
    */
   static getAllRoles(): Array<{ value: string; label: string }> {
     return [
-      { value: UserRole.ADMIN, label: 'Administrador' },
-      { value: UserRole.TUTOR, label: 'Tutor' },
-      { value: UserRole.INVITADO, label: 'Invitado' }
+      { value: UserRol.ADMIN, label: 'Administrador' },
+      { value: UserRol.TUTOR, label: 'Tutor' },
+      { value: UserRol.INVITADO, label: 'Invitado' }
     ];
   }
 
@@ -187,9 +179,7 @@ export default class PermissionService {
    * Valida si un rol es válido
    */
   static isValidRole(role: string): boolean {
-    return Object.values(UserRole).includes(role as UserRole);
+    return Object.values(UserRol).includes(role as UserRolType);
   }
 }
 
-// Exportar también el enum para uso directo
-export { UserRole as Role };

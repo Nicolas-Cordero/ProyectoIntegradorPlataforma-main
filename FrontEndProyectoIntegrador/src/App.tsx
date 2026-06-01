@@ -15,16 +15,6 @@ const UserManagement = lazy(() => import('./pages/UserManagement'));
 const DebugPermissions = lazy(() => import('./pages/DebugPermissions'));
 
 
-//Aqui se ingresan los links de la navbar.
-const NAV_LINKS = [
-  { label: 'Estudiantes', path: '/estudiantes' },
-  { label: 'Generaciones', path: '/generaciones' },
-  { label: 'Estadisticas', path: '/estadisticas' },
-  { label: 'Perfil', path: '/perfil' },
-  { label: 'Gestion Usuarios', path: '/admin/usuarios' },
-
-];
-
 function AppRoutes({ onAuthChange }: { onAuthChange: (v: boolean) => void }) {
   const navigate = useNavigate();
   const [usuario, setUsuario] = useState<any>(null);
@@ -33,6 +23,16 @@ function AppRoutes({ onAuthChange }: { onAuthChange: (v: boolean) => void }) {
     const user = authService.getCurrentUser();
     if (user) setUsuario(user);
   }, []);
+
+  const isAdmin = usuario?.rol === 'ADMIN';
+
+  const NAV_LINKS = [
+    { label: 'Estudiantes', path: '/estudiantes' },
+    { label: 'Generaciones', path: '/generaciones' },
+    { label: 'Estadisticas', path: '/estadisticas' },
+    { label: 'Perfil', path: '/perfil' },
+    ...(isAdmin ? [{ label: 'Gestion Usuarios', path: '/admin/usuarios' }] : []),
+  ];
 
   const handleLogout = async () => {
     try {

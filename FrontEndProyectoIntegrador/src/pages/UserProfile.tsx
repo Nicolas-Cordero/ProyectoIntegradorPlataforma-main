@@ -28,6 +28,9 @@ import {
   Lock as LockIcon
 } from '@mui/icons-material';
 
+
+
+
 interface UserProfileProps {}
 
 export const UserProfile: React.FC<UserProfileProps> = () => {
@@ -55,16 +58,20 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
     }
 
     console.log('✅ UserProfile - Usuario autenticado, cargando perfil...');
+
+
+
+
     try {
-      const profileData = await userService.getCurrentProfile();
+      const profileData = await userService.getCurrentProfile(authService.getCurrentUserOrThrow().rut_usuario);
       console.log('✅ UserProfile - Perfil cargado desde API:', profileData);
       
       // Mapear los campos del backend al formato del frontend
       const mappedProfileData = {
         ...profileData,
-        nombres: (profileData as any).nombre || profileData.nombres,
-        apellidos: (profileData as any).apellido || profileData.apellidos,
-        role: (profileData as any).rol || profileData.role,
+        nombres: (profileData as any).nombre || profileData.nombre,
+        apellidos: (profileData as any).apellido || profileData.apellido,
+        role: (profileData as any).rol || profileData.rol,
       };
       
       setUser(mappedProfileData);
@@ -78,9 +85,9 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
         // Aplicar mapeo también al fallback
         const mappedCurrentUser = {
           ...currentUser,
-          nombres: (currentUser as any).nombre || currentUser.nombres,
-          apellidos: (currentUser as any).apellido || currentUser.apellidos,
-          role: (currentUser as any).rol || currentUser.role,
+          nombres: (currentUser as any).nombre || currentUser.nombre,
+          apellidos: (currentUser as any).apellido || currentUser.apellido,
+          role: (currentUser as any).rol || currentUser.rol,
         };
         setUser(mappedCurrentUser);
         setEditedUser({ ...mappedCurrentUser });
@@ -108,12 +115,12 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
       const updateData: any = {};
       
       // Campos que pueden actualizarse según CreateUserDto
-      if (editedUser.nombres && editedUser.nombres !== user.nombres) {
-        updateData.nombre = editedUser.nombres.trim();
+      if (editedUser.nombre && editedUser.nombre !== user.nombre) {
+        updateData.nombre = editedUser.nombre.trim();
       }
       
-      if (editedUser.apellidos && editedUser.apellidos !== user.apellidos) {
-        updateData.apellido = editedUser.apellidos.trim();
+      if (editedUser.apellido && editedUser.apellido !== user.apellido) {
+        updateData.apellido = editedUser.apellido.trim();
       }
       
       if (editedUser.email && editedUser.email !== user.email) {
@@ -130,7 +137,7 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
       }
 
       console.log('📤 Enviando actualización de perfil:', updateData);
-      const updatedProfile = await userService.updateCurrentProfile(updateData);
+      const updatedProfile = await userService.updateCurrentProfile(authService.getCurrentUserOrThrow().rut_usuario, updateData);
       
       console.log('📥 Respuesta del servidor:', updatedProfile);
       
@@ -219,13 +226,6 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
       <Container maxWidth="md">
         {/* Header */}
         <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Button 
-            variant="outlined" 
-            onClick={() => navigate('/dashboard')}
-            sx={{ minWidth: 'auto', px: 2 }}
-          >
-            ← Volver
-          </Button>
           <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1f2937' }}>
             Mi Perfil
           </Typography>
@@ -256,21 +256,21 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
 
                 <Box>
                   <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 0.5 }}>
-                    {user.nombres && user.apellidos 
-                      ? `${user.nombres} ${user.apellidos}`
-                      : user.email.split('@')[0]
+                    {user.nombre && user.apellido 
+                      ? `${user.nombre} ${user.apellido}`
+                      : user.email?.split('@')[0] ?? 'Usuario'
                     }
                   </Typography>
                   
                   <Chip 
-                    label={getRoleDisplayName(user.role || '')} 
-                    color={getRoleColor(user.role || '')}
+                    label={getRoleDisplayName(user.rol || '')} 
+                    color={getRoleColor(user.rol || '')}
                     sx={{ mb: 1 }}
                   />
                   
-                  {user.rut && (
+                  {user.rut_usuario && (
                     <Typography variant="body2" color="textSecondary">
-                      RUT: {user.rut}
+                      RUT: {user.rut_usuario}
                     </Typography>
                   )}
                 </Box>
@@ -341,13 +341,13 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
                   {isEditing ? (
                     <Input
                       etiqueta=""
-                      valor={editedUser?.nombres || ''}
-                      onChange={(v) => handleInputChange('nombres', v)}
+                      valor={editedUser?.nombre || ''}
+                      onChange={(v) => handleInputChange('nombre', v)}
                       placeholder="Nombres"
                     />
                   ) : (
                     <Typography variant="body1" sx={{ mb: 2, ml: 4 }}>
-                      {user.nombres || 'No especificado'}
+                      {user.nombre || 'No especificado'}
                     </Typography>
                   )}
                 </Grid>
@@ -362,13 +362,13 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
                   {isEditing ? (
                     <Input
                       etiqueta=""
-                      valor={editedUser?.apellidos || ''}
-                      onChange={(v) => handleInputChange('apellidos', v)}
+                      valor={editedUser?.apellido || ''}
+                      onChange={(v) => handleInputChange('apellido', v)}
                       placeholder="Apellidos"
                     />
                   ) : (
                     <Typography variant="body1" sx={{ mb: 2, ml: 4 }}>
-                      {user.apellidos || 'No especificado'}
+                      {user.apellido || 'No especificado'}
                     </Typography>
                   )}
                 </Grid>
@@ -437,8 +437,8 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
                   </Typography>
                 </Box>
                 <Chip 
-                  label={getRoleDisplayName(user.role || '')} 
-                  color={getRoleColor(user.role || '')}
+                  label={getRoleDisplayName(user.rol || '')} 
+                  color={getRoleColor(user.rol || '')}
                   size="small"
                 />
               </Grid>
@@ -451,8 +451,8 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
                   </Typography>
                 </Box>
                 <Typography variant="body2">
-                  {user.fecha_creacion 
-                    ? new Date(user.fecha_creacion).toLocaleDateString('es-CL')
+                  {user.created_at 
+                    ? new Date(user.created_at).toLocaleDateString('es-CL')
                     : 'No disponible'
                   }
                 </Typography>

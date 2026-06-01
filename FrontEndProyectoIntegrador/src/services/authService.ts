@@ -2,7 +2,7 @@
 // SERVICIO DE AUTENTICACIÓN
 // ════════════════════════════════════════════════════════════════════════════
 
-import type { LoginCredentials, AuthResponse, Usuario } from '../types';
+import { type LoginCredentials, type AuthResponse, type Usuario, UserRol, type UserRolType } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -45,33 +45,40 @@ class AuthService {
   async loginAdmin(credentials: LoginCredentials): Promise<AuthResponse> {
     const result = await this.login(credentials);
     
-    if (result.user.role !== 'admin') {
+    if (result.user.rol !== UserRol.ADMIN) {
       throw new Error('Acceso denegado: se requieren permisos de administrador');
     }
     
     return result;
   }
 
-  async logout(): Promise<void> {
-    const token = this.getToken();
-    
-    if (token) {
-      try {
-        await fetch(`${API_BASE_URL}/auth/logout`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-      } catch (error) {
-        console.warn('No se pudo notificar logout al backend:', error);
-      }
-    }
 
-    this.clearAuthData();
+
+async logout(): Promise<void> {
+  const token = this.getToken();
+  const refreshToken = localStorage.getItem('refreshtoken');
+
+  if (token) {
+    try {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+    } catch (error) {
+      console.warn('No se pudo notificar logout al backend:', error);
+    }
   }
 
+  this.clearAuthData();
+}
+
+
+
+  
   getCurrentUser(): Usuario | null {
     if (this.currentUser) {
       return this.currentUser;
@@ -86,9 +93,16 @@ class AuthService {
     return null;
   }
 
+  getCurrentUserOrThrow(): Usuario {
+    const user = this.getCurrentUser();
+    console.log(user);
+    if (!user) throw new Error('No hay usuario autenticado');
+    return user;
+  }
+
   isAdmin(): boolean {
     const user = this.getCurrentUser();
-    return user?.role === 'admin';
+    return user?.rol === UserRol.ADMIN;
   }
 
   async verifyToken(): Promise<boolean> {
@@ -165,16 +179,12 @@ class AuthService {
     
     // Mapear campos del backend al formato del frontend
     const userToSave: Usuario = {
-      id: String(authResponse.user.id || userAny.sub || ''),
+      rut_usuario: userAny.rut_usuario || '',
+      nombre: userAny.nombre || userAny.nombre || '',
+      apellido: userAny.apellido || userAny.apellido || '',
       email: authResponse.user.email,
-      nombres: userAny.nombre || userAny.nombres || '',
-      apellidos: userAny.apellido || userAny.apellidos || '',
-      role: (userAny.rol || userAny.role || 'invitado').toLowerCase() as 'admin' | 'tutor' | 'invitado' | 'academico' | 'estudiante',
-      rut: userAny.rut || '',
       telefono: userAny.telefono || '',
-      direccion: userAny.direccion || '',
-      fecha_nacimiento: userAny.fecha_nacimiento || null,
-      activo: userAny.activo !== undefined ? userAny.activo : true,
+      rol: (userAny.rol || userAny.rol || UserRol.INVITADO) as UserRolType,
     };
     
     console.log('✅ Usuario guardado en localStorage:', userToSave);

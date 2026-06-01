@@ -42,7 +42,9 @@ export class UsersController {
 
   @Get(':rut')
   async findOne(@Param('rut') rut: string): Promise<usuario> {
-    return this.usersService.findOne(rut);
+    const user = this.usersService.findOne(rut);
+    console.log(user);
+    return user;
   }
 
 
@@ -52,7 +54,9 @@ export class UsersController {
     @Param('rut') rut: string,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<usuario> {
-    return this.usersService.update(rut, updateUserDto);
+    const user = this.usersService.update(rut, updateUserDto);
+    console.log(user);
+    return user;
   }
 
 

@@ -10,7 +10,7 @@ interface EstudiantesSectionProps {}
 
 export const EstudiantesSection: React.FC<EstudiantesSectionProps> = () => {
   const navigate = useNavigate();
-  const [sortField, setSortField] = useState<keyof UIStudent>('apellidos');
+  const [sortField, setSortField] = useState<keyof UIStudent>('apellido');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [students, setStudents] = useState<UIStudent[]>([]);
   const { showConfirm, ConfirmDialog } = useConfirmDialog();

@@ -13,6 +13,7 @@ const EntrevistaWorkspace = lazy(() => import('./pages/EntrevistaWorkspace').the
 const UserProfile = lazy(() => import('./pages/UserProfile').then(m => ({ default: m.UserProfile })));
 const UserManagement = lazy(() => import('./pages/UserManagement'));
 const DebugPermissions = lazy(() => import('./pages/DebugPermissions'));
+const GeneracionesPanel = lazy(() => import('./pages/GeneracionesPanel').then(m => ({ default: m.GeneracionesPanel })));
 
 
 function AppRoutes({ onAuthChange }: { onAuthChange: (v: boolean) => void }) {
@@ -54,6 +55,7 @@ function AppRoutes({ onAuthChange }: { onAuthChange: (v: boolean) => void }) {
     <Routes>
       <Route path="/estudiantes" element={withLayout(<EstudiantesSection />)} />
       <Route path="/perfil" element={withLayout(<UserProfile />)} />
+      <Route path="/generaciones" element={withLayout(<GeneracionesPanel />)} />
       <Route path="/generacion/:id" element={withLayout(<GeneracionView />)} />
       <Route path="/estudiante/:id" element={<EstudianteDetail />} />
       <Route path="/entrevista/:id" element={<EntrevistaWorkspace />} />

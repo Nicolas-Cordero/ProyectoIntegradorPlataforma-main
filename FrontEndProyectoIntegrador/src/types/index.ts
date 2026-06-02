@@ -30,6 +30,17 @@ export const StatusEstudiante = {
   RETIRADO: 'retirado' as const,
 };
 
+export type Genero = 'MASCULINO' | 'FEMENINO' | 'NO_BINARIO';
+
+export type EstadoEstudiante =
+  | 'ACTIVO'
+  | 'CONDICIONAL'
+  | 'ELIMINADO'
+  | 'SUSPENDIDO'
+  | 'RETIRADO'
+  | 'EGRESADO'
+  | 'TITULADO';
+
 export const TipoBeneficio = {
   BECA: 'BECA',
   CREDITO: 'CREDITO',
@@ -55,54 +66,34 @@ export interface Usuario {
 }
 
 export interface Estudiante {
-  // Campos principales del backend
-  id_estudiante: string | number;
+  // Clave primaria
+  rut_estudiante: string;
+
+  // Campos requeridos
   nombre: string;
-  rut: string;
-  fecha_de_nacimiento?: Date | string;
-  genero?: string;
-  tipo_de_estudiante: TipoEstudiante;
-  generacion?: string;
-  numero_carrera?: number;
-  observaciones?: string;
-  
-  // === CAMPOS MIGRADOS (usar servicios específicos) ===
-  // telefono, email, direccion -> informacionContactoService
-  // status, status_detalle, semestres_suspendidos, semestres_total_carrera -> estadoAcademicoService
+  apellido: string;
+  email: string;
+  telefono: string;
+  generacion: string;
+  fecha_nacimiento: Date | string;
+  direccion: string;
+  genero: Genero;
+  rbd_liceo: string;
+  estado: EstadoEstudiante;
+  promedios_media: number;
 
+  // Campos opcionales
+  puntaje_paes?: number;
   foto_url?: string;
-  
-  // Relaciones
-  institucion?: Institucion;
-  familia?: Familia;
-  ramosCursados?: RamosCursados[];
-  historialesAcademicos?: HistorialAcademico[];
-  informacionAcademica?: InformacionAcademica;
-  
-  // Campos de compatibilidad/legacy
-  id?: number;
-  nombres?: string;
-  apellidos?: string;
-  estado?: string;
-  año_generacion?: number;
-  carrera?: string;
-  universidad?: string;
-  promedio?: number;
-  beca?: string;
-  liceo?: string;
-  especialidad?: string;
-  promedio_liceo?: number;
-  duracion_carrera?: string;
-  via_acceso?: string;
-  semestre?: number;
-  region?: string;
-  institucion_id?: string;
-  año_ingreso?: number;
-  edad?: number;
-  activo?: boolean;
 
-  fecha_creacion?: string;
-  fecha_actualizacion?: string;
+  // Relaciones (opcionales porque la API puede no incluirlas siempre)
+  liceo?: Liceo;
+  familiares?: Familiar[];
+  beneficios?: BeneficioEstudiante[];
+  carreras?: Carrera[];
+  ramos?: Ramo[];
+  entrevistas?: Entrevista[];
+  contactos_emergencia?: ContactoEmergencia[];
 }
 
 // ============================================
@@ -222,6 +213,72 @@ export interface InformacionAcademica {
   created_at?: Date;
   updated_at?: Date;
 }
+// ============================================
+
+export interface Liceo {
+  rbd: string;
+  nombre: string;
+  direccion?: string;
+  comuna?: string;
+  region?: string;
+  telefono?: string;
+  email?: string;
+}
+
+// ============================================
+
+export interface Familiar {
+  id: number;
+  rut_estudiante: string;
+  nombre: string;
+  apellido: string;
+  parentesco: string;
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  observaciones?: string;
+}
+
+// ============================================
+
+export interface Carrera {
+  id: number;
+  rut_estudiante: string;
+  nombre_carrera: string;
+  institucion?: string;
+  año_ingreso?: number;
+  año_egreso?: number;
+  activa: boolean;
+  observaciones?: string;
+}
+
+// ============================================
+
+export interface Ramo {
+  id: number;
+  rut_estudiante: string;
+  nombre: string;
+  codigo?: string;
+  semestre?: number;
+  año?: number;
+  nota?: number;
+  estado: EstadoRamo;
+}
+
+export type EstadoRamo = 'APROBADO' | 'REPROBADO' | 'CURSANDO' | 'ELIMINADO';
+
+// ============================================
+
+export interface ContactoEmergencia {
+  id: number;
+  rut_estudiante: string;
+  nombre: string;
+  apellido: string;
+  parentesco?: string;
+  telefono: string;
+  email?: string;
+}
+
 // ============================================
 
 export interface Entrevista {

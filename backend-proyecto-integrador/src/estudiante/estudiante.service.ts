@@ -52,6 +52,12 @@ export class EstudianteService {
     return estudiante;
   }
 
+  async findAllGenerations(): Promise<string[]> {
+    const estudiantes = await this.estudianteRepo.findAllEstudiantes();
+    const generacionesSet = new Set(estudiantes.map(e => e.generacion));
+    return Array.from(generacionesSet);
+  }
+
   async findSortedByGeneration(): Promise<{ [generacion: string]: estudiante[] }> {
     const estudiantes_generacion = {};
     const estudiantes = await this.estudianteRepo.findAllEstudiantes();

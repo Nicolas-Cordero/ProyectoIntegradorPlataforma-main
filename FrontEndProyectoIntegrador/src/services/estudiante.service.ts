@@ -50,6 +50,10 @@ class EstudianteService extends BaseHttpClient {
     return await this.request<Estudiante[]>('/estudiante');
   }
 
+  async getGenerations(): Promise<string[]> {
+    return await this.request<string[]>('/generacion');
+  }
+
   /**
    * Obtener estudiante por ID
    */

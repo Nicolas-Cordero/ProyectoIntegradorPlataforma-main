@@ -79,9 +79,6 @@ export function EntrevistaWorkspace() {
         setLoading(true);
         setError(null);
         
-        // Cargar datos de la entrevista primero
-        console.log('Cargando entrevista con ID:', entrevistaIdFromUrl);
-
         let entrevistaData: any = null;
 
         try {
@@ -92,7 +89,6 @@ export function EntrevistaWorkspace() {
 
         // Si no se encontró, interpretamos el parámetro como id_estudiante y tomamos la más reciente
         if (!entrevistaData) {
-          console.log('Buscando entrevistas por estudiante:', entrevistaIdFromUrl);
           const entrevistasDeEstudiante = await entrevistaService.getByEstudiante(entrevistaIdFromUrl);
           if (!entrevistasDeEstudiante || entrevistasDeEstudiante.length === 0) {
             throw new Error('Entrevista no encontrada');
@@ -116,7 +112,6 @@ export function EntrevistaWorkspace() {
           throw new Error('ID del estudiante no disponible en los datos de la entrevista');
         }
         
-        console.log('Cargando estudiante con ID:', estudianteId);
         const estudianteData = await estudianteService.getById(estudianteId);
         setEstudiante(estudianteData);
         

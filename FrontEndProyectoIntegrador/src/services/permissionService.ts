@@ -16,11 +16,7 @@ export default class PermissionService {
    * Verifica si un usuario es administrador
    */
   static isAdmin(user: Usuario | null): boolean {
-    if (!user) {
-      console.log('🔴 isAdmin: usuario es null');
-      return false;
-    }
-    console.log('🔍 isAdmin - Role:', user.rol);
+    if (!user) return false;
     return user.rol === UserRol.ADMIN;
   }
 

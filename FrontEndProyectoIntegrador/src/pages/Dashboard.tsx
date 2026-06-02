@@ -10,13 +10,10 @@ import marcoDerecho from '../assets/frames/mardo-derecha.svg';
 import booksIcon from '../assets/icons/books.ico';
 import studentsIcon from '../assets/icons/students.ico';
 import activeStudentIcon from '../assets/icons/active-student.ico';
-import { DashboardParticles } from '../components/features/dashboard/DashboardParticles';
-import { 
-  DashboardNavbar,
-  CreateGeneracionModal,
-  CreateEstudianteModal,
-  GenerationsGrid
-} from '../components/features/dashboard';
+import { BackgroundParticles as DashboardParticles } from '../components/common/Particles';
+import { Navbar as DashboardNavbar } from '../components/common/Navbar';
+import { CreateGeneracionModal, GenerationsGrid } from '../components/features/generaciones';
+import { CreateEstudianteModal } from '../components/features/estudiantes';
 import type { Estudiante, EstadisticasAdmin } from '../types';
 import { Box, Tabs, Tab } from '@mui/material';
 import { UserProfile } from './UserProfile';
@@ -88,14 +85,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
           setEstadisticas(estadisticasData);
           setAllStudents(estudiantesData);
           
-          console.log('📊 Estudiantes cargados del backend:', {
-            total: estudiantesData.length,
-            estudiantes: estudiantesData.map(e => ({
-              nombre: e.nombre,
-              año: e.institucion?.anio_de_ingreso || e.año_generacion || e.año_ingreso || '2024'
-            }))
-          });
-          
           // Pasar las generaciones guardadas del localStorage al calcular
           const generacionesCalculadas = calcularGeneracionesDesdeEstudiantes(estudiantesData, generacionesGuardadas);
           setGeneraciones(generacionesCalculadas);
@@ -123,7 +112,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
   // Efecto para recalcular generaciones cuando cambias generacionesCreadas
   useEffect(() => {
     if (generaciones.length > 0 && generacionesCreadas.length > 0) {
-      console.log('🔄 Recalculando generaciones por cambio en generacionesCreadas:', generacionesCreadas);
       const todosLosEstudiantes = generaciones.flatMap(g => g.estudiantesData);
       const generacionesActualizadas = calcularGeneracionesDesdeEstudiantes(todosLosEstudiantes, generacionesCreadas);
       setGeneraciones(generacionesActualizadas);
@@ -134,42 +122,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
     estudiantesData: Estudiante[],
     generacionesCreadasParam?: number[]
   ): GeneracionCalculada[] => {
-    console.log('🔢 Calculando generaciones desde', estudiantesData.length, 'estudiantes');
-    
     const estudiantesPorAño = estudiantesData.reduce((acc, estudiante) => {
-      // Debug: mostrar todos los campos disponibles del estudiante
-      console.log(`🔍 Debug estudiante ${estudiante.nombre}:`, {
-        'institucion?.anio_de_ingreso': estudiante.institucion?.anio_de_ingreso,
-        'año_generacion': estudiante.año_generacion,
-        'año_ingreso': estudiante.año_ingreso,
-        'informacionAcademica?.año_ingreso_beca': estudiante.informacionAcademica?.año_ingreso_beca,
-        'institucion completa': estudiante.institucion,
-        'informacionAcademica completa': estudiante.informacionAcademica
-      });
-
-      // Buscar el año de ingreso en múltiples campos posibles
       const posiblesAños = [
-        estudiante.institucion?.anio_de_ingreso,
-        estudiante.año_generacion,
-        estudiante.año_ingreso,
-        estudiante.informacionAcademica?.año_ingreso_beca,
-        (estudiante.institucion as any)?.año_ingreso,
-        (estudiante as any).generacion,
-        (estudiante as any).año_generacion,
-        (estudiante as any).anio_ingreso,
-        // Buscar también en propiedades que podrían ser strings
-        parseInt((estudiante as any).generacion),
-        parseInt((estudiante.institucion as any)?.anio_ingreso),
+        estudiante.generacion,
+        parseInt(estudiante.generacion),
       ];
-      
-      // Encontrar el primer valor válido
+
       const año = posiblesAños.find(valor => {
         const parsed = parseInt(valor as string);
         return !isNaN(parsed) && parsed > 1990 && parsed <= 2030;
       }) || '2024';
 
       const añoNum = parseInt(año.toString());
-      console.log(`👤 Estudiante ${estudiante.nombre} asignado a generación ${añoNum} (valor original: ${año})`);
 
       if (!acc[añoNum]) {
         acc[añoNum] = [];
@@ -178,11 +142,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
       return acc;
     }, {} as Record<number, Estudiante[]>);
 
-    // Incluir generaciones creadas manualmente que no tienen estudiantes (generaciones vacías)
     const generacionesAIncluir = generacionesCreadasParam || generacionesCreadas;
     generacionesAIncluir.forEach(año => {
       if (!estudiantesPorAño[año]) {
-        console.log(`📝 Agregando generación vacía creada manualmente: ${año}`);
         estudiantesPorAño[año] = [];
       }
     });
@@ -192,14 +154,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
         const añoNum = parseInt(año);
 
         const activos = estudiantesAño.filter(e =>
-          e.estado === 'Activo' ||
+          e.estado === 'ACTIVO' ||
           !e.estado
         ).length;
 
-        // Una generación está activa si tiene estudiantes activos, independientemente del año
         const estaActiva = activos > 0;
-        
-        console.log(`📊 Generación ${añoNum}: ${estudiantesAño.length} total, ${activos} activos → ${estaActiva ? 'ACTIVA' : 'FINALIZADA'}`);
 
         return {
           año: añoNum,
@@ -211,7 +170,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
       })
       .sort((a, b) => b.año - a.año);
 
-    console.log('✅ Generaciones calculadas:', generacionesCalculadas.map(g => `${g.año}: ${g.estudiantes} estudiantes`));
     return generacionesCalculadas;
   };
 
@@ -241,8 +199,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
       // Guardar en localStorage
       localStorage.setItem('generaciones_creadas', JSON.stringify(nuevasGeneraciones));
       
-      console.log(`✅ Generación ${año} creada y guardada`);
-      
       // Recalcular generaciones pasando las NUEVAS generaciones creadas
       const todosLosEstudiantes = generaciones.flatMap(g => g.estudiantesData);
       const generacionesActualizadas = calcularGeneracionesDesdeEstudiantes(todosLosEstudiantes, nuevasGeneraciones);
@@ -259,8 +215,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
   };
 
   const handleEstudianteCreated = async () => {
-    // Recargar datos después de crear estudiante
-    console.log('🔄 Recargando datos del dashboard después de crear estudiante...');
     setLoading(true);
     try {
       const [estudiantesData, estadisticasData] = await Promise.all([
@@ -273,11 +227,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
       // Agregar automáticamente a generaciones creadas cualquier generación nueva que aparezca en los estudiantes
       const generatecionesDesdeEstudiantes = estudiantesData
         .reduce((acc, est) => {
-          const año = est.institucion?.anio_de_ingreso ||
-            est.año_generacion ||
-            est.año_ingreso ||
-            est.informacionAcademica?.año_ingreso_beca ||
-            2024;
+          const año = est.generacion || '2024';
           const añoNum = parseInt(año.toString());
           if (añoNum > 1990 && añoNum <= 2030 && !acc.includes(añoNum)) {
             acc.push(añoNum);
@@ -293,7 +243,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
         : generacionesCreadas;
       
       if (nuevasGeneracionesDetectadas.length > 0) {
-        console.log('🆕 Detectadas nuevas generaciones con estudiantes:', nuevasGeneracionesDetectadas);
         setGeneracionesCreadas(todasLasGeneracionesActualizadas);
         localStorage.setItem('generaciones_creadas', JSON.stringify(todasLasGeneracionesActualizadas));
       }
@@ -301,13 +250,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
       // Recalcular generaciones usando las generaciones creadas actualizadas
       const generacionesCalculadas = calcularGeneracionesDesdeEstudiantes(estudiantesData, todasLasGeneracionesActualizadas);
       setGeneraciones(generacionesCalculadas);
-      
-      console.log('✅ Dashboard actualizado - Nuevos datos:', {
-        totalEstudiantes: estudiantesData.length,
-        generaciones: generacionesCalculadas.length,
-        generacionesCreadas: todasLasGeneracionesActualizadas.length,
-        ultimoEstudiante: estudiantesData[estudiantesData.length - 1]
-      });
       logger.log('✅ Datos actualizados exitosamente');
     } catch (error) {
       logger.error('Error al recargar datos:', error);

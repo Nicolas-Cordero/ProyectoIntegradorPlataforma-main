@@ -76,44 +76,32 @@ export const UserManagement: React.FC = () => {
     filterUsers();
   }, [tabValue, users]);
 
-  const handleLogout = async () => {
-    try {
-      await authService.logout();
-      navigate('/');
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-    }
-  };
-
+  
   const loadData = async () => {
     if (!authService.isAuthenticated()) {
-      console.log('No autenticado, redirigiendo al login');
       navigate('/');
       return;
     }
 
-    // Verificar que el token sea válido
+
     const tokenValid = await authService.verifyToken();
     if (!tokenValid) {
       navigate('/');
       return;
     }
 
+
     const user = authService.getCurrentUser();
     setUsuario(user);
-    
-    // Dar tiempo para que el usuario vea el mensaje
+
     if (!PermissionService.canManageUsers(user)) {
-      console.error('🚫 Usuario sin permisos de administrador');
-      setSnackbar({ 
-        open: true, 
-        message: 'No tienes permisos para acceder a esta sección. Debes ser administrador.', 
-        severity: 'error' 
+      setSnackbar({
+        open: true,
+        message: 'No tienes permisos para acceder a esta sección. Debes ser administrador.',
+        severity: 'error'
       });
-      // Aumentar el tiempo para que el usuario pueda ver el error
       setTimeout(() => {
-        console.log('⏰ Redirigiendo al dashboard por falta de permisos...');
-        navigate('/dashboard');
+        navigate('/estudiantes');
       }, 3000);
       return;
     }
@@ -225,7 +213,6 @@ export const UserManagement: React.FC = () => {
       } else {
         // Crear nuevo usuario
         await userService.create(userData);
-        console.log(userData);
         setSnackbar({ open: true, message: `${formData.rol === UserRol.TUTOR ? 'Tutor' : 'Visitante'} creado exitosamente`, severity: 'success' });
       }
       
@@ -370,7 +357,7 @@ export const UserManagement: React.FC = () => {
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
             fullWidth={false}
-            gradientVariant={2}
+            solidColor="#65B39B"
             sx={{ minHeight: { xs: 40, sm: 48, md: 56 }, minWidth: { xs: 140, sm: 180, md: 240 } }}
           >
             Agregar Usuario
@@ -570,20 +557,22 @@ export const UserManagement: React.FC = () => {
       </Modal>
 
       {/* Modal para Cambiar Contraseña */}
-      <PasswordChangeModal
-        abierto={showPasswordChange}
-        onCerrar={() => {
-          setShowPasswordChange(false);
-          setPasswordChangeUser(null);
-        }}
-        userId={passwordChangeUser?.rut_usuario}
-        requireCurrentPassword={false}
-        onSuccess={() => {
-          setSnackbar({ open: true, message: 'Contraseña cambiada exitosamente', severity: 'success' });
-          setShowPasswordChange(false);
-          setPasswordChangeUser(null);
-        }}
-      />
+      {showPasswordChange && passwordChangeUser && (
+        <PasswordChangeModal
+          abierto={showPasswordChange}
+          onCerrar={() => {
+            setShowPasswordChange(false);
+            setPasswordChangeUser(null);
+          }}
+          userId={passwordChangeUser.rut_usuario}
+          requireCurrentPassword={false}
+          onSuccess={() => {
+            setSnackbar({ open: true, message: 'Contraseña cambiada exitosamente', severity: 'success' });
+            setShowPasswordChange(false);
+            setPasswordChangeUser(null);
+          }}
+        />
+      )}
 
       {/* Snackbar */}
       {snackbar.open && (

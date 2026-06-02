@@ -3,42 +3,45 @@
 // =====================================
 
 import { BaseHttpClient } from './base.http';
-import type { Estudiante } from '../types';
+import type { Estudiante, Genero, EstadoEstudiante, Generacion } from '../types';
 
 /**
- * Interfaz para crear un nuevo estudiante
- * Campos opcionales: email, telefono, direccion (se crean automáticamente en informacion_contacto)
+ * Interfaz para crear un nuevo estudiante (alineada al backend CreateEstudianteDto)
  */
 export interface CreateEstudianteDto {
+  rut_estudiante: string;
   nombre: string;
-  rut: string;
-  fecha_de_nacimiento: string;
-  tipo_de_estudiante: 'media' | 'universitario';
-  genero?: string;
-  generacion?: string;
-  id_institucion?: string;
-  numero_carrera?: number;
-  observaciones?: string;
-  // Campos de contacto (opcionales, se crean en informacion_contacto)
-  email?: string;
-  telefono?: string;
-  direccion?: string;
+  apellido: string;
+  email: string;
+  telefono: string;
+  generacion: string;
+  fecha_nacimiento: string;
+  direccion: string;
+  genero: Genero;
+  rbd_liceo: string;
+  puntaje_paes?: number;
+  foto_url?: string;
+  promedios_media: number;
+  estado: EstadoEstudiante;
 }
 
 /**
- * Interfaz para actualizar un estudiante existente
+ * Interfaz para actualizar un estudiante existente (alineada al backend UpdateEstudianteDto)
  */
 export interface UpdateEstudianteDto {
   nombre?: string;
-  rut?: string;
-  fecha_de_nacimiento?: string;
-  tipo_de_estudiante?: 'media' | 'universitario';
-  genero?: string;
+  apellido?: string;
+  email?: string;
+  telefono?: string;
   generacion?: string;
-  id_institucion?: string;
-  numero_carrera?: number;
-  observaciones?: string;
+  fecha_nacimiento?: string;
+  direccion?: string;
+  genero?: Genero;
+  rbd_liceo?: string;
+  puntaje_paes?: number;
   foto_url?: string;
+  promedios_media?: number;
+  estado?: EstadoEstudiante;
 }
 
 class EstudianteService extends BaseHttpClient {
@@ -50,22 +53,30 @@ class EstudianteService extends BaseHttpClient {
     return await this.request<Estudiante[]>('/estudiante');
   }
 
-  async getGenerations(): Promise<string[]> {
-    return await this.request<string[]>('/generacion');
+  async getGenerations(): Promise<Generacion[]> {
+    return await this.request<Generacion[]>('/generacion');
   }
 
   /**
-   * Obtener estudiante por ID
+   * Obtener estudiante por RUT (simple, sin relaciones)
    */
-  async getById(id: string): Promise<Estudiante> {
-    return await this.request<Estudiante>(`/estudiante/${id}`);
+  async getById(rut_estudiante: string): Promise<Estudiante> {
+    return await this.request<Estudiante>(`/estudiante/${rut_estudiante}/simple`);
+  }
+
+  /**
+   * Obtener estudiante por RUT (completo, con relaciones)
+   */
+  async getByIdComplete(rut_estudiante: string): Promise<Estudiante> {
+    return await this.request<Estudiante>(`/estudiante/${rut_estudiante}/complete`);
   }
 
   /**
    * Obtener estudiantes por generación
+   * Usa la ruta correcta del backend: /estudiante/generaciones/:generation
    */
   async getByGeneracion(generacion: string): Promise<Estudiante[]> {
-    return await this.request<Estudiante[]>(`/estudiante/generacion/${generacion}`);
+    return await this.request<Estudiante[]>(`/estudiante/generaciones/${generacion}`);
   }
 
   /**
@@ -109,32 +120,11 @@ class EstudianteService extends BaseHttpClient {
   }
 
   /**
-   * Eliminar estudiante
+   * Eliminar estudiante por RUT
    */
-  async delete(id: string): Promise<void> {
-    return this.request<void>(`/estudiante/${id}`, {
+  async delete(rut_estudiante: string): Promise<void> {
+    return this.request<void>(`/estudiante/${rut_estudiante}`, {
       method: 'DELETE',
-    });
-  }
-
-  // ============================================
-  // MÉTODOS LEGACY (deprecados - usar servicios especializados)
-  // ============================================
-
-  /**
-   * @deprecated Usar familiarService para actualizar información familiar
-   */
-  async updateFamiliaInfo(idEstudiante: string, data: {
-    mama?: { nombre: string; edad: string; observaciones: string };
-    papa?: { nombre: string; edad: string; observaciones: string };
-    hermanos?: { nombres: string; observaciones: string };
-    otros_familiares?: { nombres: string; observaciones: string };
-    observaciones_generales?: string;
-  }) {
-    console.warn('⚠️ updateFamiliaInfo está deprecado. Usar familiarService en su lugar.');
-    return this.request(`/estudiante/${idEstudiante}/familia`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
     });
   }
 }

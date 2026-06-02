@@ -6,13 +6,14 @@ import { estudianteService } from '../services';
 import { logger } from '../config';
 import { Spinner, ErrorMessage } from '../components/ui';
 import { GradientButton } from '../components/common/GradientButton';
+import type { Generacion } from '../types';
 
 const ICON_COLORS = ['#65B39B', '#C7654F', '#ECB876', '#D3C483', '#8FD4BB', '#E89080'];
 
 export const GeneracionesPanel: React.FC = () => {
   const navigate = useNavigate();
 
-  const [generaciones, setGeneraciones] = useState<string[]>([]);
+  const [generaciones, setGeneraciones] = useState<Generacion[]>([]);
   const [orden, setOrden] = useState<'desc' | 'asc'>('desc');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +37,7 @@ export const GeneracionesPanel: React.FC = () => {
   }, [fetchData]);
 
   const generacionesOrdenadas = [...generaciones].sort((a, b) =>
-    orden === 'desc' ? parseInt(b) - parseInt(a) : parseInt(a) - parseInt(b)
+    orden === 'desc' ? b.año - a.año : a.año - b.año
   );
 
   if (loading) return <Spinner fullScreen message="Cargando generaciones..." />;
@@ -123,7 +124,7 @@ export const GeneracionesPanel: React.FC = () => {
             const color = ICON_COLORS[index % ICON_COLORS.length];
             return (
               <Card
-                key={gen}
+                key={gen.id}
                 sx={{
                   borderRadius: 3,
                   border: '1px solid',
@@ -162,8 +163,13 @@ export const GeneracionesPanel: React.FC = () => {
                         GENERACIÓN
                       </Typography>
                       <Typography variant="h5" fontWeight="bold" sx={{ lineHeight: 1.1 }}>
-                        {gen}
+                        {gen.año}
                       </Typography>
+                      {gen.descripcion && (
+                        <Typography variant="caption" color="text.secondary">
+                          {gen.descripcion}
+                        </Typography>
+                      )}
                     </Box>
                   </Box>
 
@@ -171,7 +177,7 @@ export const GeneracionesPanel: React.FC = () => {
                     fullWidth
                     solidColor={color}
                     sx={{ minHeight: 44, borderRadius: 2 }}
-                    onClick={() => navigate(`/generacion/${gen}`)}
+                    onClick={() => navigate(`/generacion/${gen.año}`)}
                   >
                     Ver Generación
                   </GradientButton>

@@ -97,21 +97,23 @@ export const useGeneraciones = (): UseGeneracionesReturn => {
       const gen = generacionesMap.get(año)!;
       gen.totalEstudiantes++;
 
-      const estado = estudiante.estado || 'Activo';
+      const estado = estudiante.estado || 'ACTIVO';
       switch (estado) {
-        case 'Activo':
+        case 'ACTIVO':
           gen.activos++;
           break;
-        case 'Egresado':
+        case 'EGRESADO':
+        case 'TITULADO':
           gen.egresados++;
           break;
-        case 'Suspendido':
+        case 'SUSPENDIDO':
           gen.suspendidos++;
           break;
-        case 'Desertor':
+        case 'RETIRADO':
           gen.desertores++;
           break;
-        case 'Congelado':
+        case 'ELIMINADO':
+        case 'CONDICIONAL':
           gen.congelados++;
           break;
       }
@@ -123,7 +125,7 @@ export const useGeneraciones = (): UseGeneracionesReturn => {
   // Estadísticas globales
   const totalGeneraciones = generaciones.length;
   const totalEstudiantes = estudiantes.length;
-  const estudiantesActivos = estudiantes.filter(e => e.estado === 'Activo').length;
+  const estudiantesActivos = estudiantes.filter(e => e.estado === 'ACTIVO').length;
 
   const getGeneracionById = (id: string): Generacion | undefined => {
     return generaciones.find(gen => gen.id === id);

@@ -50,22 +50,14 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
   }, []);
 
   const loadUserData = async () => {
-    console.log('🔍 UserProfile - Verificando autenticación...');
     if (!authService.isAuthenticated()) {
-      console.log('❌ UserProfile - No autenticado, redirigiendo al login');
       navigate('/');
       return;
     }
 
-    console.log('✅ UserProfile - Usuario autenticado, cargando perfil...');
-
-
-
-
     try {
       const profileData = await userService.getCurrentProfile(authService.getCurrentUserOrThrow().rut_usuario);
-      console.log('✅ UserProfile - Perfil cargado desde API:', profileData);
-      
+
       // Mapear los campos del backend al formato del frontend
       const mappedProfileData = {
         ...profileData,
@@ -73,14 +65,12 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
         apellidos: (profileData as any).apellido || profileData.apellido,
         role: (profileData as any).rol || profileData.rol,
       };
-      
+
       setUser(mappedProfileData);
       setEditedUser({ ...mappedProfileData });
     } catch (error) {
-      console.error('⚠️ UserProfile - Error al cargar desde API:', error);
       // Fallback a authService si falla la API
       const currentUser = authService.getCurrentUser();
-      console.log('🔄 UserProfile - Usando usuario de localStorage:', currentUser);
       if (currentUser) {
         // Aplicar mapeo también al fallback
         const mappedCurrentUser = {
@@ -136,11 +126,8 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
         return;
       }
 
-      console.log('📤 Enviando actualización de perfil:', updateData);
       const updatedProfile = await userService.updateCurrentProfile(authService.getCurrentUserOrThrow().rut_usuario, updateData);
-      
-      console.log('📥 Respuesta del servidor:', updatedProfile);
-      
+
       // Mapear los campos del backend al formato del frontend
       const mappedProfile = {
         ...updatedProfile,
@@ -159,10 +146,7 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
       setSnackbarMessage('Perfil actualizado exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
-      
-      console.log('✅ Perfil actualizado correctamente');
     } catch (error: any) {
-      console.error('❌ Error al actualizar perfil:', error);
       const errorMessage = error.message || 'Error desconocido al actualizar perfil';
       setSnackbarMessage(`Error: ${errorMessage}`);
       setSnackbarSeverity('error');
@@ -472,6 +456,7 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
 
         <PasswordChangeModal
           abierto={showChangePassword}
+          userId={user.rut_usuario}
           onCerrar={() => setShowChangePassword(false)}
           onSuccess={() => {
             setSnackbarMessage('Contraseña actualizada exitosamente');

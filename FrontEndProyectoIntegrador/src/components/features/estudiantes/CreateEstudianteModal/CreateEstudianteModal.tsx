@@ -104,14 +104,26 @@ export const CreateEstudianteModal: React.FC<CreateEstudianteModalProps> = ({
     setError('');
 
     try {
+      // Map form fields to backend DTO fields
+      // NOTE: apellido, direccion, rbd_liceo, genero, promedios_media, estado are required by the backend.
+      // The form only collects basic data; these fields should be extended in a more complete form.
+      const nombreParts = formData.nombre.trim().split(' ');
+      const nombre = nombreParts[0] || formData.nombre;
+      const apellido = nombreParts.slice(1).join(' ') || nombre;
+
       const estudianteData = {
-        nombre: formData.nombre,
-        rut: formData.rut,
+        rut_estudiante: formData.rut,
+        nombre,
+        apellido,
         email: formData.email,
         telefono: formData.telefono,
-        fecha_de_nacimiento: formData.fecha_de_nacimiento,
-        tipo_de_estudiante: formData.tipo_de_estudiante,
-        generacion: formData.generacion
+        generacion: formData.generacion,
+        fecha_nacimiento: formData.fecha_de_nacimiento,
+        direccion: '',
+        genero: 'MASCULINO' as const,
+        rbd_liceo: '',
+        promedios_media: 0,
+        estado: 'ACTIVO' as const,
       };
 
       await estudianteService.create(estudianteData);

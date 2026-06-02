@@ -73,8 +73,8 @@ export const useEstudiantes = (params: UseEstudiantesParams = {}): UseEstudiante
   }, [autoFetch, fetchEstudiantes]);
 
   const getEstudianteById = useCallback((id: string | number): Estudiante | undefined => {
-    return estudiantes.find(est => 
-      String(est.id_estudiante) === String(id) || String(est.id) === String(id)
+    return estudiantes.find(est =>
+      String(est.rut_estudiante) === String(id)
     );
   }, [estudiantes]);
 

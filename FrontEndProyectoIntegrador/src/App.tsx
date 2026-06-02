@@ -5,6 +5,7 @@ import { logger } from './config';
 import { LoginAdminForm } from './components/features/auth/login/LoginAdminForm';
 import { Spinner } from './components/ui';
 import { MainLayout } from './components/common/MainLayout';
+import { AuthProvider, useAuthContext } from './context/AuthContext';
 
 const EstudiantesSection = lazy(() => import('./pages/EstudiantesSection').then(m => ({ default: m.EstudiantesSection })));
 const GeneracionView = lazy(() => import('./pages/GeneracionView'));
@@ -14,16 +15,12 @@ const UserProfile = lazy(() => import('./pages/UserProfile').then(m => ({ defaul
 const UserManagement = lazy(() => import('./pages/UserManagement'));
 const DebugPermissions = lazy(() => import('./pages/DebugPermissions'));
 const GeneracionesPanel = lazy(() => import('./pages/GeneracionesPanel').then(m => ({ default: m.GeneracionesPanel })));
+const EstadisticasPage  = lazy(() => import('./pages/EstadisticasPage').then(m => ({ default: m.EstadisticasPage })));
 
 
-function AppRoutes({ onAuthChange }: { onAuthChange: (v: boolean) => void }) {
+function AppRoutes() {
   const navigate = useNavigate();
-  const [usuario, setUsuario] = useState<any>(null);
-
-  useEffect(() => {
-    const user = authService.getCurrentUser();
-    if (user) setUsuario(user);
-  }, []);
+  const { usuario, logout } = useAuthContext();
 
   const isAdmin = usuario?.rol === 'ADMIN';
 
@@ -37,8 +34,7 @@ function AppRoutes({ onAuthChange }: { onAuthChange: (v: boolean) => void }) {
 
   const handleLogout = async () => {
     try {
-      await authService.logout();
-      onAuthChange(false);
+      await logout();
       navigate('/');
     } catch (error) {
       logger.error('❌ Error al cerrar sesión:', error);
@@ -59,6 +55,7 @@ function AppRoutes({ onAuthChange }: { onAuthChange: (v: boolean) => void }) {
       <Route path="/generacion/:id" element={withLayout(<GeneracionView />)} />
       <Route path="/estudiante/:id" element={<EstudianteDetail />} />
       <Route path="/entrevista/:id" element={<EntrevistaWorkspace />} />
+      <Route path="/estadisticas"   element={withLayout(<EstadisticasPage />)} />
       <Route path="/admin/usuarios" element={withLayout(<UserManagement />)} />
       <Route path="/debug-permissions" element={<DebugPermissions />} />
     </Routes>
@@ -87,26 +84,28 @@ function App() {
 
   return (
     <Router>
-      <Suspense fallback={<Spinner fullScreen message="Cargando página..." />}>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              isAuthenticated ?
-                <Navigate to="/estudiantes" replace /> :
-                <LoginAdminForm onAuthChange={handleAuthChange} />
-            }
-          />
-          <Route
-            path="/*"
-            element={
-              isAuthenticated ?
-                <AppRoutes onAuthChange={handleAuthChange} /> :
-                <Navigate to="/" replace />
-            }
-          />
-        </Routes>
-      </Suspense>
+      <AuthProvider onAuthChange={handleAuthChange}>
+        <Suspense fallback={<Spinner fullScreen message="Cargando página..." />}>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                isAuthenticated ?
+                  <Navigate to="/estudiantes" replace /> :
+                  <LoginAdminForm onAuthChange={handleAuthChange} />
+              }
+            />
+            <Route
+              path="/*"
+              element={
+                isAuthenticated ?
+                  <AppRoutes /> :
+                  <Navigate to="/" replace />
+              }
+            />
+          </Routes>
+        </Suspense>
+      </AuthProvider>
     </Router>
   );
 }

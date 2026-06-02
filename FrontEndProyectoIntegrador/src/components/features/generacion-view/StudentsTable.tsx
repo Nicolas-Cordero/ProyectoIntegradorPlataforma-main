@@ -7,6 +7,8 @@ type UIStudent = Estudiante & {
   totalEntrevistasAno?: number;
   diasSinEntrevista?: number;
   tienePendienteNotas?: boolean;
+  // computed display fields
+  promedio?: number;
 };
 
 interface StudentsTableProps {
@@ -39,14 +41,9 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
     return sortDirection === 'asc' ? '↑' : '↓';
   };
 
-  const getPromedioInfo = (promedio: UIStudent['promedio']) => {
-    const rawValue = typeof promedio === 'number'
-      ? promedio
-      : promedio !== undefined && promedio !== null
-        ? Number(promedio)
-        : undefined;
-
-    const value = Number.isFinite(rawValue) ? rawValue as number : undefined;
+  const getPromedioInfo = (promedio: number | undefined) => {
+    const rawValue = typeof promedio === 'number' ? promedio : undefined;
+    const value = rawValue !== undefined && Number.isFinite(rawValue) ? rawValue : undefined;
 
     if (value === undefined) {
       return { value: undefined, colorClass: 'text-[var(--color-coral-dark)]' };
@@ -62,29 +59,29 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="bg-gray-200">
-            <th 
-              onClick={() => onSort('apellidos')}
+            <th
+              onClick={() => onSort('apellido')}
               className="py-4 px-3 text-left font-bold cursor-pointer border-b-2 border-gray-300 text-gray-700 hover:bg-gray-300 transition-colors"
             >
-              Nombre {getSortIcon('apellidos')}
+              Nombre {getSortIcon('apellido')}
             </th>
-            <th 
-              onClick={() => onSort('carrera')}
+            <th
+              onClick={() => onSort('rbd_liceo')}
               className="py-4 px-3 text-left font-bold cursor-pointer border-b-2 border-gray-300 text-gray-700 hover:bg-gray-300 transition-colors"
             >
-              Carrera {getSortIcon('carrera')}
+              Liceo / Carrera {getSortIcon('rbd_liceo')}
             </th>
-            <th 
+            <th
               onClick={() => onSort('estado')}
               className="py-4 px-3 text-center font-bold cursor-pointer border-b-2 border-gray-300 text-gray-700 hover:bg-gray-300 transition-colors"
             >
               Estado {getSortIcon('estado')}
             </th>
-            <th 
-              onClick={() => onSort('promedio')}
+            <th
+              onClick={() => onSort('promedios_media')}
               className="py-4 px-3 text-center font-bold cursor-pointer border-b-2 border-gray-300 text-gray-700 hover:bg-gray-300 transition-colors"
             >
-              Promedio {getSortIcon('promedio')}
+              Promedio {getSortIcon('promedios_media')}
             </th>
             <th className="py-4 px-3 text-center font-bold border-b-2 border-gray-300 text-gray-700 min-w-[120px]">
               Última Entrevista
@@ -102,25 +99,26 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
         </thead>
         <tbody>
           {students.map((student, index) => {
-            const { value: promedioValor, colorClass: promedioColor } = getPromedioInfo(student.promedio);
+            const promedioDisplay = student.promedio ?? (typeof student.promedios_media === 'number' ? student.promedios_media : undefined);
+            const { value: promedioValor, colorClass: promedioColor } = getPromedioInfo(promedioDisplay);
 
             return (
-              <tr 
-                key={(student as any).id_estudiante || student.id || index}
+              <tr
+                key={student.rut_estudiante || index}
                 className={`${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-[var(--color-turquoise)]/10 transition-colors`}
               >
                 <td className="py-3 px-3 border-b border-gray-300">
                   <div className="font-bold text-gray-800">
-                    { (student as any).nombre || `${student.nombres || ''} ${student.apellidos || ''}` }
+                    {`${student.nombre || ''} ${student.apellido || ''}`}
                   </div>
                   <div className="text-xs text-gray-500">
-                    {student.rut}
+                    {student.rut_estudiante}
                   </div>
                 </td>
                 <td className="py-3 px-3 border-b border-gray-300 text-gray-600">
-                  {student.carrera || student.institucion?.carrera_especialidad || 'N/A'}
+                  {student.liceo?.nombre || student.rbd_liceo || 'N/A'}
                   <div className="text-xs text-gray-400">
-                    {student.universidad || student.institucion?.nombre || ''}
+                    {student.carreras && student.carreras.length > 0 ? student.carreras[0].nombre_carrera : ''}
                   </div>
                 </td>
                 <td className="py-3 px-3 border-b border-gray-300 text-center">
@@ -180,14 +178,14 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
                       <Button
                         variante="primary"
                         tamano="sm"
-                        onClick={() => onViewDetails((student as any).id_estudiante || student.id)}
+                        onClick={() => onViewDetails(student.rut_estudiante)}
                       >
                         Ver Detalles
                       </Button>
                       <Button
                         variante="danger"
                         tamano="sm"
-                        onClick={() => onDelete((student as any).id_estudiante || student.id)}
+                        onClick={() => onDelete(student.rut_estudiante)}
                       >
                         Eliminar
                       </Button>

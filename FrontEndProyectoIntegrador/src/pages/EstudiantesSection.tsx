@@ -29,7 +29,6 @@ export const EstudiantesSection: React.FC<EstudiantesSectionProps> = () => {
   };
 
   const handleDeleteStudent = async (studentId: string | number) => {
-    console.log('🗑️ Intentando eliminar estudiante:', studentId);
       showConfirm({
         title: 'Eliminar estudiante',
         message: '¿Seguro que deseas eliminar este estudiante? Esta acción no se puede deshacer.',
@@ -38,7 +37,6 @@ export const EstudiantesSection: React.FC<EstudiantesSectionProps> = () => {
         onConfirm: async () => {
           await estudianteService.delete(String(studentId));
           await loadStudents();
-          console.log('🗑️ Estudiante eliminado:', studentId);
         }
       });
     };
@@ -48,7 +46,7 @@ export const EstudiantesSection: React.FC<EstudiantesSectionProps> = () => {
         const estudiantesData = await estudianteService.getAll();
         setStudents(estudiantesData);
       } catch (error) {
-        console.error('Error al cargar estudiantes:', error);
+        // silently fail - UI already handles empty state
       }
     };
 

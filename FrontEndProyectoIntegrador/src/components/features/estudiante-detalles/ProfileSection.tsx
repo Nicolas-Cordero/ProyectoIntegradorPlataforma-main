@@ -68,7 +68,7 @@ export function ProfileSection({ estudiante, seccionActiva }: ProfileSectionProp
     const newStatus = e.target.value as StatusEstudiante;
     setStatus(newStatus);
     setLoading(true);
-    const estudianteId = (estudiante.id_estudiante ?? estudiante.id) ? String(estudiante.id_estudiante ?? estudiante.id) : '';
+    const estudianteId = estudiante.rut_estudiante || '';
     try {
       // Actualizar usando estado-academico.service.ts (upsert crea o actualiza)
       await estadoAcademicoService.upsertByEstudiante(estudianteId, { status: newStatus });
@@ -85,22 +85,21 @@ export function ProfileSection({ estudiante, seccionActiva }: ProfileSectionProp
     }
   };
 
+  const carreraActual = estudiante.carreras && estudiante.carreras.length > 0 ? estudiante.carreras[0] : null;
+
   const infoFields = [
-    { label: 'Nombre Completo', value: estudiante.nombre },
-    { label: 'RUT', value: estudiante.rut },
-    { label: 'Correo Electrónico', value: getEstudianteEmail(estudiante) },
-    { label: 'Teléfono', value: getEstudianteTelefono(estudiante) },
-    { label: 'Universidad', value: estudiante.institucion?.nombre || estudiante.universidad },
-    { label: 'Carrera', value: estudiante.institucion?.carrera_especialidad || estudiante.carrera },
-    { label: 'Generación', value: estudiante.generacion || estudiante.año_generacion },
-    { label: 'Tipo de Estudiante', value: estudiante.tipo_de_estudiante }
+    { label: 'Nombre Completo', value: `${estudiante.nombre} ${estudiante.apellido}` },
+    { label: 'RUT', value: estudiante.rut_estudiante },
+    { label: 'Correo Electrónico', value: getEstudianteEmail(estudiante) || estudiante.email },
+    { label: 'Teléfono', value: getEstudianteTelefono(estudiante) || estudiante.telefono },
+    { label: 'Liceo', value: estudiante.liceo?.nombre || estudiante.rbd_liceo },
+    { label: 'Carrera', value: carreraActual?.nombre_carrera || 'Sin carrera' },
+    { label: 'Generación', value: estudiante.generacion },
+    { label: 'Estado', value: estudiante.estado }
   ];
 
   const semestreActualDisplay = () => {
-    const numero = Number(estudiante.semestre);
-    if (!Number.isFinite(numero) || numero <= 0) return 'N/A';
-    const year = new Date().getFullYear();
-    return `${year}-${numero}`;
+    return 'N/A';
   };
 
   const promedioGeneralDisplay = () => {
@@ -161,7 +160,7 @@ export function ProfileSection({ estudiante, seccionActiva }: ProfileSectionProp
                   if (!res.ok) throw new Error('Error subiendo imagen');
                   const data = await res.json();
                   const secureUrl = data.secure_url as string;
-                  const estudianteId = (estudiante.id_estudiante ?? estudiante.id) ? String(estudiante.id_estudiante ?? estudiante.id) : '';
+                  const estudianteId = estudiante.rut_estudiante || '';
                   setFotoUrl(secureUrl);
                   await estudianteService.update(estudianteId, { foto_url: secureUrl });
                 } catch (err: any) {
@@ -270,7 +269,7 @@ export function ProfileSection({ estudiante, seccionActiva }: ProfileSectionProp
             <StatCard
               icon={becaIcon}
               label="Beca"
-              value={estudiante.beca || 'Sin beca'}
+              value={(estudiante.beneficios && estudiante.beneficios.length > 0) ? `${estudiante.beneficios.length} beneficio(s)` : 'Sin beneficios'}
               accentColor="#9c27b0"
             />
           </Box>

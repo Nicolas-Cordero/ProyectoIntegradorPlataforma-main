@@ -36,7 +36,6 @@ class UserService extends BaseHttpClient {
   }
 
   async updateCurrentProfile(rut: string, data: Partial<Usuario>): Promise<Usuario> {
-    console.log(rut, data);
     return this.request(`/users/${rut}`, {
       method: 'PATCH',
       body: JSON.stringify(data),

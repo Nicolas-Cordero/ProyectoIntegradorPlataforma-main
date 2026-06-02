@@ -353,9 +353,10 @@ export interface EstadisticasAdmin {
 // ============================================
 
 export interface Generacion {
+  id: number;
   año: number;
-  estudiantes: Estudiante[];
-  cantidadEstudiantes: number;
+  descripcion?: string;
+  estudiantes?: Estudiante[];
 }
 
 export interface NavItem {

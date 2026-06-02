@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import { Input, Alert, Button } from '../../../../components/ui';
 import { authService } from '../../../../services/authService';
+import { useAuthContext } from '../../../../context/AuthContext';
 import type { LoginCredentials } from '../../../../types';
 import { logger } from '../../../../config';
 import { isValidEmail } from '../../../../utils/validators';
@@ -28,6 +29,7 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
   const [showPasswordRecovery, setShowPasswordRecovery] = useState(false);
 
   const navigate = useNavigate();
+  const { setAuthenticated } = useAuthContext();
 
   const handleInputChangeSimple = (field: string, value: string) => {
     const { name } = { name: field } as any;
@@ -60,12 +62,10 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
       logger.log('👨‍💼 Intentando login de administrador...');
       await authService.login(credentials);
       logger.log('✅ Login exitoso');
-      
-      if (onAuthChange) {
-        onAuthChange(true);
-      }
-      
-      navigate('/dashboard');
+
+      setAuthenticated(true);
+
+      navigate('/estudiantes');
       
     } catch (error: any) {
       logger.error('❌ Error en login:', error);

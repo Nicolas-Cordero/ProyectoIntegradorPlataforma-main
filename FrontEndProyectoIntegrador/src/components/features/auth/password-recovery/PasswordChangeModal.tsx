@@ -10,7 +10,7 @@ interface PasswordChangeModalProps {
   onCerrar: () => void;
   onSuccess?: () => void;
   requireCurrentPassword?: boolean;
-  userId?: string;
+  userId: string;
 }
 
 export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
@@ -45,31 +45,24 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
     onCerrar();
   };
 
+
+
+
+  const validate = (): string | null => {
+    if (requireCurrentPassword && !currentPassword) return 'Por favor, ingresa tu contraseña actual';
+    if (!newPassword || !confirmPassword)            return 'Por favor, completa todos los campos';
+    if (newPassword !== confirmPassword)             return 'Las contraseñas no coinciden';
+    if (newPassword.length < 6)                     return 'La nueva contraseña debe tener al menos 6 caracteres';
+    if (requireCurrentPassword && currentPassword === newPassword) return 'La nueva contraseña debe ser diferente a la actual';
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (requireCurrentPassword && !currentPassword) {
-      setError('Por favor, ingresa tu contraseña actual');
-      return;
-    }
-
-    if (!newPassword || !confirmPassword) {
-      setError('Por favor, completa todos los campos');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError('Las contraseñas no coinciden');
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setError('La nueva contraseña debe tener al menos 6 caracteres');
-      return;
-    }
-
-    if (requireCurrentPassword && currentPassword === newPassword) {
-      setError('La nueva contraseña debe ser diferente a la actual');
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -79,9 +72,9 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
     try {
       logger.log('🔒 Cambiando contraseña');
       
-      if (requireCurrentPassword) {
+      if (requireCurrentPassword && userId) {
         // User changing their own password
-        await userService.changeOwnPassword(currentPassword, newPassword);
+        await userService.changeOwnPassword(userId, currentPassword, newPassword);
       } else if (userId) {
         // Admin changing another user's password
         await userService.changeUserPassword(userId, newPassword);

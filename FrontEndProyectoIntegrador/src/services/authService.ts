@@ -95,7 +95,6 @@ async logout(): Promise<void> {
 
   getCurrentUserOrThrow(): Usuario {
     const user = this.getCurrentUser();
-    console.log(user);
     if (!user) throw new Error('No hay usuario autenticado');
     return user;
   }
@@ -117,7 +116,6 @@ async logout(): Promise<void> {
       });
 
       if (response.status === 401) {
-        console.log('🔑 Token expirado, limpiando localStorage');
         this.clearAuthData();
         return false;
       }
@@ -187,7 +185,6 @@ async logout(): Promise<void> {
       rol: (userAny.rol || userAny.rol || UserRol.INVITADO) as UserRolType,
     };
     
-    console.log('✅ Usuario guardado en localStorage:', userToSave);
     
     localStorage.setItem('accesstoken', authResponse.accessToken);
     localStorage.setItem('refreshtoken', authResponse.refreshToken);

@@ -73,12 +73,9 @@ export const UserManagement: React.FC = () => {
   useEffect(() => { filterUsers(); }, [tabValue, users]);
 
   const loadData = async () => {
-    if (!authService.isAuthenticated()) { navigate('/'); return; }
+    const user = await authService.fetchCurrentUser();
+    if (!user) { navigate('/'); return; }
 
-    const tokenValid = await authService.verifyToken();
-    if (!tokenValid) { navigate('/'); return; }
-
-    const user = authService.getCurrentUser();
     setUsuario(user);
 
     if (!PermissionService.canManageUsers(user)) {

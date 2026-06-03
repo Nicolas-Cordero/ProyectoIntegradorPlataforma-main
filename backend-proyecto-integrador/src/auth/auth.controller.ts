@@ -6,17 +6,18 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Res,
+  Req,
 } from '@nestjs/common';
+import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
-import { LoginDto, RefreshTokenDto, RegisterDto } from './dto/create-auth.dto';
+import { LoginDto, RegisterDto } from './dto/create-auth.dto';
 import {
   RequestPasswordResetDto,
   VerifyResetCodeDto,
   ResetPasswordDto,
 } from './dto/password-reset.dto';
 import {
-  AuthResponseDto,
-  TokensResponseDto,
   LogoutResponseDto,
   ValidateTokenResponseDto,
   UserResponseDto,
@@ -32,6 +33,28 @@ import type { AuthenticatedUser } from './interfaces/auth.interfaces';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  private get cookieOptions() {
+    const isProd = process.env.NODE_ENV === 'production';
+    return {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'strict' as const,
+    };
+  }
+
+  private setAuthCookies(res: Response, accessToken: string, refreshToken: string): void {
+    // access token: 15 min de expiración coherente con jwt.config.ts
+    res.cookie('access_token', accessToken, {
+      ...this.cookieOptions,
+      maxAge: 15 * 60 * 1000,
+    });
+    // refresh token: 7 días
+    res.cookie('refresh_token', refreshToken, {
+      ...this.cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+  }
+
 
 
 
@@ -43,8 +66,13 @@ export class AuthController {
    */
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  async register(@Body() registerDto: RegisterDto): Promise<AuthResponseDto> {
-    return this.authService.register(registerDto);
+  async register(
+    @Body() registerDto: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<UserResponseDto> {
+    const { accessToken, refreshToken, user } = await this.authService.register(registerDto);
+    this.setAuthCookies(res, accessToken, refreshToken);
+    return user;
   }
 
 
@@ -58,8 +86,13 @@ export class AuthController {
    */
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
-    return this.authService.login(loginDto);
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<UserResponseDto> {
+    const { accessToken, refreshToken, user } = await this.authService.login(loginDto);
+    this.setAuthCookies(res, accessToken, refreshToken);
+    return user;
   }
 
 
@@ -72,8 +105,15 @@ export class AuthController {
    */
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refresh(@Body() refreshTokenDto: RefreshTokenDto): Promise<TokensResponseDto> {
-    return this.authService.refreshAccessToken(refreshTokenDto.refreshToken);
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ message: string }> {
+    const refreshToken = req.cookies?.refresh_token;
+    const { accessToken, refreshToken: newRefreshToken } =
+      await this.authService.refreshAccessToken(refreshToken);
+    this.setAuthCookies(res, accessToken, newRefreshToken);
+    return { message: 'Token renovado' };
   }
 
 
@@ -87,13 +127,33 @@ export class AuthController {
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async logout(@Body() refreshTokenDto: RefreshTokenDto): Promise<LogoutResponseDto> {
-    return this.authService.logout(refreshTokenDto.refreshToken);
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<LogoutResponseDto> {
+    const refreshToken = req.cookies?.refresh_token;
+    const result = await this.authService.logout(refreshToken);
+    res.clearCookie('access_token', this.cookieOptions);
+    res.clearCookie('refresh_token', this.cookieOptions);
+    return result;
   }
   
 
 
 
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  async getMe(@CurrentUser() user: AuthenticatedUser): Promise<UserResponseDto> {
+    return {
+      rut_usuario: user.rut_usuario,
+      email: user.email,
+      telefono: user.telefono,
+      nombre: user.nombre,
+      apellido: user.apellido,
+      rol: user.rol,
+    };
+  }
 
   @Get('profile')
   @UseGuards(JwtAuthGuard)

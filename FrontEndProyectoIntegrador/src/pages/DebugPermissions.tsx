@@ -68,24 +68,20 @@ export const DebugPermissions: React.FC = () => {
   const [newRole, setNewRole] = useState<string>('admin');
 
   useEffect(() => {
-    setUser(authService.getCurrentUser());
+    authService.fetchCurrentUser().then(setUser);
   }, []);
 
   const handleFixRole = () => {
-    if (!user) return;
-    const updatedUser = { ...user, role: newRole as 'admin' | 'tutor' | 'invitado' };
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-    setUser(updatedUser);
-    alert(`✅ Rol cambiado a: ${newRole}\n🔄 Recarga la página para ver los cambios`);
+    alert('⚠️ Cambio de rol local no disponible. El rol se gestiona desde el backend.');
   };
 
   const handleClearAll = () => {
     showConfirm({
-      title: 'Limpiar todo',
-      message: '¿Seguro que quieres limpiar todo y cerrar sesión? Esta acción cerrará tu sesión y borrará los datos locales.',
-      confirmText: 'Limpiar',
+      title: 'Cerrar sesión',
+      message: '¿Seguro que quieres cerrar sesión?',
+      confirmText: 'Cerrar sesión',
       confirmColor: 'error',
-      onConfirm: async () => { localStorage.clear(); window.location.href = '/'; },
+      onConfirm: async () => { await authService.logout(); window.location.href = '/'; },
     });
   };
 
@@ -132,9 +128,8 @@ export const DebugPermissions: React.FC = () => {
           <h6 className="text-xl font-semibold mb-4">🔐 Estado de Autenticación</h6>
           <div className="flex flex-col gap-4">
             {[
-              { label: 'Token (accesstoken):', ok: !!localStorage.getItem('accesstoken'), yes: 'Presente',     no: 'Ausente' },
-              { label: 'Usuario:',             ok: !!user,                                yes: 'Cargado',      no: 'No encontrado' },
-              { label: 'Autenticado:',         ok: authService.isAuthenticated(),         yes: 'SÍ',           no: 'NO' },
+              { label: 'Sesión activa (cookie):', ok: !!user, yes: 'Activa', no: 'Sin sesión' },
+              { label: 'Usuario:',                ok: !!user, yes: 'Cargado', no: 'No encontrado' },
             ].map(({ label, ok, yes, no }) => (
               <div key={label} className="flex items-center gap-4">
                 <span className="min-w-[150px] font-bold text-sm">{label}</span>

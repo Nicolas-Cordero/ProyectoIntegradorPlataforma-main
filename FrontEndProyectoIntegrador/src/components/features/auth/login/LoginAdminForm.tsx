@@ -60,10 +60,10 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
 
     try {
       logger.log('👨‍💼 Intentando login de administrador...');
-      await authService.login(credentials);
+      const { user } = await authService.login(credentials);
       logger.log('✅ Login exitoso');
 
-      setAuthenticated(true);
+      setAuthenticated(true, user);
 
       navigate('/estudiantes');
       

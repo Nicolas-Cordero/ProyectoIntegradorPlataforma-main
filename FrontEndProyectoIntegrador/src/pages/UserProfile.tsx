@@ -51,26 +51,24 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
   }, []);
 
   const loadUserData = async () => {
-    if (!authService.isAuthenticated()) {
-      navigate('/');
-      return;
-    }
-
     try {
-      const profileData = await userService.getCurrentProfile(authService.getCurrentUserOrThrow().rut_usuario);
+      const currentUser = await authService.fetchCurrentUser();
+      if (!currentUser) {
+        navigate('/');
+        return;
+      }
 
-      const mappedProfileData = {
-        ...profileData,
-        nombres:  (profileData as any).nombre  || profileData.nombre,
-        apellidos: (profileData as any).apellido || profileData.apellido,
-        role:     (profileData as any).rol     || profileData.rol,
-      };
-
-      setUser(mappedProfileData);
-      setEditedUser({ ...mappedProfileData });
-    } catch {
-      const currentUser = authService.getCurrentUser();
-      if (currentUser) {
+      try {
+        const profileData = await userService.getCurrentProfile(currentUser.rut_usuario);
+        const mappedProfileData = {
+          ...profileData,
+          nombres:  (profileData as any).nombre  || profileData.nombre,
+          apellidos: (profileData as any).apellido || profileData.apellido,
+          role:     (profileData as any).rol     || profileData.rol,
+        };
+        setUser(mappedProfileData);
+        setEditedUser({ ...mappedProfileData });
+      } catch {
         const mappedCurrentUser = {
           ...currentUser,
           nombres:  (currentUser as any).nombre  || currentUser.nombre,

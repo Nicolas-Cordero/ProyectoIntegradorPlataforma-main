@@ -1,6 +1,5 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { authService } from './services/authService';
 import { logger } from './config';
 import { LoginAdminForm } from './components/features/auth/login/LoginAdminForm';
 import { Spinner } from './components/ui';
@@ -62,49 +61,44 @@ function AppRoutes() {
   );
 }
 
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+function AppShell() {
+  const { isAuthenticated, loading, setAuthenticated } = useAuthContext();
 
-  useEffect(() => {
-    const authenticated = authService.isAuthenticated();
-    logger.log('🔐 Estado de autenticación:', authenticated);
-    setIsAuthenticated(authenticated);
-    setIsLoading(false);
-  }, []);
-
-  const handleAuthChange = (authenticated: boolean) => {
-    logger.log('🔄 Cambiando estado de autenticación a:', authenticated);
-    setIsAuthenticated(authenticated);
-  };
-
-  if (isLoading) {
+  // Bloquear render hasta que se resuelva la verificación de sesión.
+  // Esto corrige el flash de rutas protegidas antes de que el estado de auth se resuelva.
+  if (loading) {
     return <Spinner fullScreen message="Verificando autenticación..." />;
   }
 
   return (
+    <Suspense fallback={<Spinner fullScreen message="Cargando página..." />}>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            isAuthenticated
+              ? <Navigate to="/estudiantes" replace />
+              : <LoginAdminForm onAuthChange={(v) => setAuthenticated(v)} />
+          }
+        />
+        <Route
+          path="/*"
+          element={
+            isAuthenticated
+              ? <AppRoutes />
+              : <Navigate to="/" replace />
+          }
+        />
+      </Routes>
+    </Suspense>
+  );
+}
+
+function App() {
+  return (
     <Router>
-      <AuthProvider onAuthChange={handleAuthChange}>
-        <Suspense fallback={<Spinner fullScreen message="Cargando página..." />}>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                isAuthenticated ?
-                  <Navigate to="/estudiantes" replace /> :
-                  <LoginAdminForm onAuthChange={handleAuthChange} />
-              }
-            />
-            <Route
-              path="/*"
-              element={
-                isAuthenticated ?
-                  <AppRoutes /> :
-                  <Navigate to="/" replace />
-              }
-            />
-          </Routes>
-        </Suspense>
+      <AuthProvider>
+        <AppShell />
       </AuthProvider>
     </Router>
   );

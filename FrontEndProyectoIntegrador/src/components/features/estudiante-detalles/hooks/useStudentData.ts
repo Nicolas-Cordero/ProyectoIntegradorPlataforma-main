@@ -129,12 +129,9 @@ export const useStudentData = () => {
 
   // Cargar datos del estudiante
   useEffect(() => {
-    if (!authService.isAuthenticated()) {
-      navigate('/');
-      return;
-    }
-    
     const fetchEstudiante = async () => {
+      const sessionUser = await authService.fetchCurrentUser();
+      if (!sessionUser) { navigate('/'); return; }
       if (!id) {
         setError('ID de estudiante no proporcionado');
         setLoading(false);

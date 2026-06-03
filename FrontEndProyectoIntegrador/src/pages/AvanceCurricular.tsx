@@ -89,10 +89,8 @@ export const AvanceCurricular: React.FC = () => {
   // CARGAR DATOS DEL ESTUDIANTE
   useEffect(() => {
     const loadData = async () => {
-      if (!authService.isAuthenticated()) {
-        navigate('/');
-        return;
-      }
+      const sessionUser = await authService.fetchCurrentUser();
+      if (!sessionUser) { navigate('/'); return; }
 
       try {
         setLoading(true);

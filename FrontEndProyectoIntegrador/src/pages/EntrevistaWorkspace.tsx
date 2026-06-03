@@ -63,7 +63,8 @@ export function EntrevistaWorkspace() {
   // CARGAR DATOS: Entrevista y estudiante al iniciar
   useEffect(() => {
     const loadEntrevistaData = async () => {
-      if (!authService.isAuthenticated()) {
+      const sessionUser = await authService.fetchCurrentUser();
+      if (!sessionUser) {
         navigate('/');
         return;
       }

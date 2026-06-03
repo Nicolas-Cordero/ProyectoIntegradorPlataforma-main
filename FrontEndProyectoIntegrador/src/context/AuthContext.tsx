@@ -6,9 +6,10 @@ import type { Usuario } from '../types';
 interface AuthContextValue {
   usuario: Usuario | null;
   isAuthenticated: boolean;
+  // null = verificando sesión, false = no autenticado, true = autenticado
   loading: boolean;
   logout: () => Promise<void>;
-  setAuthenticated: (v: boolean) => void;
+  setAuthenticated: (v: boolean, user?: Usuario | null) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -24,19 +25,24 @@ export function AuthProvider({ children, onAuthChange }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const authenticated = authService.isAuthenticated();
-    setIsAuthenticated(authenticated);
-    if (authenticated) {
-      const user = authService.getCurrentUser();
-      setUsuario(user);
-    }
-    setLoading(false);
+    // Verificar sesión activa consultando el backend con la cookie HTTP-only.
+    // Nunca leer localStorage para tokens.
+    authService.fetchCurrentUser().then((user) => {
+      if (user) {
+        setUsuario(user);
+        setIsAuthenticated(true);
+        onAuthChange?.(true);
+      } else {
+        setIsAuthenticated(false);
+      }
+      setLoading(false);
+    });
   }, []);
 
-  const setAuthenticated = useCallback((v: boolean) => {
+  const setAuthenticated = useCallback((v: boolean, user?: Usuario | null) => {
     setIsAuthenticated(v);
     if (v) {
-      setUsuario(authService.getCurrentUser());
+      setUsuario(user ?? authService.getCurrentUser());
     } else {
       setUsuario(null);
     }

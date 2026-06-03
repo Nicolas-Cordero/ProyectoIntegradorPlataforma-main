@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const cookieParser = require('cookie-parser');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,12 +15,14 @@ const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [
   'http://localhost:3001',
 ];
 
+  app.use(cookieParser());
+
   app.enableCors({
     origin: (
-      origin: string | undefined, 
+      origin: string | undefined,
       callback: (err: Error | null, allow?: boolean) => void
     ) => {
-
+      console.log(`[CORS] origin recibido: "${origin}" | lista: ${JSON.stringify(allowedOrigins)}`);
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {

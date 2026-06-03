@@ -114,7 +114,7 @@ export function Navbar({ usuario, onLogout, links = [] }: NavbarProps) {
                   <Box component="span">
                     <Box component="span" sx={{ opacity: 0.8 }}>{userRole || 'Usuario'}:</Box>
                     {' '}
-                    <Box component="span" sx={{ fontWeight: 600 }}>{usuario?.email || 'Cargando...'}</Box>
+                    <Box component="span" sx={{ fontWeight: 600 }}>{ `${usuario?.nombre} ${usuario?.apellido}` || 'Cargando...'}</Box>
                   </Box>
                 }
                 sx={{

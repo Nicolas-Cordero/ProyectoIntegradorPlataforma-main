@@ -28,8 +28,8 @@ export class EstudianteService {
   }
 
 
-  findByGeneration(generacion: string): Promise<estudiante[]> {
-    return this.estudianteRepo.findEstudianteByGeneracion(generacion);
+  findByGeneracion(generacion_id: number): Promise<estudiante[]> {
+    return this.estudianteRepo.findEstudianteByGeneracionId(generacion_id);
   }
 
   
@@ -52,25 +52,18 @@ export class EstudianteService {
     return estudiante;
   }
 
-  async findAllGenerations(): Promise<string[]> {
+  async findSortedByGeneracion(): Promise<Record<number, estudiante[]>> {
     const estudiantes = await this.estudianteRepo.findAllEstudiantes();
-    const generacionesSet = new Set(estudiantes.map(e => e.generacion));
-    return Array.from(generacionesSet);
-  }
+    const resultado: Record<number, estudiante[]> = {};
 
-  async findSortedByGeneration(): Promise<{ [generacion: string]: estudiante[] }> {
-    const estudiantes_generacion = {};
-    const estudiantes = await this.estudianteRepo.findAllEstudiantes();
-
-    for (const estudiante of estudiantes) {
-      if (!estudiantes_generacion[estudiante.generacion]) {
-        estudiantes_generacion[estudiante.generacion] = [];
+    for (const est of estudiantes) {
+      if (!resultado[est.generacion_id]) {
+        resultado[est.generacion_id] = [];
       }
-
-      estudiantes_generacion[estudiante.generacion].push(estudiante);
+      resultado[est.generacion_id].push(est);
     }
 
-    return estudiantes_generacion;
+    return resultado;
   }
 
 

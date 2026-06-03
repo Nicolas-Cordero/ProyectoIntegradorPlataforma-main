@@ -37,11 +37,9 @@ export class EstudianteRepository{
   }
 
 
-  async findEstudianteByGeneracion(generacion: string): Promise<estudiante[]>{
+  async findEstudianteByGeneracionId(generacion_id: number): Promise<estudiante[]>{
     return this.prisma.estudiante.findMany({
-      where: {
-        generacion: generacion,
-      },
+      where: { generacion_id },
     });
   }
 

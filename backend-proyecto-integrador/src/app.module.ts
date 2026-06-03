@@ -12,6 +12,7 @@ import { ComentarioModule } from './comentario';
 import { EntrevistasModule } from './entrevistas';
 import { EstudianteModule } from './estudiante';
 import { FamiliarModule } from './familiar';
+import { GeneracionesModule } from './generaciones/generaciones.module';
 import { LiceoModule } from './liceo';
 import { RamoModule } from './ramo';
 import { UniversidadModule } from './universidad/universidad.module';
@@ -40,6 +41,7 @@ import { PrismaModule } from './prisma/prisma.module';
     EntrevistasModule,
     EstudianteModule,
     FamiliarModule,
+    GeneracionesModule,
     LiceoModule,
     RamoModule,
     UniversidadModule,

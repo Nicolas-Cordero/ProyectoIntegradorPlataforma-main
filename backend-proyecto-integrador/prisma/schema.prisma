@@ -162,13 +162,19 @@ model semestre {
 
 
 
+model generacion {
+  id          Int          @id @default(autoincrement())
+  año         Int          @unique
+  descripcion String?
+  estudiantes estudiante[]
+}
+
 model estudiante {
   rut_estudiante   String  @id
   nombre           String
   apellido         String
   email            String  @unique
   telefono         String
-  generacion       String
   fecha_nacimiento DateTime
   direccion        String
   genero           Genero
@@ -181,6 +187,9 @@ model estudiante {
   estado           EstadoEstudiante
   promedios_media  Decimal @db.Decimal(3,1)
 
+  generacion_id    Int
+
+  generacion_rel   generacion @relation(fields: [generacion_id], references: [id])
   liceo liceo @relation(fields: [rbd_liceo], references: [rbd])
 
   familiares  familiar[]

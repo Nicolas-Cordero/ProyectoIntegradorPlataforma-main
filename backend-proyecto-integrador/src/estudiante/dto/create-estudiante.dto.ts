@@ -4,6 +4,7 @@ import {
   MinLength,
   IsEnum,
   IsNumber,
+  IsInt,
   IsDate,
   Matches,
   IsEmail,
@@ -47,9 +48,9 @@ export class CreateEstudianteDto {
   telefono!: string;
 
 
+  @IsInt()
   @IsNotEmpty()
-  @IsString()
-  generacion!: string;
+  generacion_id!: number;
 
 
   @Type(() => Date)

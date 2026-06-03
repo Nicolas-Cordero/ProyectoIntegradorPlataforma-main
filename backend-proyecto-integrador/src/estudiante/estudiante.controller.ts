@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { EstudianteService } from './estudiante.service';
 import { CreateEstudianteDto } from './dto/create-estudiante.dto';
 import { UpdateEstudianteDto } from './dto/update-estudiante.dto';
@@ -18,14 +18,9 @@ export class EstudianteController {
   }
 
 
-  @Get('generaciones/:generation')
-  findByGeneration(@Param('generation') generation: string) {
-    return this.estudianteService.findByGeneration(generation);
-  }
-
-  @Get('generaciones/')
-  findAllGenerations() {
-    return this.estudianteService.findSortedByGeneration();
+  @Get('generacion/:generacion_id')
+  findByGeneracion(@Param('generacion_id', ParseIntPipe) generacion_id: number) {
+    return this.estudianteService.findByGeneracion(generacion_id);
   }
 
 // Revisar las de abajo

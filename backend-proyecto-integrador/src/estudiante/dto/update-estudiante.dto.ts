@@ -8,7 +8,7 @@ export class UpdateEstudianteDto extends PartialType(
       'apellido',
       'email',
       'telefono',
-      'generacion',
+      'generacion_id',
       'fecha_nacimiento',
       'direccion',
       'genero',

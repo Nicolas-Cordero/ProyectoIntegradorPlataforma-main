@@ -10,6 +10,15 @@ export const usersData = [
     rol: UserRol.ADMIN,
     password: 'admin123',
   },
+  {    
+    rut_usuario: '12345678-1',
+    nombre: 'admin',
+    apellido: 'admin',
+    email: 'nabil@fundacion.cl',
+    telefono: '+56912345678',
+    rol: UserRol.ADMIN,
+    password: 'admin123',
+  },
   {
     rut_usuario: '98765432-1',
     nombre: 'visita',

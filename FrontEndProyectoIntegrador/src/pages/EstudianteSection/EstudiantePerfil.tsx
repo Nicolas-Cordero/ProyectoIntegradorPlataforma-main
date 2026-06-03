@@ -3,35 +3,25 @@ import { useOutletContext } from 'react-router-dom';
 import { Avatar, Button, LinearProgress } from '@mui/material';
 import { AccountCircle as AccountCircleIcon, CloudUpload as CloudUploadIcon, Edit as EditIcon } from '@mui/icons-material';
 import { Modal, Input, Select, Alert } from '../../components/ui';
-import { estadoAcademicoService, estudianteService } from '../../services';
+import { estudianteService } from '../../services';
 import { getEstudianteStatus } from '../../utils/migration-helpers';
 import type { EstudianteOutletContext } from './EstudianteDetail';
-import type { StatusEstudiante, EstadoEstudiante, Genero } from '../../types';
+import type { EstadoEstudiante, Genero } from '../../types';
 import type { UpdateEstudianteDto } from '../../services/estudiante.service';
 
-const STATUS_OPTIONS: { value: StatusEstudiante; label: string }[] = [
-  { value: 'activo',   label: 'Activo'   },
-  { value: 'inactivo', label: 'Inactivo' },
-  { value: 'egresado', label: 'Egresado' },
-  { value: 'retirado', label: 'Retirado' },
-];
-
-const STATUS_COLOR: Record<string, string> = {
-  activo:   'bg-green-500',
-  egresado: 'bg-blue-500',
-  inactivo: 'bg-yellow-500',
-  retirado: 'bg-red-500',
-};
+// Normaliza coma decimal a punto antes de cualquier operación numérica (Bug 10)
+function normalizarDecimal(v: string | number | undefined | null): string {
+  if (v === null || v === undefined) return '';
+  return String(v).replace(',', '.');
+}
 
 export default function EstudiantePerfil() {
   const { estudiante, liceo, generacion, canEdit, refresh } = useOutletContext<EstudianteOutletContext>();
 
-  const statusInicial = getEstudianteStatus(estudiante) || 'activo';
-  const [status, setStatus] = useState<StatusEstudiante>(statusInicial as StatusEstudiante);
   const [fotoUrl, setFotoUrl] = useState<string | undefined>(estudiante.foto_url);
   const [subiendo, setSubiendo] = useState(false);
   const [errorUpload, setErrorUpload] = useState('');
-  const [guardandoEstado, setGuardandoEstado] = useState(false);
+  const [errorDB, setErrorDB] = useState('');
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editForm, setEditForm] = useState<Partial<UpdateEstudianteDto>>({});
@@ -39,27 +29,11 @@ export default function EstudiantePerfil() {
   const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
-    setStatus((getEstudianteStatus(estudiante) || 'activo') as StatusEstudiante);
     setFotoUrl(estudiante.foto_url);
   }, [estudiante]);
 
-  const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newStatus = e.target.value as StatusEstudiante;
-    const prev = status;
-    setStatus(newStatus);
-    setGuardandoEstado(true);
-    try {
-      await estadoAcademicoService.upsertByEstudiante(estudiante.rut_estudiante, { status: newStatus });
-      (estudiante as any).status = newStatus;
-    } catch {
-      setStatus(prev);
-    } finally {
-      setGuardandoEstado(false);
-    }
-  };
-
   const openEditModal = () => {
-    // Pre-cargar el formulario con los datos actuales del estudiante
+    // Bug 10 fix: normalizar promedios_media (puede llegar con coma decimal del backend)
     setEditForm({
       nombre:           estudiante.nombre,
       apellido:         estudiante.apellido,
@@ -72,7 +46,7 @@ export default function EstudiantePerfil() {
       genero:           estudiante.genero,
       rbd_liceo:        estudiante.rbd_liceo,
       puntaje_paes:     estudiante.puntaje_paes,
-      promedios_media:  estudiante.promedios_media,
+      promedios_media:  parseFloat(normalizarDecimal(estudiante.promedios_media)) || 0,
       estado:           estudiante.estado,
     });
     setSaveError('');
@@ -83,7 +57,14 @@ export default function EstudiantePerfil() {
     setSaving(true);
     setSaveError('');
     try {
-      await estudianteService.update(estudiante.rut_estudiante, editForm);
+      // Bug 10 fix: asegurar punto decimal antes de enviar
+      const payload = {
+        ...editForm,
+        promedios_media: editForm.promedios_media !== undefined
+          ? parseFloat(normalizarDecimal(editForm.promedios_media))
+          : undefined,
+      };
+      await estudianteService.update(estudiante.rut_estudiante, payload);
       setModalOpen(false);
       refresh();
     } catch (err: any) {
@@ -103,7 +84,8 @@ export default function EstudiantePerfil() {
     { label: 'Liceo',           value: liceo?.nombre ?? `RBD: ${estudiante.rbd_liceo}` },
     { label: 'Generación',      value: generacion ? `${generacion.año}${generacion.descripcion ? ` — ${generacion.descripcion}` : ''}` : `ID: ${estudiante.generacion_id ?? '—'}` },
     { label: 'Carrera',         value: carreraActual?.nombre_carrera ?? 'Sin carrera' },
-    { label: 'Estado',          value: estudiante.estado },
+    // Bug 8 fix: etiqueta clara para distinguir del estado académico
+    { label: 'Estado en sistema', value: estudiante.estado },
   ];
 
   return (
@@ -112,7 +94,7 @@ export default function EstudiantePerfil() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-8 items-start">
 
-          {/* Avatar, foto y selector de estado */}
+          {/* Avatar y foto */}
           <div className="flex flex-col items-center gap-2">
             <Avatar
               sx={{ width: 160, height: 160, bgcolor: 'grey.300', fontSize: '4rem' }}
@@ -127,7 +109,11 @@ export default function EstudiantePerfil() {
                 const file = e.target.files?.[0];
                 if (!file) return;
                 setErrorUpload('');
+                setErrorDB('');
                 setSubiendo(true);
+
+                // Bug 3 fix: dos bloques try/catch independientes
+                let secureUrl: string;
                 try {
                   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                   const preset   = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
@@ -138,13 +124,21 @@ export default function EstudiantePerfil() {
                   formData.append('upload_preset', preset);
                   formData.append('folder', folder);
                   const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: 'POST', body: formData });
-                  if (!res.ok) throw new Error('Error subiendo imagen');
+                  if (!res.ok) throw new Error('Error subiendo imagen a Cloudinary');
                   const data = await res.json();
-                  const secureUrl = data.secure_url as string;
+                  secureUrl = data.secure_url as string;
                   setFotoUrl(secureUrl);
-                  await estudianteService.update(estudiante.rut_estudiante, { foto_url: secureUrl });
                 } catch (err: any) {
                   setErrorUpload(err.message || 'No se pudo subir la imagen');
+                  setSubiendo(false);
+                  if (e.target) e.target.value = '';
+                  return;
+                }
+
+                try {
+                  await estudianteService.update(estudiante.rut_estudiante, { foto_url: secureUrl });
+                } catch {
+                  setErrorDB('La foto se subió pero no se guardó en el perfil. Intenta guardar de nuevo.');
                 } finally {
                   setSubiendo(false);
                   if (e.target) e.target.value = '';
@@ -158,20 +152,7 @@ export default function EstudiantePerfil() {
             </label>
             {subiendo && <LinearProgress sx={{ width: '100%', mt: 1 }} />}
             {errorUpload && <p className="text-red-500 text-xs mt-1 text-center">{errorUpload}</p>}
-
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-sm text-gray-600 font-semibold">Estado:</span>
-              <select
-                value={status}
-                onChange={handleStatusChange}
-                disabled={guardandoEstado}
-                className={`rounded-lg px-3 py-1 font-semibold text-white text-sm cursor-pointer disabled:opacity-60 ${STATUS_COLOR[status] ?? 'bg-gray-500'}`}
-              >
-                {STATUS_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value} className="text-black bg-white">{opt.label}</option>
-                ))}
-              </select>
-            </div>
+            {errorDB && <p className="text-orange-500 text-xs mt-1 text-center">{errorDB}</p>}
           </div>
 
           {/* Información General */}
@@ -192,7 +173,8 @@ export default function EstudiantePerfil() {
               {infoFields.map(field => (
                 <div key={field.label}>
                   <p className="text-xs text-gray-500 uppercase tracking-wide">{field.label}</p>
-                  <p className="font-semibold text-gray-800 mt-0.5">{field.value || '—'}</p>
+                  {/* Bug 6 fix: ?? en lugar de || para que 0 no sea falsy */}
+                  <p className="font-semibold text-gray-800 mt-0.5">{field.value ?? 'No especificado'}</p>
                 </div>
               ))}
             </div>
@@ -207,7 +189,9 @@ export default function EstudiantePerfil() {
           <div>
             <p className="text-gray-400 text-xs mb-0.5">Promedio media</p>
             <p className="font-bold text-gray-800">
-              {Number.isFinite(Number(estudiante.promedios_media)) ? Number(estudiante.promedios_media).toFixed(2) : '—'}
+              {Number.isFinite(parseFloat(normalizarDecimal(estudiante.promedios_media)))
+                ? parseFloat(normalizarDecimal(estudiante.promedios_media)).toFixed(2)
+                : '—'}
             </p>
           </div>
           <div>
@@ -245,59 +229,31 @@ export default function EstudiantePerfil() {
           </div>
         }
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Bug 11 fix: padding superior para que los primeros campos no queden cortados */}
+        <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {saveError && (
             <div className="sm:col-span-2">
               <Alert tipo="error" mensaje={saveError} />
             </div>
           )}
-
-          <Input
-            etiqueta="Nombre"
-            valor={editForm.nombre ?? ''}
-            onChange={(v) => setEditForm(f => ({ ...f, nombre: v }))}
-          />
-          <Input
-            etiqueta="Apellido"
-            valor={editForm.apellido ?? ''}
-            onChange={(v) => setEditForm(f => ({ ...f, apellido: v }))}
-          />
-          <Input
-            etiqueta="Correo electrónico"
-            tipo="email"
-            valor={editForm.email ?? ''}
-            onChange={(v) => setEditForm(f => ({ ...f, email: v }))}
-          />
-          <Input
-            etiqueta="Teléfono"
-            tipo="tel"
-            valor={editForm.telefono ?? ''}
-            onChange={(v) => setEditForm(f => ({ ...f, telefono: v }))}
-            placeholder="+569 xxxx xxxx"
-          />
-          <Input
-            etiqueta="Fecha de nacimiento"
-            tipo="date"
-            valor={editForm.fecha_nacimiento ?? ''}
-            onChange={(v) => setEditForm(f => ({ ...f, fecha_nacimiento: v }))}
-          />
-          <Input
-            etiqueta="Dirección"
-            valor={editForm.direccion ?? ''}
-            onChange={(v) => setEditForm(f => ({ ...f, direccion: v }))}
-          />
+          <Input etiqueta="Nombre"     valor={editForm.nombre ?? ''}    onChange={(v) => setEditForm(f => ({ ...f, nombre: v }))} />
+          <Input etiqueta="Apellido"   valor={editForm.apellido ?? ''}  onChange={(v) => setEditForm(f => ({ ...f, apellido: v }))} />
+          <Input etiqueta="Correo"     tipo="email" valor={editForm.email ?? ''}   onChange={(v) => setEditForm(f => ({ ...f, email: v }))} />
+          <Input etiqueta="Teléfono"   tipo="tel"   valor={editForm.telefono ?? ''} onChange={(v) => setEditForm(f => ({ ...f, telefono: v }))} placeholder="+569 xxxx xxxx" />
+          <Input etiqueta="Fecha de nacimiento" tipo="date" valor={editForm.fecha_nacimiento ?? ''} onChange={(v) => setEditForm(f => ({ ...f, fecha_nacimiento: v }))} />
+          <Input etiqueta="Dirección"  valor={editForm.direccion ?? ''} onChange={(v) => setEditForm(f => ({ ...f, direccion: v }))} />
           <Select
             etiqueta="Género"
             valor={editForm.genero ?? ''}
             onChange={(v) => setEditForm(f => ({ ...f, genero: v as Genero }))}
             opciones={[
-              { valor: 'MASCULINO',  etiqueta: 'Masculino' },
-              { valor: 'FEMENINO',   etiqueta: 'Femenino'  },
+              { valor: 'MASCULINO',  etiqueta: 'Masculino'  },
+              { valor: 'FEMENINO',   etiqueta: 'Femenino'   },
               { valor: 'NO_BINARIO', etiqueta: 'No binario' },
             ]}
           />
           <Select
-            etiqueta="Estado"
+            etiqueta="Estado en sistema"
             valor={editForm.estado ?? ''}
             onChange={(v) => setEditForm(f => ({ ...f, estado: v as EstadoEstudiante }))}
             opciones={[
@@ -310,16 +266,12 @@ export default function EstudiantePerfil() {
               { valor: 'TITULADO',    etiqueta: 'Titulado'    },
             ]}
           />
-          <Input
-            etiqueta="RBD Liceo"
-            valor={editForm.rbd_liceo ?? ''}
-            onChange={(v) => setEditForm(f => ({ ...f, rbd_liceo: v }))}
-          />
+          <Input etiqueta="RBD Liceo" valor={editForm.rbd_liceo ?? ''} onChange={(v) => setEditForm(f => ({ ...f, rbd_liceo: v }))} />
           <Input
             etiqueta="Promedio media"
             tipo="number"
             valor={editForm.promedios_media?.toString() ?? ''}
-            onChange={(v) => setEditForm(f => ({ ...f, promedios_media: Number(v) }))}
+            onChange={(v) => setEditForm(f => ({ ...f, promedios_media: parseFloat(normalizarDecimal(v)) || 0 }))}
           />
           <Input
             etiqueta="Puntaje PAES"

@@ -60,19 +60,20 @@ function FamiliarCard({ familiar, canEdit, onEdit, onDelete }: FamiliarCardProps
             {PARENTESCO_LABEL[familiar.parentesco] ?? familiar.parentesco}
           </span>
         </div>
+        {/* Bug 16 fix: botones con padding suficiente para área de toque cómoda */}
         {canEdit && (
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             <button
               onClick={() => onEdit(familiar)}
-              className="text-xs text-[#65B39B] hover:text-[#4a9e87] font-semibold transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg text-[#65B39B] hover:bg-[#65B39B]/10 font-semibold transition-colors"
             >
-              Editar
+              ✏️ Editar
             </button>
             <button
               onClick={() => onDelete(familiar.id)}
-              className="text-xs text-red-400 hover:text-red-600 font-semibold transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg text-red-500 hover:bg-red-50 font-semibold transition-colors"
             >
-              Eliminar
+              🗑 Eliminar
             </button>
           </div>
         )}
@@ -100,7 +101,9 @@ function FamiliarCard({ familiar, canEdit, onEdit, onDelete }: FamiliarCardProps
 
 export default function EstudianteInfoFamiliar() {
   const { estudiante, canEdit, refresh } = useOutletContext<EstudianteOutletContext>();
-  const familiares: Familiar[] = estudiante.familiares ?? [];
+  // Bug 7 fix: distinguir explícitamente undefined (no cargado) de [] (cargado y vacío)
+  const familiaresRaw = estudiante.familiares;
+  const familiares: Familiar[] = familiaresRaw ?? [];
   const { showConfirm, ConfirmDialog } = useConfirmDialog();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -183,10 +186,13 @@ export default function EstudianteInfoFamiliar() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Información Familiar</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            {familiares.length > 0
-              ? `${familiares.length} familiar(es) registrado(s)`
-              : 'Sin familiares registrados'}
+          {/* Bug 15 fix: texto con mejor contraste */}
+          <p className="text-sm text-gray-600 font-medium mt-1">
+            {familiaresRaw === undefined
+              ? 'Cargando información familiar...'
+              : familiares.length > 0
+                ? `${familiares.length} familiar(es) registrado(s)`
+                : 'Sin familiares registrados'}
           </p>
         </div>
         {canEdit && (
@@ -199,7 +205,12 @@ export default function EstudianteInfoFamiliar() {
         )}
       </div>
 
-      {familiares.length === 0 ? (
+      {/* Bug 7 fix: tres estados diferenciados */}
+      {familiaresRaw === undefined ? (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+          <p className="text-gray-400 font-medium">Los datos de familiares no están disponibles en este momento.</p>
+        </div>
+      ) : familiares.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
           <p className="text-4xl mb-3">👨‍👩‍👧‍👦</p>
           <p className="text-gray-500 font-medium">No hay familiares registrados para este estudiante.</p>

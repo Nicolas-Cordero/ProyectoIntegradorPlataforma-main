@@ -1,11 +1,12 @@
 import { useParams, Outlet, useNavigate } from 'react-router-dom';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { estudianteService, liceoService } from '../../services';
 import PermissionService from '../../services/permissionService';
+import { Spinner } from '../../components/ui';
 import { Navbar } from '../../components/common/Navbar';
 import { useAuthContext } from '../../context/AuthContext';
 import { BackgroundParticles } from '../../components/common/Particles';
-import { Spinner, ErrorMessage } from '../../components/ui';
+import { ErrorMessage } from '../../components/ui';
 import { logger } from '../../config';
 import type { Estudiante, Liceo, Generacion } from '../../types';
 import marcoIzquierdo from '../../assets/frames/marco-izquierda.svg';
@@ -41,6 +42,7 @@ export default function EstudianteDetail() {
   const navigate = useNavigate();
 
   const canEdit = PermissionService.canEditStudent(usuario);
+  const canViewInterviews = PermissionService.canViewInterviews(usuario);
   const refresh = useCallback(() => setRefreshCount((c) => c + 1), []);
 
   useEffect(() => {
@@ -94,7 +96,8 @@ export default function EstudianteDetail() {
     { label: 'Desempeño Académico',  path: `/estudiante/${id}/desempeno-academico` },
     { label: 'Desempeño Semestral',  path: `/estudiante/${id}/desempeno-semestral` },
     { label: 'Avance Curricular',    path: `/estudiante/${id}/avance-curricular` },
-    { label: 'Entrevistas',          path: `/estudiante/${id}/entrevistas` },
+    // Bug 1 fix: solo admin y tutor pueden ver entrevistas
+    ...(canViewInterviews ? [{ label: 'Entrevistas', path: `/estudiante/${id}/entrevistas` }] : []),
   ];
 
   if (loading) {
@@ -137,8 +140,11 @@ export default function EstudianteDetail() {
           </div>
         </div>
 
+        {/* Bug 2 fix: Suspense local para que el layout no se desmonte al cargar sub-páginas lazy */}
         <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Outlet context={{ estudiante, liceo, generacion, canEdit, refresh } satisfies EstudianteOutletContext} />
+          <Suspense fallback={<div className="flex justify-center py-16"><Spinner message="Cargando..." /></div>}>
+            <Outlet context={{ estudiante, liceo, generacion, canEdit, refresh } satisfies EstudianteOutletContext} />
+          </Suspense>
         </main>
       </div>
     </div>

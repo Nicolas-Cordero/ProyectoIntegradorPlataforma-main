@@ -15,7 +15,8 @@ import { Navbar as DashboardNavbar } from '../components/common/Navbar';
 import { CreateGeneracionModal, GenerationsGrid } from '../components/features/generaciones';
 import { CreateEstudianteModal } from '../components/features/estudiantes';
 import type { Estudiante, EstadisticasAdmin } from '../types';
-import { Box, Tabs, Tab } from '@mui/material';
+// TODO: migrate Tabs, Tab
+import { Tabs, Tab } from '@mui/material';
 import { UserProfile } from './UserProfile';
 import { UserManagement } from './UserManagement';
 import { EstudiantesSection } from './EstudiantesSection';
@@ -324,8 +325,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
       <DashboardNavbar usuario={usuario} onLogout={handleLogout} />
 
       {/* Barra de Navegación con Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'white', display: 'flex', justifyContent: 'center' }}>
-        <Tabs 
+      {/* TODO: migrate Tabs, Tab */}
+      <div className="border-b border-black/[0.12] bg-white flex justify-center">
+        <Tabs
           value={activeTab} 
           onChange={(_, newValue) => setActiveTab(newValue)}
           variant="scrollable"
@@ -347,7 +349,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onAuthChange }) => {
           <Tab label="Estadísticas Generales" />
           <Tab label="Perfil" />
         </Tabs>
-      </Box>
+      </div>
 
       {/* Contenido Principal */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-8 flex-1 w-full">

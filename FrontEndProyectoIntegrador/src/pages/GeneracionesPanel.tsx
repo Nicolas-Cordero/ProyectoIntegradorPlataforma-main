@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Card, CardContent, Typography, ToggleButtonGroup, ToggleButton, Container } from '@mui/material';
+// TODO: migrate ToggleButtonGroup, ToggleButton
+import { ToggleButtonGroup, ToggleButton } from '@mui/material';
 import { School as SchoolIcon, ArrowUpward, ArrowDownward } from '@mui/icons-material';
 import { estudianteService } from '../services';
 import { logger } from '../config';
@@ -44,134 +45,88 @@ export const GeneracionesPanel: React.FC = () => {
   if (error) return <ErrorMessage fullScreen message={error} onRetry={fetchData} />;
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#FFFBF0', py: 4 }}>
-      <Container maxWidth="lg">
+    <div className="min-h-screen bg-[#FFFBF0] py-8">
+      <div className="max-w-7xl mx-auto px-4">
 
         {/* Header con gradiente */}
-        <Box
-          sx={{
+        <div
+          className="rounded-2xl p-6 md:p-10 mb-8 text-white relative overflow-hidden"
+          style={{
             background: 'linear-gradient(135deg, #65B39B 0%, #4a9e87 40%, #C7654F 100%)',
-            borderRadius: 4,
-            p: { xs: 3, md: 5 },
-            mb: 4,
-            color: 'white',
-            position: 'relative',
-            overflow: 'hidden',
             boxShadow: '0 8px 32px rgba(101, 179, 155, 0.35)',
           }}
         >
           {/* Círculos decorativos */}
-          <Box sx={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
-          <Box sx={{ position: 'absolute', bottom: -50, right: 80, width: 130, height: 130, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
-          <Box sx={{ position: 'absolute', top: 20, right: 120, width: 60, height: 60, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
+          <div className="absolute -top-10 -right-10 w-[180px] h-[180px] rounded-full bg-white/[0.08] pointer-events-none" />
+          <div className="absolute -bottom-[50px] right-20 w-[130px] h-[130px] rounded-full bg-white/[0.06] pointer-events-none" />
+          <div className="absolute top-5 right-[120px] w-[60px] h-[60px] rounded-full bg-white/10 pointer-events-none" />
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, position: 'relative' }}>
-            <Box
-              sx={{
-                bgcolor: 'rgba(255,255,255,0.2)',
-                borderRadius: 3,
-                p: 1.5,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backdropFilter: 'blur(4px)',
-              }}
-            >
-              <SchoolIcon sx={{ fontSize: 40 }} />
-            </Box>
-            <Box>
-              <Typography variant="h4" fontWeight="bold" sx={{ lineHeight: 1.2 }}>
-                Generaciones
-              </Typography>
-              <Typography variant="body1" sx={{ opacity: 0.85, mt: 0.5 }}>
+          <div className="flex items-center gap-5 relative">
+            <div className="bg-white/20 rounded-xl p-3 flex items-center justify-center backdrop-blur-sm">
+              <SchoolIcon style={{ fontSize: 40 }} />
+            </div>
+            <div>
+              <h4 className="text-[2.125rem] font-bold leading-tight">Generaciones</h4>
+              <p className="text-base opacity-85 mt-1">
                 {generacionesOrdenadas.length} generación{generacionesOrdenadas.length !== 1 ? 'es' : ''} registrada{generacionesOrdenadas.length !== 1 ? 's' : ''}
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Controles de orden */}
-        <Card sx={{ mb: 3, borderRadius: 3, boxShadow: 1 }}>
-          <CardContent sx={{ py: 2, px: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="body2" color="text.secondary" fontWeight={500}>
-              Ordenar por año:
-            </Typography>
-            <ToggleButtonGroup
-              size="small"
-              value={orden}
-              exclusive
-              onChange={(_, value) => { if (value) setOrden(value); }}
-            >
-              <ToggleButton value="desc">
-                <ArrowDownward fontSize="small" sx={{ mr: 0.5 }} /> Mayor a menor
-              </ToggleButton>
-              <ToggleButton value="asc">
-                <ArrowUpward fontSize="small" sx={{ mr: 0.5 }} /> Menor a mayor
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </CardContent>
-        </Card>
+        {/* TODO: migrate ToggleButtonGroup, ToggleButton */}
+        <div
+          className="rounded-xl bg-white mb-6 px-6 py-4 flex items-center gap-4"
+          style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}
+        >
+          <span className="text-sm text-gray-500 font-medium">Ordenar por año:</span>
+          <ToggleButtonGroup
+            size="small"
+            value={orden}
+            exclusive
+            onChange={(_, value) => { if (value) setOrden(value); }}
+          >
+            <ToggleButton value="desc">
+              <ArrowDownward fontSize="small" sx={{ mr: 0.5 }} /> Mayor a menor
+            </ToggleButton>
+            <ToggleButton value="asc">
+              <ArrowUpward fontSize="small" sx={{ mr: 0.5 }} /> Menor a mayor
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </div>
 
         {/* Grid de tarjetas */}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' },
-            gap: 3,
-          }}
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {generacionesOrdenadas.map((gen, index) => {
             const color = ICON_COLORS[index % ICON_COLORS.length];
             return (
-              <Card
+              <div
                 key={gen.id}
-                sx={{
-                  borderRadius: 3,
-                  border: '1px solid',
-                  borderColor: 'grey.200',
-                  transition: 'all 0.25s ease',
-                  '&:hover': { transform: 'translateY(-6px)', boxShadow: 6 },
-                }}
+                className="rounded-xl bg-white border border-gray-200 transition-all duration-[250ms] ease-in-out hover:-translate-y-1.5 hover:shadow-xl"
               >
-                <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                <div className="p-6 flex flex-col gap-5">
                   {/* Banda de color superior */}
-                  <Box
-                    sx={{
-                      height: 6,
-                      borderRadius: 2,
-                      background: `linear-gradient(90deg, ${color}, ${color}aa)`,
-                      mx: -0.5,
-                      mt: -0.5,
-                    }}
+                  <div
+                    className="h-1.5 rounded-lg -mx-1 -mt-1"
+                    style={{ background: `linear-gradient(90deg, ${color}, ${color}aa)` }}
                   />
 
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box
-                      sx={{
-                        bgcolor: `${color}18`,
-                        borderRadius: 2.5,
-                        p: 1.2,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="rounded-xl p-3 flex items-center justify-center"
+                      style={{ backgroundColor: `${color}18` }}
                     >
-                      <SchoolIcon sx={{ fontSize: 32, color }} />
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="text.secondary" fontWeight={500}>
-                        GENERACIÓN
-                      </Typography>
-                      <Typography variant="h5" fontWeight="bold" sx={{ lineHeight: 1.1 }}>
-                        {gen.año}
-                      </Typography>
+                      <SchoolIcon style={{ fontSize: 32, color }} />
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Generación</span>
+                      <p className="text-2xl font-bold leading-tight">{gen.año}</p>
                       {gen.descripcion && (
-                        <Typography variant="caption" color="text.secondary">
-                          {gen.descripcion}
-                        </Typography>
+                        <span className="text-xs text-gray-500">{gen.descripcion}</span>
                       )}
-                    </Box>
-                  </Box>
+                    </div>
+                  </div>
 
                   <GradientButton
                     fullWidth
@@ -181,13 +136,13 @@ export const GeneracionesPanel: React.FC = () => {
                   >
                     Ver Generación
                   </GradientButton>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
-        </Box>
+        </div>
 
-      </Container>
-    </Box>
+      </div>
+    </div>
   );
 };

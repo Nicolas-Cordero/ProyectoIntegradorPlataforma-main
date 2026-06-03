@@ -2,19 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, userService } from '../services';
 import type { Usuario } from '../types';
-import {
-  Box,
-  Container,
-  Typography,
-  Avatar,
-  Button,
-  Grid as GridBase,
-  Divider,
-  IconButton,
-  Card,
-  CardContent,
-  Chip
-} from '@mui/material';
 import { Input, Alert } from '../components/ui';
 import { PasswordChangeModal } from '../components/features/auth/password-recovery';
 import {
@@ -28,13 +15,27 @@ import {
   Lock as LockIcon
 } from '@mui/icons-material';
 
-
-
-
 interface UserProfileProps {}
 
+const getRoleDisplayName = (role: string) => {
+  const map: Record<string, string> = {
+    admin:      'Administrador',
+    academico:  'Académico',
+    estudiante: 'Estudiante',
+  };
+  return map[role] || role;
+};
+
+const getRoleChipClasses = (role: string): string => {
+  const map: Record<string, string> = {
+    admin:      'bg-red-100 text-red-700',
+    academico:  'bg-blue-100 text-blue-700',
+    estudiante: 'bg-green-100 text-green-700',
+  };
+  return map[role] || 'bg-blue-100 text-blue-700';
+};
+
 export const UserProfile: React.FC<UserProfileProps> = () => {
-  const Grid: any = GridBase;
   const navigate = useNavigate();
   const [user, setUser] = useState<Usuario | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -58,26 +59,23 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
     try {
       const profileData = await userService.getCurrentProfile(authService.getCurrentUserOrThrow().rut_usuario);
 
-      // Mapear los campos del backend al formato del frontend
       const mappedProfileData = {
         ...profileData,
-        nombres: (profileData as any).nombre || profileData.nombre,
+        nombres:  (profileData as any).nombre  || profileData.nombre,
         apellidos: (profileData as any).apellido || profileData.apellido,
-        role: (profileData as any).rol || profileData.rol,
+        role:     (profileData as any).rol     || profileData.rol,
       };
 
       setUser(mappedProfileData);
       setEditedUser({ ...mappedProfileData });
-    } catch (error) {
-      // Fallback a authService si falla la API
+    } catch {
       const currentUser = authService.getCurrentUser();
       if (currentUser) {
-        // Aplicar mapeo también al fallback
         const mappedCurrentUser = {
           ...currentUser,
-          nombres: (currentUser as any).nombre || currentUser.nombre,
+          nombres:  (currentUser as any).nombre  || currentUser.nombre,
           apellidos: (currentUser as any).apellido || currentUser.apellido,
-          role: (currentUser as any).rol || currentUser.rol,
+          role:     (currentUser as any).rol     || currentUser.rol,
         };
         setUser(mappedCurrentUser);
         setEditedUser({ ...mappedCurrentUser });
@@ -101,23 +99,15 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
     if (!editedUser || !user) return;
 
     try {
-      // Preparar datos de actualización - solo campos válidos del DTO
       const updateData: any = {};
-      
-      // Campos que pueden actualizarse según CreateUserDto
-      if (editedUser.nombre && editedUser.nombre !== user.nombre) {
-        updateData.nombre = editedUser.nombre.trim();
-      }
-      
-      if (editedUser.apellido && editedUser.apellido !== user.apellido) {
-        updateData.apellido = editedUser.apellido.trim();
-      }
-      
-      if (editedUser.email && editedUser.email !== user.email) {
-        updateData.email = editedUser.email.trim();
-      }
 
-      // Solo hacer la petición si hay cambios
+      if (editedUser.nombre && editedUser.nombre !== user.nombre)
+        updateData.nombre = editedUser.nombre.trim();
+      if (editedUser.apellido && editedUser.apellido !== user.apellido)
+        updateData.apellido = editedUser.apellido.trim();
+      if (editedUser.email && editedUser.email !== user.email)
+        updateData.email = editedUser.email.trim();
+
       if (Object.keys(updateData).length === 0) {
         setSnackbarMessage('No hay cambios para guardar');
         setSnackbarSeverity('info');
@@ -126,202 +116,142 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
         return;
       }
 
-      const updatedProfile = await userService.updateCurrentProfile(authService.getCurrentUserOrThrow().rut_usuario, updateData);
+      const updatedProfile = await userService.updateCurrentProfile(
+        authService.getCurrentUserOrThrow().rut_usuario,
+        updateData
+      );
 
-      // Mapear los campos del backend al formato del frontend
       const mappedProfile = {
         ...updatedProfile,
-        nombres: updatedProfile.nombre,
-        apellidos: updatedProfile.apellido
+        nombres:  updatedProfile.nombre,
+        apellidos: updatedProfile.apellido,
       };
-      
-      // Actualizar el usuario local con los datos mapeados
+
       setUser(mappedProfile);
       setEditedUser(mappedProfile);
-      
-      // Actualizar también el localStorage para mantener consistencia
       localStorage.setItem('user', JSON.stringify(mappedProfile));
-      
       setIsEditing(false);
       setSnackbarMessage('Perfil actualizado exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
     } catch (error: any) {
-      const errorMessage = error.message || 'Error desconocido al actualizar perfil';
-      setSnackbarMessage(`Error: ${errorMessage}`);
+      setSnackbarMessage(`Error: ${error.message || 'Error desconocido al actualizar perfil'}`);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
   };
 
   const handleInputChange = (field: keyof Usuario, value: string) => {
-    if (editedUser) {
-      setEditedUser({
-        ...editedUser,
-        [field]: value
-      });
-    }
-  };
-
-  const getRoleDisplayName = (role: string) => {
-    const roleMap: { [key: string]: string } = {
-      'admin': 'Administrador',
-      'academico': 'Académico',
-      'estudiante': 'Estudiante'
-    };
-    return roleMap[role] || role;
-  };
-
-  const getRoleColor = (role: string): 'primary' | 'secondary' | 'success' | 'warning' | 'error' => {
-    const colorMap: { [key: string]: 'primary' | 'secondary' | 'success' | 'warning' | 'error' } = {
-      'admin': 'error',
-      'academico': 'primary',
-      'estudiante': 'success'
-    };
-    return colorMap[role] || 'primary';
+    if (editedUser) setEditedUser({ ...editedUser, [field]: value });
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-        <Typography variant="h6">Cargando perfil...</Typography>
-      </Box>
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-xl text-gray-600">Cargando perfil...</p>
+      </div>
     );
   }
 
   if (!user) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-        <Alert 
-          tipo="error" 
-          mensaje="Error al cargar el perfil del usuario"
-          onCerrar={() => {}}
-        />
-      </Box>
+      <div className="flex justify-center items-center min-h-screen">
+        <Alert tipo="error" mensaje="Error al cargar el perfil del usuario" onCerrar={() => {}} />
+      </div>
     );
   }
 
   return (
-    <Box sx={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#FFFBF0',
-      py: 4
-    }}>
-      <Container maxWidth="md">
-        {/* Header */}
-        <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1f2937' }}>
-            Mi Perfil
-          </Typography>
-        </Box>
+    <div className="min-h-screen bg-[#FFFBF0] py-8">
+      <div className="max-w-[900px] mx-auto px-4">
 
-        {/* Main Profile Card */}
-        <Card sx={{ mb: 3, borderRadius: 3, boxShadow: 3 }}>
-          <CardContent sx={{ p: 4 }}>
-            {/* Profile Header */}
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'flex-start', 
-              justifyContent: 'space-between',
-              mb: 4 
-            }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                {/* Avatar sin imagen */}
-                <Avatar
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    backgroundColor: '#e3f2fd',
-                    fontSize: '2rem'
-                  }}
-                >
-                  <PersonIcon sx={{ fontSize: '2.5rem', color: '#1976d2' }} />
-                </Avatar>
+        {/* Título */}
+        <div className="mb-6">
+          <h4 className="text-[2.125rem] font-bold text-gray-800">Mi Perfil</h4>
+        </div>
 
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 0.5 }}>
-                    {user.nombre && user.apellido 
+        {/* Tarjeta principal */}
+        <div className="rounded-xl bg-white shadow-md mb-6">
+          <div className="p-8">
+
+            {/* Header de perfil */}
+            <div className="flex items-start justify-between mb-8">
+              <div className="flex items-center gap-6">
+                {/* Avatar */}
+                <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                  <PersonIcon style={{ fontSize: '2.5rem', color: '#1976d2' }} />
+                </div>
+
+                <div>
+                  <h5 className="text-2xl font-bold mb-1">
+                    {user.nombre && user.apellido
                       ? `${user.nombre} ${user.apellido}`
                       : user.email?.split('@')[0] ?? 'Usuario'
                     }
-                  </Typography>
-                  
-                  <Chip 
-                    label={getRoleDisplayName(user.rol || '')} 
-                    color={getRoleColor(user.rol || '')}
-                    sx={{ mb: 1 }}
-                  />
-                  
+                  </h5>
+                  <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold mb-2 ${getRoleChipClasses(user.rol || '')}`}>
+                    {getRoleDisplayName(user.rol || '')}
+                  </span>
                   {user.rut_usuario && (
-                    <Typography variant="body2" color="textSecondary">
-                      RUT: {user.rut_usuario}
-                    </Typography>
+                    <p className="text-sm text-gray-500">RUT: {user.rut_usuario}</p>
                   )}
-                </Box>
-              </Box>
+                </div>
+              </div>
 
-              {/* Edit Button */}
-              <Box>
+              {/* Botones editar/guardar */}
+              <div>
                 {!isEditing ? (
-                  <Button
-                    variant="outlined"
-                    startIcon={<EditIcon />}
+                  <button
                     onClick={handleEdit}
-                    sx={{ borderRadius: 2 }}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-blue-600 text-blue-600 text-sm font-medium hover:bg-blue-50 transition-colors"
                   >
+                    <EditIcon style={{ fontSize: 18 }} />
                     Editar
-                  </Button>
+                  </button>
                 ) : (
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button
-                      variant="contained"
-                      startIcon={<SaveIcon />}
+                  <div className="flex gap-2">
+                    <button
                       onClick={handleSave}
-                      sx={{ borderRadius: 2 }}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
                     >
+                      <SaveIcon style={{ fontSize: 18 }} />
                       Guardar
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      startIcon={<CancelIcon />}
+                    </button>
+                    <button
                       onClick={handleCancel}
-                      sx={{ borderRadius: 2 }}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-400 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
                     >
+                      <CancelIcon style={{ fontSize: 18 }} />
                       Cancelar
-                    </Button>
-                  </Box>
+                    </button>
+                  </div>
                 )}
-              </Box>
-            </Box>
+              </div>
+            </div>
 
-            <Divider sx={{ mb: 4 }} />
+            <hr className="border-t border-gray-200 mb-8" />
 
-            {/* Personal Information */}
-            <Box sx={{ mb: 4 }}>
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                mb: 3 
-              }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                  Información Personal
-                </Typography>
+            {/* Información personal */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <h6 className="text-xl font-bold">Información Personal</h6>
                 {!isEditing && (
-                  <IconButton onClick={handleEdit} size="small">
-                    <EditIcon fontSize="small" />
-                  </IconButton>
+                  <button
+                    onClick={handleEdit}
+                    className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                  >
+                    <EditIcon style={{ fontSize: 18 }} />
+                  </button>
                 )}
-              </Box>
+              </div>
 
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <PersonIcon color="action" fontSize="small" />
-                    <Typography variant="body2" color="textSecondary" sx={{ minWidth: 80 }}>
-                      Nombres
-                    </Typography>
-                  </Box>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Nombres */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <PersonIcon style={{ fontSize: 18, color: 'rgba(0,0,0,0.54)' }} />
+                    <span className="text-sm text-gray-500 min-w-[80px]">Nombres</span>
+                  </div>
                   {isEditing ? (
                     <Input
                       etiqueta=""
@@ -330,19 +260,16 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
                       placeholder="Nombres"
                     />
                   ) : (
-                    <Typography variant="body1" sx={{ mb: 2, ml: 4 }}>
-                      {user.nombre || 'No especificado'}
-                    </Typography>
+                    <p className="text-base ml-7 mb-2">{user.nombre || 'No especificado'}</p>
                   )}
-                </Grid>
+                </div>
 
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <PersonIcon color="action" fontSize="small" />
-                    <Typography variant="body2" color="textSecondary" sx={{ minWidth: 80 }}>
-                      Apellidos
-                    </Typography>
-                  </Box>
+                {/* Apellidos */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <PersonIcon style={{ fontSize: 18, color: 'rgba(0,0,0,0.54)' }} />
+                    <span className="text-sm text-gray-500 min-w-[80px]">Apellidos</span>
+                  </div>
                   {isEditing ? (
                     <Input
                       etiqueta=""
@@ -351,19 +278,16 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
                       placeholder="Apellidos"
                     />
                   ) : (
-                    <Typography variant="body1" sx={{ mb: 2, ml: 4 }}>
-                      {user.apellido || 'No especificado'}
-                    </Typography>
+                    <p className="text-base ml-7 mb-2">{user.apellido || 'No especificado'}</p>
                   )}
-                </Grid>
+                </div>
 
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <EmailIcon color="action" fontSize="small" />
-                    <Typography variant="body2" color="textSecondary" sx={{ minWidth: 80 }}>
-                      Email
-                    </Typography>
-                  </Box>
+                {/* Email */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <EmailIcon style={{ fontSize: 18, color: 'rgba(0,0,0,0.54)' }} />
+                    <span className="text-sm text-gray-500 min-w-[80px]">Email</span>
+                  </div>
                   {isEditing ? (
                     <Input
                       etiqueta=""
@@ -373,82 +297,67 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
                       placeholder="correo@ejemplo.com"
                     />
                   ) : (
-                    <Typography variant="body1" sx={{ mb: 2, ml: 4 }}>
-                      {user.email}
-                    </Typography>
+                    <p className="text-base ml-7 mb-2">{user.email}</p>
                   )}
-                </Grid>
+                </div>
+              </div>
+            </div>
 
-                <Grid item xs={12} sm={6}>
-                </Grid>
-              </Grid>
-            </Box>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Password Change Card */}
-        <Card sx={{ mb: 3, borderRadius: 3, boxShadow: 1 }}>
-          <CardContent sx={{ p: 3 }}>
-            <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-              <LockIcon sx={{ mr: 1 }} />
+        {/* Tarjeta cambio de contraseña */}
+        <div className="rounded-xl bg-white shadow-sm mb-6">
+          <div className="p-6">
+            <h6 className="text-xl font-semibold flex items-center gap-2 mb-4">
+              <LockIcon style={{ fontSize: 22 }} />
               Cambiar Contraseña
-            </Typography>
-
-            <Button
+            </h6>
+            <button
               onClick={() => setShowChangePassword(true)}
-              variant="outlined"
-              color="primary"
-              startIcon={<LockIcon />}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-blue-600 text-blue-600 text-sm font-medium hover:bg-blue-50 transition-colors"
             >
+              <LockIcon style={{ fontSize: 18 }} />
               Cambiar Contraseña
-            </Button>
-          </CardContent>
-        </Card>
+            </button>
+          </div>
+        </div>
 
-        {/* Account Information Card */}
-        <Card sx={{ borderRadius: 3, boxShadow: 1 }}>
-          <CardContent sx={{ p: 3 }}>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
-              Información de la Cuenta
-            </Typography>
-            
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  <BusinessIcon color="action" fontSize="small" />
-                  <Typography variant="body2" color="textSecondary">
-                    Tipo de Usuario
-                  </Typography>
-                </Box>
-                <Chip 
-                  label={getRoleDisplayName(user.rol || '')} 
-                  color={getRoleColor(user.rol || '')}
-                  size="small"
-                />
-              </Grid>
+        {/* Tarjeta información de la cuenta */}
+        <div className="rounded-xl bg-white shadow-sm">
+          <div className="p-6">
+            <h6 className="text-xl font-bold mb-6">Información de la Cuenta</h6>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <BusinessIcon style={{ fontSize: 18, color: 'rgba(0,0,0,0.54)' }} />
+                  <span className="text-sm text-gray-500">Tipo de Usuario</span>
+                </div>
+                <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${getRoleChipClasses(user.rol || '')}`}>
+                  {getRoleDisplayName(user.rol || '')}
+                </span>
+              </div>
 
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  <CalendarIcon color="action" fontSize="small" />
-                  <Typography variant="body2" color="textSecondary">
-                    Fecha de Registro
-                  </Typography>
-                </Box>
-                <Typography variant="body2">
-                  {user.created_at 
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <CalendarIcon style={{ fontSize: 18, color: 'rgba(0,0,0,0.54)' }} />
+                  <span className="text-sm text-gray-500">Fecha de Registro</span>
+                </div>
+                <p className="text-sm text-gray-700">
+                  {user.created_at
                     ? new Date(user.created_at).toLocaleDateString('es-CL')
                     : 'No disponible'
                   }
-                </Typography>
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        {/* Snackbar for notifications */}
+        {/* Notificación */}
         {snackbarOpen && (
-          <Alert 
-            tipo={snackbarSeverity === 'error' ? 'error' : 'exito'} 
+          <Alert
+            tipo={snackbarSeverity === 'error' ? 'error' : 'exito'}
             mensaje={snackbarMessage}
             onCerrar={() => setSnackbarOpen(false)}
           />
@@ -464,8 +373,9 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
             setSnackbarOpen(true);
           }}
         />
-      </Container>
-    </Box>
+
+      </div>
+    </div>
   );
 };
 

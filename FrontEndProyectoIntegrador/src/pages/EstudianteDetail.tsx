@@ -13,7 +13,8 @@ import {
 } from '../components/features/estudiante-detalles';
 import { NuevoSemestreModal } from '../components/features/estudiante-detalles/components';
 import { DashboardParticles } from '../components/common/Particles';
-import { Snackbar, Alert, Box } from '@mui/material';
+// TODO: migrate Snackbar, Alert
+import { Snackbar, Alert } from '@mui/material';
 import marcoIzquierdo from '../assets/frames/marco-izquierda.svg';
 import marcoDerecho from '../assets/frames/mardo-derecha.svg';
 

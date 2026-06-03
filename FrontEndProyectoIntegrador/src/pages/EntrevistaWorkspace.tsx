@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box } from '@mui/material';
 import { authService } from '../services/authService';
 import { entrevistaService, estudianteService } from '../services';
 import { logger } from '../config';
@@ -135,17 +134,20 @@ export function EntrevistaWorkspace() {
   }
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'grey.50' }}>
+    <div className="h-screen flex flex-col bg-gray-50">
       {/* NAVBAR SUPERIOR */}
-      <TopNavbar 
+      <TopNavbar
         estudiante={estudiante}
         onNavigateBack={() => navigate(-1)}
       />
-      
+
       {/* ÁREA PRINCIPAL: Sidebar + Workspace */}
-      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden', height: 'calc(100vh - 64px)', maxHeight: 'calc(100vh - 64px)' }}>
+      <div
+        className="flex-1 flex overflow-hidden"
+        style={{ height: 'calc(100vh - 64px)', maxHeight: 'calc(100vh - 64px)' }}
+      >
         {/* SIDEBAR IZQUIERDO */}
-        <Sidebar 
+        <Sidebar
           sections={sidebarSections}
           onSectionClick={openTab}
           activePanel={workspace.activePanel}
@@ -153,9 +155,12 @@ export function EntrevistaWorkspace() {
           customTags={customTags}
           onAddCustomTag={handleAddCustomTag}
         />
-        
+
         {/* ÁREA DE PESTAÑAS */}
-        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', width: 'calc(100% - 280px)', maxWidth: 'calc(100% - 280px)', minWidth: 400, overflow: 'hidden' }}>
+        <div
+          className="flex-1 flex flex-col min-w-[400px] overflow-hidden"
+          style={{ width: 'calc(100% - 280px)', maxWidth: 'calc(100% - 280px)' }}
+        >
           <TabManager
             workspace={workspace}
             onCloseTab={closeTab}
@@ -166,8 +171,8 @@ export function EntrevistaWorkspace() {
             estudiante={estudiante}
             entrevistaId={entrevistaId}
           />
-        </Box>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 }

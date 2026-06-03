@@ -2,23 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, userService, PermissionService } from '../services';
 import type { Usuario } from '../types';
+// TODO: migrate Table*, Tabs, Tab
 import {
-  Box,
   Paper,
-  Typography,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
-  IconButton,
   Tab,
   Tabs,
-  Avatar,
-  useMediaQuery,
-  useTheme
 } from '@mui/material';
 import { Modal, Input, Select, Button, Alert } from '../components/ui';
 import { PasswordChangeModal } from '../components/features/auth/password-recovery';
@@ -29,9 +23,6 @@ import {
   SupervisorAccount as TutorIcon,
   Visibility as VisibilityIcon,
   Lock as LockIcon,
-  AccountCircle as AccountCircleIcon,
-  Logout as LogoutIcon,
-  SpaceBar as DashboardIcon
 } from '@mui/icons-material';
 import { GradientButton } from '../components/common/GradientButton';
 import { TypingText } from '../components/common/TypingText';
@@ -40,14 +31,24 @@ import { BackgroundParticles } from '../components/common/Particles';
 import marcoIzquierdo from '../assets/frames/marco-izquierda.svg';
 import marcoDerecho from '../assets/frames/mardo-derecha.svg';
 import userSvg from '../assets/icons/user.svg';
-import {UserRol, type UserRolType} from '../types';
+import { UserRol, type UserRolType } from '../types';
+
+const getRoleChipClasses = (role: UserRolType): string => {
+  const map: Record<string, string> = {
+    [UserRol.ADMIN]:      'bg-red-100 text-red-700',
+    [UserRol.TUTOR]:      'bg-blue-100 text-blue-700',
+    [UserRol.VISITA]:     'bg-sky-100 text-sky-700',
+    [UserRol.ACADEMICO]:  'bg-green-100 text-green-700',
+    [UserRol.ESTUDIANTE]: 'bg-yellow-100 text-yellow-700',
+    [UserRol.INVITADO]:   'bg-gray-100 text-gray-600',
+  };
+  return map[role] ?? 'bg-gray-100 text-gray-600';
+};
 
 export const UserManagement: React.FC = () => {
   const navigate = useNavigate();
-  const theme = useTheme();
   const { showConfirm, ConfirmDialog } = useConfirmDialog();
-  const showAdminChip = useMediaQuery(theme.breakpoints.up('lg'));
-  
+
   const [users, setUsers] = useState<Usuario[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<Usuario[]>([]);
   const [tabValue, setTabValue] = useState<'todos' | 'tutores' | 'visitas'>('todos');
@@ -57,7 +58,7 @@ export const UserManagement: React.FC = () => {
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [passwordChangeUser, setPasswordChangeUser] = useState<Usuario | null>(null);
   const [usuario, setUsuario] = useState<any>(null);
-  
+
   const [formData, setFormData] = useState({
     nombres: '',
     apellidos: '',
@@ -65,44 +66,24 @@ export const UserManagement: React.FC = () => {
     password: '',
     rut: '',
     telefono: '',
-    rol: UserRol.TUTOR as UserRolType
+    rol: UserRol.TUTOR as UserRolType,
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
+  useEffect(() => { filterUsers(); }, [tabValue, users]);
 
-  useEffect(() => {
-    filterUsers();
-  }, [tabValue, users]);
-
-  
   const loadData = async () => {
-    if (!authService.isAuthenticated()) {
-      navigate('/');
-      return;
-    }
-
+    if (!authService.isAuthenticated()) { navigate('/'); return; }
 
     const tokenValid = await authService.verifyToken();
-    if (!tokenValid) {
-      navigate('/');
-      return;
-    }
-
+    if (!tokenValid) { navigate('/'); return; }
 
     const user = authService.getCurrentUser();
     setUsuario(user);
 
     if (!PermissionService.canManageUsers(user)) {
-      setSnackbar({
-        open: true,
-        message: 'No tienes permisos para acceder a esta sección. Debes ser administrador.',
-        severity: 'error'
-      });
-      setTimeout(() => {
-        navigate('/estudiantes');
-      }, 3000);
+      setSnackbar({ open: true, message: 'No tienes permisos para acceder a esta sección. Debes ser administrador.', severity: 'error' });
+      setTimeout(() => navigate('/estudiantes'), 3000);
       return;
     }
 
@@ -114,8 +95,8 @@ export const UserManagement: React.FC = () => {
       const usersData = await userService.getAll();
       const mappedUsers = (usersData as any[]).map((user) => ({
         ...user,
-        role: user.rol || user.role || UserRol.VISITA,
-        nombres: user.nombre || user.nombres || '',
+        role:      user.rol     || user.role     || UserRol.VISITA,
+        nombres:   user.nombre  || user.nombres  || '',
         apellidos: user.apellido || user.apellidos || '',
       }));
       setUsers(mappedUsers);
@@ -139,25 +120,17 @@ export const UserManagement: React.FC = () => {
     if (user) {
       setEditingUser(user);
       setFormData({
-        nombres: user.nombre || '',
+        nombres:   user.nombre || '',
         apellidos: user.apellido || '',
-        email: user.email,
-        password: '',
-        rut: user.rut_usuario || '',
-        telefono: user.telefono || '',
-        rol: (user as any).rol || user.rol as UserRolType
+        email:     user.email,
+        password:  '',
+        rut:       user.rut_usuario || '',
+        telefono:  user.telefono || '',
+        rol:       (user as any).rol || user.rol as UserRolType,
       });
     } else {
       setEditingUser(null);
-      setFormData({
-        nombres: '',
-        apellidos: '',
-        email: '',
-        password: '',
-        rut: '',
-        telefono: '',
-        rol: UserRol.TUTOR
-      });
+      setFormData({ nombres: '', apellidos: '', email: '', password: '', rut: '', telefono: '', rol: UserRol.TUTOR });
     }
     setOpenDialog(true);
   };
@@ -165,61 +138,43 @@ export const UserManagement: React.FC = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setEditingUser(null);
-    setFormData({
-      nombres: '',
-      apellidos: '',
-      email: '',
-      password: '',
-      rut: '',
-      telefono: '',
-      rol: UserRol.TUTOR
-    });
+    setFormData({ nombres: '', apellidos: '', email: '', password: '', rut: '', telefono: '', rol: UserRol.TUTOR });
   };
 
   const handleSaveUser = async () => {
-    // Validaciones
     if (!formData.nombres || !formData.apellidos || !formData.email) {
       setSnackbar({ open: true, message: 'Por favor completa los campos obligatorios', severity: 'error' });
       return;
     }
-
     if (!editingUser && !formData.password) {
       setSnackbar({ open: true, message: 'La contraseña es obligatoria para nuevos usuarios', severity: 'error' });
       return;
     }
 
     try {
-      // Mapear datos del frontend al formato del backend
       const userData = {
         rut_usuario: formData.rut,
-        nombre: formData.nombres,
-        apellido: formData.apellidos,
-        email: formData.email,
-        telefono: formData.telefono,
-        rol: formData.rol as UserRolType, // El backend espera 'TUTOR' o 'VISITA' en mayúsculas
-        password: formData.password,
+        nombre:      formData.nombres,
+        apellido:    formData.apellidos,
+        email:       formData.email,
+        telefono:    formData.telefono,
+        rol:         formData.rol as UserRolType,
+        password:    formData.password,
       };
 
-      console.log('📤 Enviando datos de usuario:', userData);
-
       if (editingUser) {
-        // Actualizar usuario existente
         const updateData = { ...userData };
-        if (!updateData.password) {
-          delete (updateData as any).password; // No enviar password vacío en actualizaciones
-        }
+        if (!updateData.password) delete (updateData as any).password;
         await userService.update(editingUser.rut_usuario!, updateData);
         setSnackbar({ open: true, message: 'Usuario actualizado exitosamente', severity: 'success' });
       } else {
-        // Crear nuevo usuario
         await userService.create(userData);
         setSnackbar({ open: true, message: `${formData.rol === UserRol.TUTOR ? 'Tutor' : 'Visitante'} creado exitosamente`, severity: 'success' });
       }
-      
+
       handleCloseDialog();
-      await loadUsers(); // Recargar lista
+      await loadUsers();
     } catch (err) {
-      console.error('Error al guardar usuario:', err);
       const errorMessage = err instanceof Error ? err.message : 'Error al guardar el usuario';
       setSnackbar({ open: true, message: errorMessage, severity: 'error' });
     }
@@ -234,47 +189,23 @@ export const UserManagement: React.FC = () => {
       onConfirm: async () => {
         await userService.delete(userId);
         setSnackbar({ open: true, message: 'Usuario eliminado exitosamente', severity: 'success' });
-        await loadUsers(); // Recargar lista
-      }
+        await loadUsers();
+      },
     });
-  };
-
-  const getRoleColor = (role: UserRolType): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' => {
-    const colorMap: { [key in UserRolType]: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' } = {
-      [UserRol.ADMIN]: 'error',
-      [UserRol.TUTOR]: 'primary',
-      [UserRol.VISITA]: 'info',
-      [UserRol.ACADEMICO]: 'success',
-      [UserRol.ESTUDIANTE]: 'warning',
-      [UserRol.INVITADO]: 'secondary',
-    };
-    return colorMap[role] ?? 'secondary';
   };
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#FFFBF0' }}>
       {/* Marcos de fondo */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
-      >
-        <img
-          src={marcoIzquierdo}
-          alt=""
-          className="absolute left-0 top-0 h-screen w-auto max-w-none opacity-35 select-none hidden md:block"
-        />
-        <img
-          src={marcoDerecho}
-          alt=""
-          className="absolute right-0 top-0 h-screen w-auto max-w-none opacity-35 select-none hidden md:block"
-        />
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <img src={marcoIzquierdo} alt="" className="absolute left-0 top-0 h-screen w-auto max-w-none opacity-35 select-none hidden md:block" />
+        <img src={marcoDerecho}   alt="" className="absolute right-0 top-0 h-screen w-auto max-w-none opacity-35 select-none hidden md:block" />
       </div>
 
-      {/* Partículas */}
       <BackgroundParticles />
 
-      {/* Contenido Principal */}
       <div className="relative z-10 flex-1 max-w-7xl mx-auto px-6 lg:px-8 py-8 w-full">
+
         {/* Título */}
         <div className="mb-8">
           <TypingText
@@ -282,35 +213,27 @@ export const UserManagement: React.FC = () => {
             text="Gestión de Usuarios"
             startDelayMs={0}
             charDelayMs={1}
-            sx={{
-              display: 'block',
-              fontSize: '1.875rem',
-              fontWeight: 700,
-              marginBottom: '0.5rem',
-              color: '#1f2937',
-            }}
+            sx={{ display: 'block', fontSize: '1.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#1f2937' }}
           />
-          <Typography variant="body1" sx={{ color: '#6b7280', fontWeight: 500 }}>
+          <p className="text-base text-gray-500 font-medium">
             Administra tutores y visitantes de la plataforma
-          </Typography>
+          </p>
         </div>
 
-        {/* Navbar de Tabs estilo Dashboard */}
-        <Paper sx={{ 
-          mb: 6, 
-          borderRadius: 2,
-          background: `
-            linear-gradient(135deg, rgba(238, 179, 93, 0.15) 0%, rgba(238, 179, 93, 0.08) 100%),
-            rgba(255, 255, 255, 0.85)
-          `,
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(238, 179, 93, 0.3)',
-          boxShadow: '0 8px 32px rgba(238, 179, 93, 0.12)'
-        }}>
-          <Tabs 
-            value={tabValue} 
+        {/* Tabs de filtro */}
+        {/* TODO: migrate Tabs, Tab */}
+        <div
+          className="mb-12 rounded-lg border border-[rgba(238,179,93,0.3)]"
+          style={{
+            background: 'linear-gradient(135deg, rgba(238,179,93,0.15) 0%, rgba(238,179,93,0.08) 100%), rgba(255,255,255,0.85)',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 8px 32px rgba(238,179,93,0.12)',
+          }}
+        >
+          <Tabs
+            value={tabValue}
             onChange={(_, newValue) => setTabValue(newValue)}
-            sx={{ 
+            sx={{
               borderBottom: '2px solid',
               borderColor: 'rgba(238, 179, 93, 0.2)',
               '& .MuiTab-root': {
@@ -319,40 +242,24 @@ export const UserManagement: React.FC = () => {
                 fontSize: '0.95rem',
                 transition: 'all 0.3s ease',
                 color: 'rgba(31, 41, 55, 0.6)',
-                '&.Mui-selected': {
-                  color: '#EEB35D',
-                  fontWeight: 700
-                },
-                '&:hover': {
-                  backgroundColor: 'rgba(238, 179, 93, 0.08)',
-                  color: 'rgba(238, 179, 93, 0.9)'
-                }
+                '&.Mui-selected': { color: '#EEB35D', fontWeight: 700 },
+                '&:hover': { backgroundColor: 'rgba(238, 179, 93, 0.08)', color: 'rgba(238, 179, 93, 0.9)' },
               },
               '& .MuiTabs-indicator': {
                 background: 'linear-gradient(135deg, #f9b150 0%, #EEB35D 100%)',
                 height: 3,
-                borderRadius: '3px 3px 0 0'
-              }
+                borderRadius: '3px 3px 0 0',
+              },
             }}
           >
             <Tab label={`Todos (${users.length})`} value="todos" />
-            <Tab 
-              label={`Tutores (${users.filter(u => u.rol === 'TUTOR').length})`} 
-              value="tutores"
-              icon={<TutorIcon />}
-              iconPosition="start"
-            />
-            <Tab 
-              label={`Visitas (${users.filter(u => u.rol === UserRol.VISITA || u.rol === UserRol.INVITADO).length})`}
-              value="visitas"
-              icon={<VisibilityIcon />}
-              iconPosition="start"
-            />
+            <Tab label={`Tutores (${users.filter(u => u.rol === 'TUTOR').length})`} value="tutores" icon={<TutorIcon />} iconPosition="start" />
+            <Tab label={`Visitas (${users.filter(u => u.rol === UserRol.VISITA || u.rol === UserRol.INVITADO).length})`} value="visitas" icon={<VisibilityIcon />} iconPosition="start" />
           </Tabs>
-        </Paper>
+        </div>
 
-        {/* Botón Agregar Usuario */}
-        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'flex-end' }}>
+        {/* Botón Agregar */}
+        <div className="mb-8 flex justify-end">
           <GradientButton
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
@@ -362,208 +269,142 @@ export const UserManagement: React.FC = () => {
           >
             Agregar Usuario
           </GradientButton>
-        </Box>
+        </div>
 
-        {/* Table */}
-        <TableContainer component={Paper} sx={{ 
-          borderRadius: 2, 
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-          background: 'rgba(255, 255, 255, 0.9)',
-          backdropFilter: 'blur(10px)'
-        }}>
+        {/* Tabla — TODO: migrate Table* */}
+        <TableContainer
+          component={Paper}
+          sx={{
+            borderRadius: 2,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            background: 'rgba(255,255,255,0.9)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
           <Table>
-            <TableHead sx={{ backgroundColor: 'rgba(101, 179, 155, 0.08)' }}>
+            <TableHead sx={{ backgroundColor: 'rgba(101,179,155,0.08)' }}>
               <TableRow>
-                <TableCell sx={{ fontWeight: 600, color: '#1f2937' }}>Usuario</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#1f2937' }}>Email</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#1f2937' }}>RUT</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#1f2937' }}>Teléfono</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#1f2937' }}>Rol</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#1f2937' }}>Estado</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600, color: '#1f2937' }}>Acciones</TableCell>
+                {['Usuario', 'Email', 'RUT', 'Teléfono', 'Rol', 'Estado', 'Acciones'].map((col, i) => (
+                  <TableCell key={col} align={i === 6 ? 'center' : 'left'} sx={{ fontWeight: 600, color: '#1f2937' }}>
+                    {col}
+                  </TableCell>
+                ))}
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredUsers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                      <Box
-                        component="img"
-                        src={userSvg}
-                        alt="Sin usuarios"
-                        sx={{
-                          width: 64,
-                          height: 64,
-                          opacity: 0.3,
-                          mb: 1
-                        }}
-                      />
-                      <Typography color="textSecondary" sx={{ fontWeight: 500 }}>
-                        No hay usuarios registrados
-                      </Typography>
-                    </Box>
+                    <div className="flex flex-col items-center gap-2">
+                      <img src={userSvg} alt="Sin usuarios" className="w-16 h-16 opacity-30 mb-2" />
+                      <p className="text-gray-500 font-medium">No hay usuarios registrados</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredUsers.map((user) => (
-                  <TableRow key={user.rut_usuario} hover sx={{ '&:hover': { backgroundColor: 'rgba(101, 179, 155, 0.04)' } }}>
+                filteredUsers.map((user) => {
+                  const isSelf = user.rut_usuario === usuario?.rut_usuario;
+                  return (
+                  <TableRow key={user.rut_usuario} hover sx={{ '&:hover': { backgroundColor: 'rgba(101,179,155,0.04)' } }}>
                     <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{ width: 40, height: 40, bgcolor: 'rgba(101, 179, 155, 0.2)' }}>
-                          <Box
-                            component="img"
-                            src={userSvg}
-                            alt="Usuario"
-                            sx={{
-                              width: 24,
-                              height: 24,
-                              objectFit: 'contain'
-                            }}
-                          />
-                        </Avatar>
-                        <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1f2937' }}>
-                            {user.nombre} {user.apellido}
-                          </Typography>
-                          <Typography variant="caption" color="textSecondary">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-[rgba(101,179,155,0.2)]">
+                          <img src={userSvg} alt="Usuario" className="w-6 h-6 object-contain" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-bold text-gray-800">{user.nombre} {user.apellido}</p>
+                            {isSelf && (
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[rgba(101,179,155,0.15)] text-[#3d8a72]">Tú</span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500">
                             {user.created_at && `Desde ${new Date(user.created_at).toLocaleDateString('es-CL')}`}
-                          </Typography>
-                        </Box>
-                      </Box>
+                          </p>
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell sx={{ color: '#6b7280' }}>{user.email}</TableCell>
                     <TableCell sx={{ color: '#6b7280' }}>{user.rut_usuario || '-'}</TableCell>
                     <TableCell sx={{ color: '#6b7280' }}>{user.telefono || '-'}</TableCell>
                     <TableCell>
-                      <Chip 
-                        label={(user.rol || '').charAt(0).toUpperCase() + (user.rol || '').slice(1)}
-                        color={getRoleColor(user.rol as UserRolType)}
-                        size="small"
-                        sx={{ fontWeight: 600 }}
-                      />
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getRoleChipClasses(user.rol as UserRolType)}`}>
+                        {(user.rol || '').charAt(0).toUpperCase() + (user.rol || '').slice(1)}
+                      </span>
                     </TableCell>
+                    <TableCell />
                     <TableCell align="center">
-                      <IconButton 
-                        size="small" 
-                        color="primary"
+                      <button
                         onClick={() => handleOpenDialog(user)}
-                        title="Editar usuario"
+                        title={isSelf ? 'No puedes editar tu propio usuario' : 'Editar usuario'}
+                        disabled={isSelf}
+                        className="p-1.5 rounded-full text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                       >
                         <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton 
-                        size="small" 
-                        color="warning"
-                        onClick={() => {
-                          setPasswordChangeUser(user);
-                          setShowPasswordChange(true);
-                        }}
-                        title="Cambiar contraseña"
+                      </button>
+                      <button
+                        onClick={() => { setPasswordChangeUser(user); setShowPasswordChange(true); }}
+                        title={isSelf ? 'Cambia tu contraseña desde tu perfil' : 'Cambiar contraseña'}
+                        disabled={isSelf}
+                        className="p-1.5 rounded-full text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                       >
                         <LockIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton 
-                        size="small" 
-                        color="error"
+                      </button>
+                      <button
                         onClick={() => handleDeleteUser(user.rut_usuario!)}
-                        title="Eliminar usuario"
+                        title={isSelf ? 'No puedes eliminar tu propio usuario' : 'Eliminar usuario'}
+                        disabled={isSelf}
+                        className="p-1.5 rounded-full text-red-600 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                       >
                         <DeleteIcon fontSize="small" />
-                      </IconButton>
+                      </button>
                     </TableCell>
                   </TableRow>
-                ))
+                  );
+                })
               )}
             </TableBody>
           </Table>
         </TableContainer>
       </div>
 
-      {/* Modal para Crear/Editar Usuario */}
+      {/* Modal Crear/Editar */}
       <Modal
         titulo={editingUser ? 'Editar Usuario' : 'Agregar Nuevo Usuario'}
         abierto={openDialog}
         onCerrar={handleCloseDialog}
         tamanio="sm"
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <Input
-            etiqueta="Nombres"
-            valor={formData.nombres}
-            onChange={(v) => setFormData({ ...formData, nombres: v })}
-            requerido
-          />
-          <Input
-            etiqueta="Apellidos"
-            valor={formData.apellidos}
-            onChange={(v) => setFormData({ ...formData, apellidos: v })}
-            requerido
-          />
-          <Input
-            etiqueta="Email"
-            tipo="email"
-            valor={formData.email}
-            onChange={(v) => setFormData({ ...formData, email: v })}
-            requerido
-          />
+        <div className="flex flex-col gap-4">
+          <Input etiqueta="Nombres"   valor={formData.nombres}   onChange={(v) => setFormData({ ...formData, nombres: v })}   requerido />
+          <Input etiqueta="Apellidos" valor={formData.apellidos} onChange={(v) => setFormData({ ...formData, apellidos: v })} requerido />
+          <Input etiqueta="Email" tipo="email" valor={formData.email} onChange={(v) => setFormData({ ...formData, email: v })} requerido />
           {!editingUser && (
-            <Input
-              etiqueta="Contraseña"
-              tipo="password"
-              valor={formData.password}
-              onChange={(v) => setFormData({ ...formData, password: v })}
-              ayuda="Mínimo 6 caracteres"
-              requerido
-            />
+            <Input etiqueta="Contraseña" tipo="password" valor={formData.password} onChange={(v) => setFormData({ ...formData, password: v })} ayuda="Mínimo 6 caracteres" requerido />
           )}
-          <Input
-            etiqueta="RUT"
-            valor={formData.rut}
-            onChange={(v) => setFormData({ ...formData, rut: v })}
-            placeholder="12345678-9"
-          />
-          <Input
-            etiqueta="Teléfono"
-            tipo="tel"
-            valor={formData.telefono}
-            onChange={(v) => setFormData({ ...formData, telefono: v })}
-            placeholder="+56912345678"
-          />
+          <Input etiqueta="RUT"      valor={formData.rut}      onChange={(v) => setFormData({ ...formData, rut: v })}      placeholder="12345678-9" />
+          <Input etiqueta="Teléfono" tipo="tel" valor={formData.telefono} onChange={(v) => setFormData({ ...formData, telefono: v })} placeholder="+56912345678" />
           <Select
             etiqueta="Rol"
-            opciones={[
-              { valor: UserRol.TUTOR, etiqueta: 'Tutor' },
-              { valor: UserRol.VISITA, etiqueta: 'Visita' }
-            ]}
+            opciones={[{ valor: UserRol.TUTOR, etiqueta: 'Tutor' }, { valor: UserRol.VISITA, etiqueta: 'Visita' }]}
             valor={formData.rol}
             onChange={(v) => setFormData({ ...formData, rol: v as UserRolType })}
             requerido
           />
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
-            <Button variante="outline" tamano="md" onClick={handleCloseDialog}>
-              Cancelar
-            </Button>
-            <Button
-              variante="primary"
-              tamano="md"
-              onClick={handleSaveUser}
-              deshabilitado={!formData.nombres || !formData.apellidos || !formData.email}
-            >
+          <div className="flex gap-4 justify-end mt-2">
+            <Button variante="outline" tamano="md" onClick={handleCloseDialog}>Cancelar</Button>
+            <Button variante="primary" tamano="md" onClick={handleSaveUser} deshabilitado={!formData.nombres || !formData.apellidos || !formData.email}>
               {editingUser ? 'Actualizar' : 'Crear'}
             </Button>
-          </Box>
-        </Box>
+          </div>
+        </div>
       </Modal>
 
-      {/* Modal para Cambiar Contraseña */}
+      {/* Modal Cambiar Contraseña */}
       {showPasswordChange && passwordChangeUser && (
         <PasswordChangeModal
           abierto={showPasswordChange}
-          onCerrar={() => {
-            setShowPasswordChange(false);
-            setPasswordChangeUser(null);
-          }}
+          onCerrar={() => { setShowPasswordChange(false); setPasswordChangeUser(null); }}
           userId={passwordChangeUser.rut_usuario}
           requireCurrentPassword={false}
           onSuccess={() => {
@@ -574,15 +415,14 @@ export const UserManagement: React.FC = () => {
         />
       )}
 
-      {/* Snackbar */}
       {snackbar.open && (
-        <Alert 
+        <Alert
           tipo={snackbar.severity === 'error' ? 'error' : 'exito'}
           mensaje={snackbar.message}
           onCerrar={() => setSnackbar({ ...snackbar, open: false })}
         />
       )}
-      <ConfirmDialog/>
+      <ConfirmDialog />
     </div>
   );
 };

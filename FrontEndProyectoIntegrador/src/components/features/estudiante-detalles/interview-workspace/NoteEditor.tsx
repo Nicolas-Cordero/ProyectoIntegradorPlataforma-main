@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import type { Estudiante } from '../../../types';
-import { entrevistaService } from '../../../services';
-import { useConfirmDialog } from '../../ui';
+import type { Estudiante } from '../../../../types';
+import { entrevistaService } from '../../../../services';
+import { useConfirmDialog } from '../../../ui';
 
 // INTERFACE: Estructura de notas
 interface Note {

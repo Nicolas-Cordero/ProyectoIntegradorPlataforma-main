@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { authService } from '../services/authService';
-import { entrevistaService, estudianteService } from '../services';
-import { logger } from '../config';
-import type { Estudiante } from '../types';
-import { useWorkspaceTabs } from '../hooks';
-import { sidebarSections } from '../config/workspaceSections';
-import { LoadingState, ErrorState } from '../components/features/estudiante-detalles/entrevista-workspace';
+import { authService } from '../../services/authService';
+import { entrevistaService, estudianteService } from '../../services';
+import { logger } from '../../config';
+import type { Estudiante } from '../../types';
+import { useWorkspaceTabs } from '../../hooks';
+import { sidebarSections } from '../../config/workspaceSections';
+import { LoadingState, ErrorState } from '../../components/features/estudiante-detalles/entrevista-workspace';
 
-import { TopNavbar, Sidebar, TabManager } from '../components/features/interview-workspace';
+import { TopNavbar, Sidebar, TabManager } from '../../components/features/estudiante-detalles/interview-workspace';
 
 export function EntrevistaWorkspace() {
   const navigate = useNavigate();

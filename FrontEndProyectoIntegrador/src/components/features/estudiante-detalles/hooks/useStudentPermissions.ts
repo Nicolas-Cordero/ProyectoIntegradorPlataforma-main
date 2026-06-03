@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { authService, PermissionService } from '../../../../services';
-import type { SeccionActiva } from '../index';
+
+export type SeccionActiva = 'perfil' | 'personal' | 'familiar' | 'informe' | 'desempeno' | 'avance' | 'entrevistas';
 
 export const useStudentPermissions = () => {
   const [seccionActiva, setSeccionActiva] = useState<SeccionActiva>('perfil');

@@ -7,9 +7,16 @@ import { MainLayout } from './components/common/MainLayout';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
 
 const EstudiantesSection = lazy(() => import('./pages/EstudiantesSection').then(m => ({ default: m.EstudiantesSection })));
-const GeneracionView = lazy(() => import('./pages/GeneracionView'));
-const EstudianteDetail = lazy(() => import('./pages/EstudianteDetail'));
-const EntrevistaWorkspace = lazy(() => import('./pages/EntrevistaWorkspace').then(m => ({ default: m.EntrevistaWorkspace })));
+const GeneracionView = lazy(() => import('./pages/GeneracionSection/GeneracionView'));
+const EstudianteDetail = lazy(() => import('./pages/EstudianteSection/EstudianteDetail'));
+const EstudiantePerfil = lazy(() => import('./pages/EstudianteSection/EstudiantePerfil'));
+const EstudianteDatosPersonales = lazy(() => import('./pages/EstudianteSection/EstudianteDatosPersonales'));
+const EstudianteInfoFamiliar = lazy(() => import('./pages/EstudianteSection/EstudianteInfoFamiliar'));
+const EstudianteDesempenoAcademico = lazy(() => import('./pages/EstudianteSection/EstudianteDesempenoAcademico'));
+const EstudianteDesempenoSemestral = lazy(() => import('./pages/EstudianteSection/EstudianteDesempenoSemestral'));
+const EstudianteAvanceCurricular = lazy(() => import('./pages/EstudianteSection/EstudianteAvanceCurricular'));
+const EstudianteEntrevistas = lazy(() => import('./pages/EstudianteSection/EstudianteEntrevistas'));
+const EntrevistaWorkspace = lazy(() => import('./pages/EstudianteSection/EntrevistaWorkspace').then(m => ({ default: m.EntrevistaWorkspace })));
 const UserProfile = lazy(() => import('./pages/UserProfile').then(m => ({ default: m.UserProfile })));
 const UserManagement = lazy(() => import('./pages/UserManagement'));
 const DebugPermissions = lazy(() => import('./pages/DebugPermissions'));
@@ -52,7 +59,16 @@ function AppRoutes() {
       <Route path="/perfil" element={withLayout(<UserProfile />)} />
       <Route path="/generaciones" element={withLayout(<GeneracionesPanel />)} />
       <Route path="/generacion/:id" element={withLayout(<GeneracionView />)} />
-      <Route path="/estudiante/:id" element={<EstudianteDetail />} />
+      <Route path="/estudiante/:id" element={<EstudianteDetail />}>
+        <Route index element={<Navigate to="perfil" replace />} />
+        <Route path="perfil" element={<EstudiantePerfil />} />
+        <Route path="datos-personales" element={<EstudianteDatosPersonales />} />
+        <Route path="informacion-familiar" element={<EstudianteInfoFamiliar />} />
+        <Route path="desempeno-academico" element={<EstudianteDesempenoAcademico />} />
+        <Route path="desempeno-semestral" element={<EstudianteDesempenoSemestral />} />
+        <Route path="avance-curricular" element={<EstudianteAvanceCurricular />} />
+        <Route path="entrevistas" element={<EstudianteEntrevistas />} />
+      </Route>
       <Route path="/entrevista/:id" element={<EntrevistaWorkspace />} />
       <Route path="/estadisticas"   element={withLayout(<EstadisticasPage />)} />
       <Route path="/admin/usuarios" element={withLayout(<UserManagement />)} />

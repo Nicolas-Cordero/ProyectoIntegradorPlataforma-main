@@ -21,3 +21,4 @@ export { periodoAcademicoService } from './periodo-academico.service';
 // Servicios para nuevas entidades
 export { beneficiosService } from './beneficios.service';
 export { informacionAdmisionService } from './informacion-admision.service';
+export { liceoService } from './liceo.service';

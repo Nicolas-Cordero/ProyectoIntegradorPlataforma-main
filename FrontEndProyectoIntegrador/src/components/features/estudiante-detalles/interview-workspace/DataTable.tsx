@@ -1,6 +1,6 @@
 ﻿import { Fragment, useEffect, useState } from 'react';
-import type { Estudiante, HistorialAcademico, RamosCursados } from '../../../types';
-import { historialAcademicoService, ramosCursadosService } from '../../../services';
+import type { Estudiante, HistorialAcademico, RamosCursados } from '../../../../types';
+import { historialAcademicoService, ramosCursadosService } from '../../../../services';
 import {
   getEstudianteEmail,
   getEstudianteTelefono,
@@ -19,7 +19,7 @@ import {
   getRamoAño,
   getHistorialSemestre,
   getHistorialAño
-} from '../../../utils/migration-helpers';
+} from '../../../../utils/migration-helpers';
 
 interface DataTableProps {
   tabId: string;

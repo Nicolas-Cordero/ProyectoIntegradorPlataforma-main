@@ -15,4 +15,4 @@ export { useAcademicEditing } from './useAcademicEditing';
 export { useAutosave } from './useAutosave';
 
 // Tipos compartidos
-export type { SeccionActiva } from '../index';
+export type { SeccionActiva } from './useStudentPermissions';

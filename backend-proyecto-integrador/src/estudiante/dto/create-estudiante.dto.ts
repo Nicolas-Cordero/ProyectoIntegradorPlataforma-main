@@ -81,8 +81,8 @@ export class CreateEstudianteDto {
 
 
   @IsString()
-  @IsNotEmpty()
-  foto_url!: string;
+  @IsOptional()
+  foto_url?: string;
 
 
   @IsNumber({ maxDecimalPlaces: 1 })

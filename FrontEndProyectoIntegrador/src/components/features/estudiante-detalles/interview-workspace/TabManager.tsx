@@ -1,7 +1,7 @@
 ﻿import { useState } from 'react';
 import { Box, Paper, IconButton, Button, Typography, Alert } from '@mui/material';
 import { Close as CloseIcon, ViewColumn as ViewColumnIcon, Search as SearchIcon } from '@mui/icons-material';
-import type { Estudiante } from '../../../types';
+import type { Estudiante } from '../../../../types';
 import { NoteEditor } from './NoteEditor';
 import { DataTable } from './DataTable';
 

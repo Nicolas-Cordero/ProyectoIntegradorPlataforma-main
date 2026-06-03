@@ -1,7 +1,7 @@
 import { AppBar, Toolbar, Button, Breadcrumbs, Typography, Avatar, Chip, Box } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, CheckCircle as CheckCircleIcon, AccountCircle as AccountCircleIcon } from '@mui/icons-material';
-import type { Estudiante } from '../../../types';
-import { useConfirmDialog } from '../../ui';
+import type { Estudiante } from '../../../../types';
+import { useConfirmDialog } from '../../../ui';
 
 interface TopNavbarProps {
   estudiante: Estudiante;

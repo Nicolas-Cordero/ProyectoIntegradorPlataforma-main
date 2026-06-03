@@ -1,0 +1,282 @@
+import { useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
+import { familiarService } from '../../services';
+import type { CreateFamiliarDto, UpdateFamiliarDto } from '../../services/familiar.service';
+import { Modal, Input, Select, Alert } from '../../components/ui';
+import { useConfirmDialog } from '../../components/ui';
+import type { EstudianteOutletContext } from './EstudianteDetail';
+import type { Familiar, Parentesco } from '../../types';
+
+const PARENTESCO_OPTIONS: { value: Parentesco; label: string }[] = [
+  { value: 'PADRE', label: 'Padre' },
+  { value: 'MADRE', label: 'Madre' },
+  { value: 'ABUELO', label: 'Abuelo' },
+  { value: 'ABUELA', label: 'Abuela' },
+  { value: 'HERMANO', label: 'Hermano/a' },
+  { value: 'HERMANA', label: 'Hermana' },
+  { value: 'TIO', label: 'Tío' },
+  { value: 'TIA', label: 'Tía' },
+  { value: 'PRIMO', label: 'Primo' },
+  { value: 'PRIMA', label: 'Prima' },
+  { value: 'OTRO', label: 'Otro' },
+];
+
+const PARENTESCO_LABEL: Record<Parentesco, string> = {
+  PADRE: 'Padre', MADRE: 'Madre', ABUELO: 'Abuelo', ABUELA: 'Abuela',
+  HERMANO: 'Hermano/a', HERMANA: 'Hermana', TIO: 'Tío', TIA: 'Tía',
+  PRIMO: 'Primo', PRIMA: 'Prima', OTRO: 'Otro',
+};
+
+interface FormState {
+  rut_familiar: string;
+  nombre: string;
+  telefono: string;
+  parentesco: Parentesco;
+  observacion: string;
+}
+
+const EMPTY_FORM: FormState = {
+  rut_familiar: '',
+  nombre: '',
+  telefono: '',
+  parentesco: 'OTRO',
+  observacion: '',
+};
+
+interface FamiliarCardProps {
+  familiar: Familiar;
+  canEdit: boolean;
+  onEdit: (f: Familiar) => void;
+  onDelete: (id: number) => void;
+}
+
+function FamiliarCard({ familiar, canEdit, onEdit, onDelete }: FamiliarCardProps) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <div className="flex items-start justify-between mb-2">
+        <div>
+          <h3 className="text-base font-bold text-gray-800">{familiar.nombre}</h3>
+          <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[#65B39B]/15 text-[#3a7a6b]">
+            {PARENTESCO_LABEL[familiar.parentesco] ?? familiar.parentesco}
+          </span>
+        </div>
+        {canEdit && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => onEdit(familiar)}
+              className="text-xs text-[#65B39B] hover:text-[#4a9e87] font-semibold transition-colors"
+            >
+              Editar
+            </button>
+            <button
+              onClick={() => onDelete(familiar.id)}
+              className="text-xs text-red-400 hover:text-red-600 font-semibold transition-colors"
+            >
+              Eliminar
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mt-3">
+        <div>
+          <span className="text-xs text-gray-500 uppercase tracking-wide">RUT</span>
+          <p className="font-medium text-gray-800">{familiar.rut_familiar}</p>
+        </div>
+        <div>
+          <span className="text-xs text-gray-500 uppercase tracking-wide">Teléfono</span>
+          <p className="font-medium text-gray-800">{familiar.telefono}</p>
+        </div>
+        {familiar.observacion && (
+          <div className="sm:col-span-2">
+            <span className="text-xs text-gray-500 uppercase tracking-wide">Observación</span>
+            <p className="text-gray-700 mt-0.5">{familiar.observacion}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function EstudianteInfoFamiliar() {
+  const { estudiante, canEdit, refresh } = useOutletContext<EstudianteOutletContext>();
+  const familiares: Familiar[] = estudiante.familiares ?? [];
+  const { showConfirm, ConfirmDialog } = useConfirmDialog();
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const openCreate = () => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setError('');
+    setModalOpen(true);
+  };
+
+  const openEdit = (familiar: Familiar) => {
+    setEditingId(familiar.id);
+    setForm({
+      rut_familiar: familiar.rut_familiar,
+      nombre: familiar.nombre,
+      telefono: familiar.telefono,
+      parentesco: familiar.parentesco,
+      observacion: familiar.observacion ?? '',
+    });
+    setError('');
+    setModalOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.rut_familiar || !form.nombre || !form.telefono) {
+      setError('RUT, nombre y teléfono son obligatorios');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      if (editingId !== null) {
+        const update: UpdateFamiliarDto = {
+          nombre: form.nombre,
+          telefono: form.telefono,
+          parentesco: form.parentesco,
+          observacion: form.observacion || undefined,
+        };
+        await familiarService.update(editingId, update);
+      } else {
+        const create: CreateFamiliarDto = {
+          rut_estudiante: estudiante.rut_estudiante,
+          rut_familiar: form.rut_familiar,
+          nombre: form.nombre,
+          telefono: form.telefono,
+          parentesco: form.parentesco,
+          observacion: form.observacion || undefined,
+        };
+        await familiarService.create(create);
+      }
+      setModalOpen(false);
+      refresh();
+    } catch (err: any) {
+      setError(err?.message || 'Error al guardar');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = (id: number) => {
+    showConfirm({
+      title: 'Eliminar familiar',
+      message: '¿Estás seguro de que deseas eliminar este familiar? Esta acción no se puede deshacer.',
+      confirmText: 'Eliminar',
+      confirmColor: 'error',
+      onConfirm: async () => {
+        await familiarService.delete(id);
+        refresh();
+      },
+    });
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800">Información Familiar</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            {familiares.length > 0
+              ? `${familiares.length} familiar(es) registrado(s)`
+              : 'Sin familiares registrados'}
+          </p>
+        </div>
+        {canEdit && (
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-1.5 px-4 py-2 bg-[#65B39B] text-white text-sm font-semibold rounded-xl hover:bg-[#4a9e87] transition-colors"
+          >
+            + Agregar familiar
+          </button>
+        )}
+      </div>
+
+      {familiares.length === 0 ? (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+          <p className="text-4xl mb-3">👨‍👩‍👧‍👦</p>
+          <p className="text-gray-500 font-medium">No hay familiares registrados para este estudiante.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {familiares.map(familiar => (
+            <FamiliarCard
+              key={familiar.id}
+              familiar={familiar}
+              canEdit={canEdit}
+              onEdit={openEdit}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      )}
+
+      <Modal
+        titulo={editingId !== null ? 'Editar familiar' : 'Agregar familiar'}
+        abierto={modalOpen}
+        onCerrar={() => setModalOpen(false)}
+        tamanio="sm"
+        acciones={
+          <div className="flex gap-2 justify-end w-full">
+            <button
+              onClick={() => setModalOpen(false)}
+              className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-4 py-2 text-sm rounded-lg bg-[#65B39B] text-white font-semibold hover:bg-[#4a9e87] disabled:opacity-50 transition-colors"
+            >
+              {saving ? 'Guardando...' : 'Guardar'}
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-3">
+          {error && <Alert tipo="error" mensaje={error} />}
+          <Input
+            etiqueta="RUT del familiar"
+            valor={form.rut_familiar}
+            onChange={(v) => setForm(f => ({ ...f, rut_familiar: v }))}
+            placeholder="12345678-9"
+            deshabilitado={editingId !== null}
+          />
+          <Input
+            etiqueta="Nombre"
+            valor={form.nombre}
+            onChange={(v) => setForm(f => ({ ...f, nombre: v }))}
+          />
+          <Input
+            etiqueta="Teléfono"
+            tipo="tel"
+            valor={form.telefono}
+            onChange={(v) => setForm(f => ({ ...f, telefono: v }))}
+            placeholder="+569 xxxx xxxx"
+          />
+          <Select
+            etiqueta="Parentesco"
+            valor={form.parentesco}
+            onChange={(v) => setForm(f => ({ ...f, parentesco: v as Parentesco }))}
+            opciones={PARENTESCO_OPTIONS.map(o => ({ valor: o.value, etiqueta: o.label }))}
+          />
+          <Input
+            etiqueta="Observación (opcional)"
+            valor={form.observacion}
+            onChange={(v) => setForm(f => ({ ...f, observacion: v }))}
+          />
+        </div>
+      </Modal>
+
+      <ConfirmDialog />
+    </div>
+  );
+}

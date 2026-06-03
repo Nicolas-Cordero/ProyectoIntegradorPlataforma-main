@@ -5,17 +5,14 @@
 import { BaseHttpClient } from './base.http';
 import type { Estudiante, Genero, EstadoEstudiante, Generacion } from '../types';
 
-/**
- * Interfaz para crear un nuevo estudiante (alineada al backend CreateEstudianteDto)
- */
 export interface CreateEstudianteDto {
   rut_estudiante: string;
   nombre: string;
   apellido: string;
   email: string;
   telefono: string;
-  generacion: string;
-  fecha_nacimiento: string;
+  generacion_id: number;
+  fecha_nacimiento: string; // ISO 8601, ej: "2000-03-15T00:00:00.000Z"
   direccion: string;
   genero: Genero;
   rbd_liceo: string;
@@ -25,15 +22,12 @@ export interface CreateEstudianteDto {
   estado: EstadoEstudiante;
 }
 
-/**
- * Interfaz para actualizar un estudiante existente (alineada al backend UpdateEstudianteDto)
- */
 export interface UpdateEstudianteDto {
   nombre?: string;
   apellido?: string;
   email?: string;
   telefono?: string;
-  generacion?: string;
+  generacion_id?: number;
   fecha_nacimiento?: string;
   direccion?: string;
   genero?: Genero;
@@ -44,11 +38,13 @@ export interface UpdateEstudianteDto {
   estado?: EstadoEstudiante;
 }
 
+export interface CreateManyResult {
+  creados: number;
+  errores: { rut: string; motivo: string }[];
+}
+
 class EstudianteService extends BaseHttpClient {
-  
-  /**
-   * Obtener todos los estudiantes
-   */
+
   async getAll(): Promise<Estudiante[]> {
     return await this.request<Estudiante[]>('/estudiante');
   }
@@ -57,49 +53,30 @@ class EstudianteService extends BaseHttpClient {
     return await this.request<Generacion[]>('/generacion');
   }
 
-  /**
-   * Obtener estudiante por RUT (simple, sin relaciones)
-   */
+  async getGeneracionById(id: number): Promise<Generacion> {
+    return await this.request<Generacion>(`/generacion/${id}`);
+  }
+
+  async createGeneracion(data: { año: number; descripcion?: string }): Promise<Generacion> {
+    return this.request<Generacion>('/generacion', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   async getById(rut_estudiante: string): Promise<Estudiante> {
     return await this.request<Estudiante>(`/estudiante/${rut_estudiante}/simple`);
   }
 
-  /**
-   * Obtener estudiante por RUT (completo, con relaciones)
-   */
   async getByIdComplete(rut_estudiante: string): Promise<Estudiante> {
     return await this.request<Estudiante>(`/estudiante/${rut_estudiante}/complete`);
   }
 
-  /**
-   * Obtener estudiantes por generación
-   * Usa la ruta correcta del backend: /estudiante/generaciones/:generation
-   */
-  async getByGeneracion(generacion: string): Promise<Estudiante[]> {
-    return await this.request<Estudiante[]>(`/estudiante/generaciones/${generacion}`);
+  // Ruta corregida: /estudiante/generacion/:generacion_id (Int)
+  async getByGeneracion(generacion_id: number): Promise<Estudiante[]> {
+    return await this.request<Estudiante[]>(`/estudiante/generacion/${generacion_id}`);
   }
 
-  /**
-   * Obtener estadísticas de estudiantes
-   */
-  async getEstadisticas(): Promise<{
-    generacionesTotal: number;
-    estudiantesTotal: number;
-    activosTotal: number;
-    generaciones: Array<{
-      generacion: string;
-      total: number;
-      activos: number;
-    }>;
-  }> {
-    return await this.request('/estudiante/');
-  }
-
-  /**
-   * Crear nuevo estudiante
-   * Los campos email, telefono y direccion se crean automáticamente en informacion_contacto
-   * Se crea automáticamente un registro en estado_academico con status 'activo'
-   */
   async create(data: CreateEstudianteDto): Promise<Estudiante> {
     return this.request<Estudiante>('/estudiante', {
       method: 'POST',
@@ -107,11 +84,26 @@ class EstudianteService extends BaseHttpClient {
     });
   }
 
-  /**
-   * Actualizar estudiante existente
-   * NOTA: Para actualizar email, telefono o direccion, usar informacionContactoService
-   * Para actualizar status académico, usar estadoAcademicoService
-   */
+  // Crea múltiples estudiantes secuencialmente (no hay endpoint batch en el backend)
+  async createMany(data: CreateEstudianteDto[]): Promise<CreateManyResult> {
+    let creados = 0;
+    const errores: { rut: string; motivo: string }[] = [];
+
+    for (const dto of data) {
+      try {
+        await this.create(dto);
+        creados++;
+      } catch (err: any) {
+        errores.push({
+          rut: dto.rut_estudiante,
+          motivo: err?.message ?? 'Error desconocido',
+        });
+      }
+    }
+
+    return { creados, errores };
+  }
+
   async update(id: string, data: UpdateEstudianteDto): Promise<void> {
     return this.request<void>(`/estudiante/${id}`, {
       method: 'PATCH',
@@ -119,9 +111,6 @@ class EstudianteService extends BaseHttpClient {
     });
   }
 
-  /**
-   * Eliminar estudiante por RUT
-   */
   async delete(rut_estudiante: string): Promise<void> {
     return this.request<void>(`/estudiante/${rut_estudiante}`, {
       method: 'DELETE',

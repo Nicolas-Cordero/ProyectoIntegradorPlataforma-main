@@ -74,7 +74,9 @@ export interface Estudiante {
   apellido: string;
   email: string;
   telefono: string;
-  generacion: string;
+  // generacion_id es la FK real en la BD; generacion es un alias legacy que puede o no venir
+  generacion_id?: number;
+  generacion?: string;
   fecha_nacimiento: Date | string;
   direccion: string;
   genero: Genero;
@@ -86,7 +88,7 @@ export interface Estudiante {
   puntaje_paes?: number;
   foto_url?: string;
 
-  // Relaciones (opcionales porque la API puede no incluirlas siempre)
+  // Relaciones — solo se populan si el endpoint las incluye explícitamente
   liceo?: Liceo;
   familiares?: Familiar[];
   beneficios?: BeneficioEstudiante[];
@@ -227,16 +229,22 @@ export interface Liceo {
 
 // ============================================
 
+export type Parentesco =
+  | 'PADRE' | 'MADRE'
+  | 'ABUELO' | 'ABUELA'
+  | 'HERMANO' | 'HERMANA'
+  | 'TIO' | 'TIA'
+  | 'PRIMO' | 'PRIMA'
+  | 'OTRO';
+
 export interface Familiar {
   id: number;
   rut_estudiante: string;
+  rut_familiar: string;
   nombre: string;
-  apellido: string;
-  parentesco: string;
-  telefono?: string;
-  email?: string;
-  direccion?: string;
-  observaciones?: string;
+  telefono: string;
+  parentesco: Parentesco;
+  observacion?: string;
 }
 
 // ============================================

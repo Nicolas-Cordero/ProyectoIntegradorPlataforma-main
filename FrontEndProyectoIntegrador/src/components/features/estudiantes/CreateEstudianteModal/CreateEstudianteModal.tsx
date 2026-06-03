@@ -1,188 +1,387 @@
-import React, { useState } from 'react';
-import {
-  Box,
-  Typography
-} from '@mui/material';
-import { Modal, Alert } from '../../../../components/ui';
-import { estudianteService } from '../../../../services';
-import { PersonalDataForm } from './PersonalDataForm';
-import { StepperNavigation } from './StepperNavigation';
+import React, { useState, useEffect } from 'react';
+import { Box, Divider, Typography } from '@mui/material';
+import { Modal, Input, Select, Alert, Button } from '../../../ui';
+import { estudianteService, liceoService } from '../../../../services';
+import type { Generacion, Genero, EstadoEstudiante, Liceo } from '../../../../types';
 
-interface CreateEstudianteModalProps {
+interface Props {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  generacion: number;
+  /** Si se pasa, se usa directamente y NO se muestra el selector de generación */
+  generacionId?: number;
 }
 
-interface FormData {
+interface FormState {
+  rut_estudiante: string;
   nombre: string;
-  rut: string;
+  apellido: string;
   email: string;
   telefono: string;
-  fecha_de_nacimiento: string;
-  tipo_de_estudiante: 'media' | 'universitario';
-  generacion: string;
+  fecha_nacimiento: string; // YYYY-MM-DD (valor del <input type="date">)
+  direccion: string;
+  genero: Genero | '';
+  rbd_liceo: string;
+  promedios_media: string;
+  estado: EstadoEstudiante | '';
+  puntaje_paes: string;
+  foto_url: string;
+  generacion_id: string; // string para el <select>
 }
 
-const INITIAL_FORM_STATE = (generacion: number): FormData => ({
+const EMPTY: FormState = {
+  rut_estudiante: '',
   nombre: '',
-  rut: '',
+  apellido: '',
   email: '',
   telefono: '',
-  fecha_de_nacimiento: '',
-  tipo_de_estudiante: 'universitario',
-  generacion: generacion.toString()
-});
+  fecha_nacimiento: '',
+  direccion: '',
+  genero: '',
+  rbd_liceo: '',
+  promedios_media: '',
+  estado: 'ACTIVO',
+  puntaje_paes: '',
+  foto_url: '',
+  generacion_id: '',
+};
 
-export const CreateEstudianteModal: React.FC<CreateEstudianteModalProps> = ({
+const PHONE_RE = /^\+569\s?\d{4}\s?\d{4}$/;
+
+const INPUT_CLASS =
+  'w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] bg-white transition-colors';
+
+const LABEL_CLASS = 'block text-xs font-semibold text-gray-600 mb-1';
+
+export const CreateEstudianteModal: React.FC<Props> = ({
   open,
   onClose,
   onSuccess,
-  generacion
+  generacionId,
 }) => {
-  const [activeStep, setActiveStep] = useState(0);
+  const [form, setForm] = useState<FormState>(EMPTY);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState<FormData>(INITIAL_FORM_STATE(generacion));
+  const [generaciones, setGeneraciones] = useState<Generacion[]>([]);
+  const [liceos, setLiceos] = useState<Liceo[]>([]);
+  const [liceoSearch, setLiceoSearch] = useState('');
 
-  const handleFieldChange = (field: string, value: string) => {
-    setFormData(prev => {
-      const updated = { ...prev, [field]: value };
-      // Si cambia el tipo de estudiante a media, el sistema lo detecta
-      // (en futuro se puede usar para crear institución de tipo Liceo automáticamente)
-      return updated;
-    });
-  };
-
-  const validateStep = (step: number): boolean => {
-    setError('');
-
-    if (step === 0) {
-      if (!formData.nombre.trim()) {
-        setError('El nombre es obligatorio');
-        return false;
-      }
-      if (!formData.rut.trim()) {
-        setError('El RUT es obligatorio');
-        return false;
-      }
-      if (!formData.email.trim() || !formData.email.includes('@')) {
-        setError('Ingresa un email válido');
-        return false;
-      }
-      if (!formData.telefono.trim()) {
-        setError('El teléfono es obligatorio');
-        return false;
-      }
-      if (!formData.fecha_de_nacimiento) {
-        setError('La fecha de nacimiento es obligatoria');
-        return false;
-      }
+  // Carga generaciones y liceos al abrir
+  useEffect(() => {
+    if (!open) return;
+    if (generacionId === undefined) {
+      estudianteService.getGenerations().then(setGeneraciones).catch(() => {});
     }
+    liceoService.getAll().then(setLiceos).catch(() => {});
+  }, [open, generacionId]);
 
-    return true;
-  };
-
-  const handleNext = () => {
-    if (validateStep(activeStep)) {
-      setActiveStep(prev => prev + 1);
+  // Resetea el form al abrir
+  useEffect(() => {
+    if (open) {
+      setForm({ ...EMPTY, generacion_id: generacionId ? String(generacionId) : '' });
+      setError('');
+      setLiceoSearch('');
     }
-  };
+  }, [open, generacionId]);
 
-  const handleBack = () => {
-    setError('');
-    setActiveStep(prev => prev - 1);
+  const set = (field: keyof FormState) => (value: string) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
+
+  const validate = (): string => {
+    if (!form.rut_estudiante.trim()) return 'El RUT es obligatorio.';
+    if (!form.nombre.trim() || form.nombre.trim().length < 2) return 'El nombre debe tener al menos 2 caracteres.';
+    if (!form.apellido.trim() || form.apellido.trim().length < 2) return 'El apellido debe tener al menos 2 caracteres.';
+    if (!form.email.includes('@')) return 'Ingresa un email válido.';
+    if (!PHONE_RE.test(form.telefono.trim())) return 'Teléfono inválido. Formato: +569 XXXX XXXX';
+    if (!form.fecha_nacimiento) return 'La fecha de nacimiento es obligatoria.';
+    if (!form.direccion.trim()) return 'La dirección es obligatoria.';
+    if (!form.genero) return 'El género es obligatorio.';
+    if (!form.rbd_liceo.trim()) return 'El RBD del liceo es obligatorio.';
+    const prom = parseFloat(form.promedios_media);
+    if (isNaN(prom) || prom < 1 || prom > 7) return 'El promedio debe estar entre 1.0 y 7.0.';
+    if (!form.estado) return 'El estado es obligatorio.';
+    if (generacionId === undefined && !form.generacion_id) return 'La generación es obligatoria.';
+    return '';
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(activeStep)) {
-      return;
-    }
+    const err = validate();
+    if (err) { setError(err); return; }
 
     setLoading(true);
     setError('');
-
     try {
-      // Map form fields to backend DTO fields
-      // NOTE: apellido, direccion, rbd_liceo, genero, promedios_media, estado are required by the backend.
-      // The form only collects basic data; these fields should be extended in a more complete form.
-      const nombreParts = formData.nombre.trim().split(' ');
-      const nombre = nombreParts[0] || formData.nombre;
-      const apellido = nombreParts.slice(1).join(' ') || nombre;
+      const prom = parseFloat(form.promedios_media);
+      // Redondear a 1 decimal para cumplir con Decimal(3,1)
+      const promRedondeado = Math.round(prom * 10) / 10;
 
-      const estudianteData = {
-        rut_estudiante: formData.rut,
-        nombre,
-        apellido,
-        email: formData.email,
-        telefono: formData.telefono,
-        generacion: formData.generacion,
-        fecha_nacimiento: formData.fecha_de_nacimiento,
-        direccion: '',
-        genero: 'MASCULINO' as const,
-        rbd_liceo: '',
-        promedios_media: 0,
-        estado: 'ACTIVO' as const,
-      };
-
-      await estudianteService.create(estudianteData);
-
+      await estudianteService.create({
+        rut_estudiante: form.rut_estudiante.trim(),
+        nombre: form.nombre.trim(),
+        apellido: form.apellido.trim(),
+        email: form.email.trim(),
+        telefono: form.telefono.trim(),
+        generacion_id: generacionId ?? parseInt(form.generacion_id),
+        fecha_nacimiento: new Date(form.fecha_nacimiento).toISOString(),
+        direccion: form.direccion.trim(),
+        genero: form.genero as Genero,
+        rbd_liceo: form.rbd_liceo.trim(),
+        promedios_media: promRedondeado,
+        estado: form.estado as EstadoEstudiante,
+        puntaje_paes: form.puntaje_paes ? parseInt(form.puntaje_paes) : undefined,
+        foto_url: form.foto_url.trim() || undefined,
+      });
       onSuccess();
-      handleClose();
-    } catch (err: any) {
-      console.error('Error al crear estudiante:', err);
-      setError(err.message || 'Error al crear el estudiante');
+      onClose();
+    } catch (e: any) {
+      setError(e?.message ?? 'Error al crear el estudiante. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleClose = () => {
-    setActiveStep(0);
-    setFormData(INITIAL_FORM_STATE(generacion));
-    setError('');
+    if (loading) return;
     onClose();
   };
 
+  const tituloGeneracion = generacionId
+    ? `Generación ${generaciones.find((g) => g.id === generacionId)?.año ?? generacionId}`
+    : '';
+
   return (
-    <Modal 
-      titulo={`Agregar Nuevo Estudiante - Generación ${generacion}`}
-      abierto={open} 
+    <Modal
+      titulo={`Nuevo Estudiante${tituloGeneracion ? ` — ${tituloGeneracion}` : ''}`}
+      abierto={open}
       onCerrar={handleClose}
-      tamanio="md"
+      tamanio="lg"
+      acciones={
+        <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
+          <Button variante="outline" tamano="md" onClick={handleClose} deshabilitado={loading}>
+            Cancelar
+          </Button>
+          <Button variante="primary" tamano="md" onClick={handleSubmit} cargando={loading}>
+            Crear Estudiante
+          </Button>
+        </Box>
+      }
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {error && (
-          <Alert 
-            tipo="error" 
-            mensaje={error}
-            onCerrar={() => setError('')}
-          />
+          <Alert tipo="error" mensaje={error} cerrable onCerrar={() => setError('')} />
         )}
 
-        <PersonalDataForm
-          formData={{
-            nombre: formData.nombre,
-            rut: formData.rut,
-            email: formData.email,
-            telefono: formData.telefono,
-            fecha_de_nacimiento: formData.fecha_de_nacimiento,
-            tipo_de_estudiante: formData.tipo_de_estudiante
-          }}
-          onChange={handleFieldChange}
+        {/* ── Sección 1: Identificación ── */}
+        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#65B39B', mt: 0.5 }}>
+          Identificación
+        </Typography>
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+          <Input
+            etiqueta="RUT *"
+            valor={form.rut_estudiante}
+            onChange={set('rut_estudiante')}
+            placeholder="12.345.678-9"
+            deshabilitado={loading}
+          />
+          <Input
+            etiqueta="Email *"
+            tipo="email"
+            valor={form.email}
+            onChange={set('email')}
+            placeholder="estudiante@correo.com"
+            deshabilitado={loading}
+          />
+        </Box>
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+          <Input
+            etiqueta="Nombre *"
+            valor={form.nombre}
+            onChange={set('nombre')}
+            placeholder="Juan"
+            deshabilitado={loading}
+          />
+          <Input
+            etiqueta="Apellido *"
+            valor={form.apellido}
+            onChange={set('apellido')}
+            placeholder="Pérez González"
+            deshabilitado={loading}
+          />
+        </Box>
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+          <div>
+            <label className={LABEL_CLASS}>Fecha de Nacimiento *</label>
+            <input
+              type="date"
+              value={form.fecha_nacimiento}
+              onChange={(e) => set('fecha_nacimiento')(e.target.value)}
+              disabled={loading}
+              max={new Date().toISOString().split('T')[0]}
+              className={INPUT_CLASS}
+            />
+          </div>
+          <Select
+            etiqueta="Género *"
+            opciones={[
+              { valor: 'MASCULINO', etiqueta: 'Masculino' },
+              { valor: 'FEMENINO', etiqueta: 'Femenino' },
+              { valor: 'NO_BINARIO', etiqueta: 'No binario' },
+            ]}
+            valor={form.genero}
+            onChange={set('genero')}
+            deshabilitado={loading}
+          />
+        </Box>
+
+        <Input
+          etiqueta="Teléfono *"
+          tipo="tel"
+          valor={form.telefono}
+          onChange={set('telefono')}
+          placeholder="+569 1234 5678"
+          ayuda="Formato: +569 XXXX XXXX"
+          deshabilitado={loading}
+        />
+
+        <Divider sx={{ my: 0.5 }} />
+
+        {/* ── Sección 2: Datos académicos ── */}
+        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#65B39B' }}>
+          Datos Académicos
+        </Typography>
+
+        {/* Solo muestra el selector de generación cuando NO se pasa generacionId */}
+        {generacionId === undefined && (
+          <div>
+            <label className={LABEL_CLASS}>Generación *</label>
+            <select
+              value={form.generacion_id}
+              onChange={(e) => set('generacion_id')(e.target.value)}
+              disabled={loading}
+              className={INPUT_CLASS}
+            >
+              <option value="">Selecciona una generación</option>
+              {generaciones.map((g) => (
+                <option key={g.id} value={String(g.id)}>
+                  {g.año}{g.descripcion ? ` — ${g.descripcion}` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+          {/* Selector de liceo con búsqueda */}
+          <div>
+            <label className={LABEL_CLASS}>Liceo *</label>
+            <input
+              type="text"
+              value={liceoSearch}
+              onChange={(e) => {
+                setLiceoSearch(e.target.value);
+                // Si el usuario escribe algo distinto al liceo seleccionado, limpiar la selección
+                const seleccionado = liceos.find((l) => l.rbd === form.rbd_liceo);
+                if (seleccionado && e.target.value !== `${seleccionado.nombre} (${seleccionado.rbd})`) {
+                  set('rbd_liceo')('');
+                }
+              }}
+              placeholder="Buscar liceo por nombre o RBD..."
+              disabled={loading}
+              className={INPUT_CLASS}
+            />
+            {/* Dropdown de opciones filtradas */}
+            {liceoSearch && !form.rbd_liceo && (() => {
+              const lower = liceoSearch.toLowerCase();
+              const opciones = liceos.filter(
+                (l) =>
+                  l.nombre.toLowerCase().includes(lower) ||
+                  l.rbd.toLowerCase().includes(lower) ||
+                  (l.comuna ?? '').toLowerCase().includes(lower)
+              ).slice(0, 8);
+              if (opciones.length === 0) return null;
+              return (
+                <div className="border border-gray-200 rounded-lg mt-1 bg-white shadow-lg z-10 max-h-48 overflow-y-auto">
+                  {opciones.map((l) => (
+                    <button
+                      key={l.rbd}
+                      type="button"
+                      onClick={() => {
+                        set('rbd_liceo')(l.rbd);
+                        setLiceoSearch(`${l.nombre} (${l.rbd})`);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-[#65B39B]/10 transition-colors border-b border-gray-100 last:border-0"
+                    >
+                      <span className="font-medium text-gray-800">{l.nombre}</span>
+                      <span className="text-gray-400 text-xs ml-2">RBD: {l.rbd}</span>
+                      {l.comuna && (
+                        <span className="text-gray-400 text-xs ml-1">— {l.comuna}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+            {form.rbd_liceo && (
+              <p className="text-xs text-[#65B39B] mt-1 font-medium">
+                ✓ RBD seleccionado: {form.rbd_liceo}
+              </p>
+            )}
+          </div>
+
+          <Input
+            etiqueta="Dirección *"
+            valor={form.direccion}
+            onChange={set('direccion')}
+            placeholder="Calle Ejemplo 123"
+            deshabilitado={loading}
+          />
+        </Box>
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
+          <Input
+            etiqueta="Promedio Media * (1.0 – 7.0)"
+            tipo="number"
+            valor={form.promedios_media}
+            onChange={set('promedios_media')}
+            placeholder="5.5"
+            deshabilitado={loading}
+          />
+          <Input
+            etiqueta="Puntaje PAES"
+            tipo="number"
+            valor={form.puntaje_paes}
+            onChange={set('puntaje_paes')}
+            placeholder="Opcional"
+            deshabilitado={loading}
+          />
+          <Select
+            etiqueta="Estado *"
+            opciones={[
+              { valor: 'ACTIVO', etiqueta: 'Activo' },
+              { valor: 'CONDICIONAL', etiqueta: 'Condicional' },
+              { valor: 'SUSPENDIDO', etiqueta: 'Suspendido' },
+              { valor: 'RETIRADO', etiqueta: 'Retirado' },
+              { valor: 'EGRESADO', etiqueta: 'Egresado' },
+              { valor: 'TITULADO', etiqueta: 'Titulado' },
+              { valor: 'ELIMINADO', etiqueta: 'Eliminado' },
+            ]}
+            valor={form.estado}
+            onChange={set('estado')}
+            deshabilitado={loading}
+          />
+        </Box>
+
+        <Input
+          etiqueta="URL de Foto (opcional)"
+          valor={form.foto_url}
+          onChange={set('foto_url')}
+          placeholder="https://ejemplo.com/foto.jpg"
+          deshabilitado={loading}
         />
       </Box>
-
-      <StepperNavigation
-        activeStep={0}
-        totalSteps={1}
-        loading={loading}
-        onBack={handleBack}
-        onNext={handleNext}
-        onCancel={handleClose}
-        onSubmit={handleSubmit}
-      />
     </Modal>
   );
 };

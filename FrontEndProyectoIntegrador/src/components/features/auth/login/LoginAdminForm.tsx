@@ -137,6 +137,7 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
         <Button
           variante="primary"
           tamano="lg"
+          type="submit"
           deshabilitado={loading}
           onClick={(e: any) => { e.preventDefault(); handleSubmit(e as any); }}
           sx={{
@@ -180,23 +181,6 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
             }}
           >
             ¿Olvidaste tu contraseña?
-          </Link>
-          <Link
-            component="button"
-            type="button"
-            variant="body2"
-            onClick={() => navigate('/')}
-            sx={{
-              color: '#65B39B',
-              textDecoration: 'underline',
-              cursor: 'pointer',
-              transition: 'color 0.3s ease',
-              '&:hover': {
-                color: '#C7654F'
-              }
-            }}
-          >
-            ← Volver al login general
           </Link>
         </Box>
       </Box>

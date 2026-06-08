@@ -54,7 +54,7 @@ export const GeneracionesPanel: React.FC = () => {
   if (error) return <ErrorMessage fullScreen message={error} onRetry={fetchData} />;
 
   return (
-    <div className="min-h-screen bg-[#FFFBF0] py-8">
+    <div className="min-h-screen bg-[#FFFBF0]/90 py-8 rounded-2xl">
       <div className="max-w-7xl mx-auto px-4">
 
         {/* Header con gradiente */}

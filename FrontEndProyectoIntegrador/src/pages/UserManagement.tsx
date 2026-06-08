@@ -24,7 +24,6 @@ import {
   Visibility as VisibilityIcon,
   Lock as LockIcon,
 } from '@mui/icons-material';
-import { GradientButton } from '../components/common/GradientButton';
 import { TypingText } from '../components/common/TypingText';
 import { useConfirmDialog } from '../components/ui';
 import { BackgroundParticles } from '../components/common/Particles';
@@ -104,13 +103,9 @@ export const UserManagement: React.FC = () => {
   };
 
   const filterUsers = () => {
-    if (tabValue === 'todos') {
-      setFilteredUsers(users);
-    } else if (tabValue === 'tutores') {
-      setFilteredUsers(users.filter(u => u.rol === UserRol.TUTOR));
-    } else {
-      setFilteredUsers(users.filter(u => u.rol === UserRol.VISITA || u.rol === UserRol.INVITADO));
-    }
+    if (tabValue === 'todos') setFilteredUsers(users);
+    else if (tabValue === 'tutores') setFilteredUsers(users.filter(u => u.rol === UserRol.TUTOR));
+    else setFilteredUsers(users.filter(u => u.rol === UserRol.VISITA || u.rol === UserRol.INVITADO));
   };
 
   const handleOpenDialog = (user?: Usuario) => {
@@ -192,7 +187,7 @@ export const UserManagement: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#FFFBF0' }}>
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-[#FFFBF0]/90 rounded-2xl">
       {/* Marcos de fondo */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <img src={marcoIzquierdo} alt="" className="absolute left-0 top-0 h-screen w-auto max-w-none opacity-35 select-none hidden md:block" />
@@ -203,24 +198,36 @@ export const UserManagement: React.FC = () => {
 
       <div className="relative z-10 flex-1 max-w-7xl mx-auto px-6 lg:px-8 py-8 w-full">
 
-        {/* Título */}
-        <div className="mb-8">
-          <TypingText
-            component="h2"
-            text="Gestión de Usuarios"
-            startDelayMs={0}
-            charDelayMs={1}
-            sx={{ display: 'block', fontSize: '1.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#1f2937' }}
-          />
-          <p className="text-base text-gray-500 font-medium">
-            Administra tutores y visitantes de la plataforma
-          </p>
+        {/* Cabecera degradado */}
+        <div
+          className="mb-6 rounded-2xl p-6 flex items-center justify-between gap-4"
+          style={{ background: 'linear-gradient(135deg, #65B39B 0%, #4a9e87 40%, #C7654F 100%)' }}
+        >
+          <div>
+            <TypingText
+              component="h2"
+              text="Gestión de Usuarios"
+              startDelayMs={0}
+              charDelayMs={1}
+              sx={{ display: 'block', fontSize: '1.875rem', fontWeight: 700, color: '#fff' }}
+            />
+            <p className="text-white/80 text-sm font-medium mt-1">
+              Administra tutores y visitantes de la plataforma
+            </p>
+          </div>
+          <button
+            onClick={() => handleOpenDialog()}
+            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 border border-white/30 hover:border-white/50 whitespace-nowrap"
+          >
+            <AddIcon fontSize="small" />
+            Agregar Usuario
+          </button>
         </div>
 
         {/* Tabs de filtro */}
         {/* TODO: migrate Tabs, Tab */}
         <div
-          className="mb-12 rounded-lg border border-[rgba(238,179,93,0.3)]"
+          className="mb-8 rounded-lg border border-[rgba(238,179,93,0.3)]"
           style={{
             background: 'linear-gradient(135deg, rgba(238,179,93,0.15) 0%, rgba(238,179,93,0.08) 100%), rgba(255,255,255,0.85)',
             backdropFilter: 'blur(10px)',
@@ -253,19 +260,6 @@ export const UserManagement: React.FC = () => {
             <Tab label={`Tutores (${users.filter(u => u.rol === 'TUTOR').length})`} value="tutores" icon={<TutorIcon />} iconPosition="start" />
             <Tab label={`Visitas (${users.filter(u => u.rol === UserRol.VISITA || u.rol === UserRol.INVITADO).length})`} value="visitas" icon={<VisibilityIcon />} iconPosition="start" />
           </Tabs>
-        </div>
-
-        {/* Botón Agregar */}
-        <div className="mb-8 flex justify-end">
-          <GradientButton
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-            fullWidth={false}
-            solidColor="#65B39B"
-            sx={{ minHeight: { xs: 40, sm: 48, md: 56 }, minWidth: { xs: 140, sm: 180, md: 240 } }}
-          >
-            Agregar Usuario
-          </GradientButton>
         </div>
 
         {/* Tabla — TODO: migrate Table* */}

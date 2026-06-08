@@ -119,6 +119,9 @@ export function LoginForm() {
             }));
             if (error) setError('');
           }}
+          onKeyDown={(e: React.KeyboardEvent) => {
+            if (e.key === 'Enter') handleSubmit(e as unknown as React.FormEvent);
+          }}
           placeholder="Tu contraseña"
           deshabilitado={loading}
           requerido
@@ -137,8 +140,8 @@ export function LoginForm() {
         <Button
           variante="primary"
           tamano="lg"
+          type="submit"
           deshabilitado={loading}
-          onClick={(e: any) => { e.preventDefault(); handleSubmit(e as any); }}
           sx={{
             mt: 1,
             py: 1.5,

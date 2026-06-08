@@ -1,8 +1,5 @@
-/**
- * Componente reutilizable para filas de información familiar
- * Muestra label, nombre y observaciones con modo edición
- */
-import { TableRow, TableCell, TextField, Typography, Box } from '@mui/material';
+import { TableRow, TableCell, TextField, Box, Typography } from '@mui/material';
+import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 
 interface FamilyMemberRowProps {
   label: string;
@@ -14,7 +11,9 @@ interface FamilyMemberRowProps {
   observacionesRows?: number;
   onNombreChange?: (value: string) => void;
   onObservacionesChange?: (value: string) => void;
-  showNameField?: boolean; // Si false, solo muestra el label sin campo de nombre
+  showNameField?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export function FamilyMemberRow({
@@ -28,25 +27,27 @@ export function FamilyMemberRow({
   onNombreChange,
   onObservacionesChange,
   showNameField = true,
+  onEdit,
+  onDelete,
 }: FamilyMemberRowProps) {
   return (
     <TableRow>
-      {/* Primera columna: Label y nombre */}
-      <TableCell sx={{ fontWeight: 700, bgcolor: 'grey.100', width: '20%' }}>
+      {/* Primera columna: relación (prominente) y nombre (secundario) */}
+      <TableCell sx={{ bgcolor: 'grey.100', width: '20%' }}>
         {modoEdicion ? (
           <Box>
-            <TextField 
-              fullWidth 
-              size="small" 
-              value={label} 
-              disabled 
-              sx={{ mb: showNameField ? 1 : 0, fontWeight: 700 }}
+            <TextField
+              fullWidth
+              size="small"
+              value={label}
+              disabled
+              sx={{ mb: showNameField ? 1 : 0, '& input': { fontWeight: 700 } }}
             />
             {showNameField && (
-              <TextField 
-                fullWidth 
-                size="small" 
-                defaultValue={nombreValue || ''} 
+              <TextField
+                fullWidth
+                size="small"
+                defaultValue={nombreValue || ''}
                 placeholder={nombrePlaceholder}
                 variant="outlined"
                 onChange={(e) => onNombreChange?.(e.target.value)}
@@ -54,23 +55,23 @@ export function FamilyMemberRow({
             )}
           </Box>
         ) : (
-          <Box>
-            <Typography variant="body1" fontWeight={700} gutterBottom={showNameField}>
+          <div className="flex flex-col">
+            <span className="text-xs font-bold uppercase tracking-wide text-gray-800">
               {label}
-            </Typography>
+            </span>
             {showNameField && (
-              <Typography variant="body2" color="text.secondary">
+              <span className="text-sm text-gray-500 mt-0.5">
                 {nombreValue || 'Sin definir'}
-              </Typography>
+              </span>
             )}
-          </Box>
+          </div>
         )}
       </TableCell>
 
-      {/* Segunda columna: Observaciones */}
+      {/* Segunda columna: observaciones */}
       <TableCell>
         {modoEdicion ? (
-          <TextField 
+          <TextField
             fullWidth
             multiline
             rows={observacionesRows}
@@ -86,6 +87,30 @@ export function FamilyMemberRow({
           </Typography>
         )}
       </TableCell>
+
+      {/* Tercera columna: acciones (solo si se proveen callbacks) */}
+      {(onEdit || onDelete) && (
+        <TableCell align="center" sx={{ whiteSpace: 'nowrap', width: 80 }}>
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              title="Editar"
+              className="p-1.5 rounded-md text-blue-600 hover:bg-blue-50 transition-colors"
+            >
+              <EditIcon fontSize="small" />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={onDelete}
+              title="Eliminar"
+              className="p-1.5 rounded-md text-red-500 hover:bg-red-50 transition-colors"
+            >
+              <DeleteIcon fontSize="small" />
+            </button>
+          )}
+        </TableCell>
+      )}
     </TableRow>
   );
 }

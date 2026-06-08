@@ -6,7 +6,7 @@ interface InputProps extends Omit<TextFieldProps, 'size' | 'onChange'> {
   etiqueta?: string;
   valor?: string | number;
   onChange?: (valor: string) => void;
-  tipo?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url';
+  tipo?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'date';
   error?: boolean;
   ayuda?: string;
   requerido?: boolean;

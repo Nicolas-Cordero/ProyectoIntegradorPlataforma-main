@@ -160,7 +160,7 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFBF0] py-8">
+    <div className="min-h-screen bg-[#FFFBF0]/90 py-8 rounded-2xl">
       <div className="max-w-[900px] mx-auto px-4">
 
         {/* Título */}
@@ -196,35 +196,25 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
                 </div>
               </div>
 
-              {/* Botones editar/guardar */}
-              <div>
-                {!isEditing ? (
+              {/* Botones guardar/cancelar (solo en modo edición) */}
+              {isEditing && (
+                <div className="flex gap-2">
                   <button
-                    onClick={handleEdit}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-blue-600 text-blue-600 text-sm font-medium hover:bg-blue-50 transition-colors"
+                    onClick={handleSave}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
                   >
-                    <EditIcon style={{ fontSize: 18 }} />
-                    Editar
+                    <SaveIcon style={{ fontSize: 18 }} />
+                    Guardar
                   </button>
-                ) : (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleSave}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
-                    >
-                      <SaveIcon style={{ fontSize: 18 }} />
-                      Guardar
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-400 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
-                    >
-                      <CancelIcon style={{ fontSize: 18 }} />
-                      Cancelar
-                    </button>
-                  </div>
-                )}
-              </div>
+                  <button
+                    onClick={handleCancel}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-400 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    <CancelIcon style={{ fontSize: 18 }} />
+                    Cancelar
+                  </button>
+                </div>
+              )}
             </div>
 
             <hr className="border-t border-gray-200 mb-8" />

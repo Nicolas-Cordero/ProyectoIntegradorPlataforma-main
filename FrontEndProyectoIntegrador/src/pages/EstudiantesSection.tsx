@@ -21,7 +21,7 @@ const SORT_OPTIONS: { label: string; field: keyof UIStudent; dir: 'asc' | 'desc'
 type StudentWithStats = UIStudent & { _diasSinEntrevista?: number };
 
 const SELECT_CLASS =
-  'text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] transition-colors w-full';
+  'text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] transition-colors flex-1 min-w-[140px]';
 
 export const EstudiantesSection: React.FC = () => {
   const navigate = useNavigate();
@@ -247,7 +247,7 @@ export const EstudiantesSection: React.FC = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-[#FFFBF0] py-8">
+      <div className="min-h-screen bg-[#FFFBF0]/90 py-8 rounded-2xl">
         <div className="max-w-7xl mx-auto px-4 space-y-5">
 
           {/* Header */}
@@ -292,14 +292,14 @@ export const EstudiantesSection: React.FC = () => {
             style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}
           >
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Búsqueda y filtros</p>
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Buscar por nombre del estudiante o liceo..."
-              className="w-full text-sm border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] transition-colors bg-gray-50 focus:bg-white"
-            />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Buscar por nombre o liceo..."
+                className="w-56 text-sm border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] transition-colors bg-gray-50 focus:bg-white"
+              />
               <select
                 value={filterGeneracion}
                 onChange={(e) => setFilterGeneracion(e.target.value)}

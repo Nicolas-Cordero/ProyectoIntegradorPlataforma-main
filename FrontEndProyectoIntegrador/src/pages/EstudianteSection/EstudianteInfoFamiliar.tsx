@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useOutletContext } from 'react-router-dom';
 import { familiarService } from '../../services';
 import type { CreateFamiliarDto, UpdateFamiliarDto } from '../../services/familiar.service';
@@ -50,30 +51,35 @@ interface FamiliarCardProps {
   onDelete: (id: number) => void;
 }
 
+
+
 function FamiliarCard({ familiar, canEdit, onEdit, onDelete }: FamiliarCardProps) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
       <div className="flex items-start justify-between mb-2">
-        <div>
-          <h3 className="text-base font-bold text-gray-800">{familiar.nombre}</h3>
-          <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[#65B39B]/15 text-[#3a7a6b]">
+        <div className="flex flex-col">
+          <span className="text-xl font-bold uppercase tracking-wide text-gray-800">
             {PARENTESCO_LABEL[familiar.parentesco] ?? familiar.parentesco}
           </span>
+          <span className="text-s text-gray-500 mt-0.5">
+            {familiar.nombre}
+          </span>
         </div>
-        {/* Bug 16 fix: botones con padding suficiente para área de toque cómoda */}
         {canEdit && (
-          <div className="flex gap-1">
+          <div className="flex items-center gap-1">
             <button
               onClick={() => onEdit(familiar)}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg text-[#65B39B] hover:bg-[#65B39B]/10 font-semibold transition-colors"
+              title="Editar"
+              className="p-1.5 rounded-md text-blue-600 hover:bg-blue-50 transition-colors"
             >
-              ✏️ Editar
+              <EditIcon fontSize="small" />
             </button>
             <button
               onClick={() => onDelete(familiar.id)}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg text-red-500 hover:bg-red-50 font-semibold transition-colors"
+              title="Eliminar"
+              className="p-1.5 rounded-md text-red-500 hover:bg-red-50 transition-colors"
             >
-              🗑 Eliminar
+              <DeleteIcon fontSize="small" />
             </button>
           </div>
         )}
@@ -254,6 +260,8 @@ export default function EstudianteInfoFamiliar() {
       >
         <div className="space-y-3">
           {error && <Alert tipo="error" mensaje={error} />}
+          {/*fix muy cutre*/}
+          <p></p>
           <Input
             etiqueta="RUT del familiar"
             valor={form.rut_familiar}
@@ -279,6 +287,8 @@ export default function EstudianteInfoFamiliar() {
             onChange={(v) => setForm(f => ({ ...f, parentesco: v as Parentesco }))}
             opciones={PARENTESCO_OPTIONS.map(o => ({ valor: o.value, etiqueta: o.label }))}
           />
+          {/*fix muy cutre*/}
+          <p></p>
           <Input
             etiqueta="Observación (opcional)"
             valor={form.observacion}

@@ -128,6 +128,7 @@ export default function EstudianteDatosPersonales() {
   const { estudiante, liceo, generacion, canEdit } = useOutletContext<EstudianteOutletContext>();
   const [saveError, setSaveError] = useState('');
   const carreraActual = estudiante.carreras?.find(c => c.activa) ?? estudiante.carreras?.[0] ?? null;
+  const contactoEmergencia = estudiante.familiares?.find(f => f.es_contacto_emergencia) ?? null;
   const generacionLabel = generacion
     ? `${generacion.año}${generacion.descripcion ? ` — ${generacion.descripcion}` : ''}`
     : 'No especificado';
@@ -236,6 +237,22 @@ export default function EstudianteDatosPersonales() {
           </>
         ) : (
           <p className="text-sm text-gray-400 italic">Sin carrera registrada</p>
+        )}
+      </Section>
+
+      <Section title="Contacto de Emergencia">
+        {contactoEmergencia ? (
+          <>
+            <InlineField label="Nombre"     value={contactoEmergencia.nombre}                              readOnly />
+            <InlineField label="Parentesco" value={contactoEmergencia.parentesco}                          readOnly />
+            <InlineField label="Teléfono"   value={contactoEmergencia.telefono}                            readOnly />
+            <InlineField label="RUT"        value={contactoEmergencia.rut_familiar}                        readOnly />
+            {contactoEmergencia.observacion && (
+              <InlineField label="Observación" value={contactoEmergencia.observacion} readOnly />
+            )}
+          </>
+        ) : (
+          <p className="text-sm text-gray-400 italic">Sin contacto de emergencia designado</p>
         )}
       </Section>
     </div>

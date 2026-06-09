@@ -61,4 +61,14 @@ export class FamiliarRepository{
     });
   }
 
+  async findContactoEmergencia(rut_estudiante: string, excludeId?: number): Promise<familiar | null> {
+    return this.prisma.familiar.findFirst({
+      where: {
+        rut_estudiante,
+        es_contacto_emergencia: true,
+        ...(excludeId !== undefined ? { id: { not: excludeId } } : {}),
+      },
+    });
+  }
+
 }

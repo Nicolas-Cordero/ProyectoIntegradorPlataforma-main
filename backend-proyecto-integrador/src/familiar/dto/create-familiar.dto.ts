@@ -1,5 +1,5 @@
 import { Parentesco } from '@prisma/client';
-import { IsEnum, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
+import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 
 
 export class CreateFamiliarDto {
@@ -33,4 +33,8 @@ export class CreateFamiliarDto {
   @IsString()
   @IsOptional()
   observacion?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  es_contacto_emergencia?: boolean;
 }

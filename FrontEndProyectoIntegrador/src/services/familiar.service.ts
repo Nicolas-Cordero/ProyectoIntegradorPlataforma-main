@@ -8,6 +8,7 @@ export interface CreateFamiliarDto {
   telefono: string;
   parentesco: Parentesco;
   observacion?: string;
+  es_contacto_emergencia?: boolean;
 }
 
 export interface UpdateFamiliarDto {
@@ -15,6 +16,7 @@ export interface UpdateFamiliarDto {
   telefono?: string;
   parentesco?: Parentesco;
   observacion?: string;
+  es_contacto_emergencia?: boolean;
 }
 
 class FamiliarService extends BaseHttpClient {

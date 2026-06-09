@@ -203,13 +203,14 @@ model estudiante {
 
 
 model familiar {
-  id             Int @id @default(autoincrement())
-  rut_familiar   String
-  rut_estudiante String
-  nombre         String
-  telefono       String
-  parentesco     Parentesco
-  observacion    String?
+  id                    Int     @id @default(autoincrement())
+  rut_familiar          String
+  rut_estudiante        String
+  nombre                String
+  telefono              String
+  parentesco            Parentesco
+  observacion           String?
+  es_contacto_emergencia Boolean @default(false)
 
   estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
 

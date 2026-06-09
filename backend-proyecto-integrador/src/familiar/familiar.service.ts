@@ -14,8 +14,14 @@ export class FamiliarService {
 
   // === FAMILIAR ===
 
-  create(createDto: CreateFamiliarDto): Promise<familiar> {
-    return this.familiarRepo.create(createDto); 
+  async create(createDto: CreateFamiliarDto): Promise<familiar> {
+    if (createDto.es_contacto_emergencia) {
+      const existing = await this.familiarRepo.findContactoEmergencia(createDto.rut_estudiante);
+      if (existing) {
+        throw new ConflictException('Ya existe un contacto de emergencia para este estudiante');
+      }
+    }
+    return this.familiarRepo.create(createDto);
   }
 
 
@@ -33,7 +39,14 @@ export class FamiliarService {
   }
 
   async update(id_familiar: number, updateDto: UpdateFamiliarDto): Promise<familiar> {
-    return await this.familiarRepo.update(id_familiar, updateDto);
+    if (updateDto.es_contacto_emergencia) {
+      const current = await this.findOne(id_familiar);
+      const existing = await this.familiarRepo.findContactoEmergencia(current.rut_estudiante, id_familiar);
+      if (existing) {
+        throw new ConflictException('Ya existe un contacto de emergencia para este estudiante');
+      }
+    }
+    return this.familiarRepo.update(id_familiar, updateDto);
   }
 
   remove(id_familiar: number): Promise<familiar> {

@@ -245,6 +245,7 @@ export interface Familiar {
   telefono: string;
   parentesco: Parentesco;
   observacion?: string;
+  es_contacto_emergencia?: boolean;
 }
 
 // ============================================

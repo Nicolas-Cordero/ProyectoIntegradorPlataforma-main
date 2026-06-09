@@ -34,6 +34,7 @@ interface FormState {
   telefono: string;
   parentesco: Parentesco;
   observacion: string;
+  es_contacto_emergencia: boolean;
 }
 
 const EMPTY_FORM: FormState = {
@@ -42,6 +43,7 @@ const EMPTY_FORM: FormState = {
   telefono: '',
   parentesco: 'OTRO',
   observacion: '',
+  es_contacto_emergencia: false,
 };
 
 interface FamiliarCardProps {
@@ -55,12 +57,19 @@ interface FamiliarCardProps {
 
 function FamiliarCard({ familiar, canEdit, onEdit, onDelete }: FamiliarCardProps) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+    <div className={`bg-white rounded-xl shadow-sm border p-5 ${familiar.es_contacto_emergencia ? 'border-[#65B39B] ring-1 ring-[#65B39B]/30' : 'border-gray-100'}`}>
       <div className="flex items-start justify-between mb-2">
         <div className="flex flex-col">
-          <span className="text-xl font-bold uppercase tracking-wide text-gray-800">
-            {PARENTESCO_LABEL[familiar.parentesco] ?? familiar.parentesco}
-          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xl font-bold uppercase tracking-wide text-gray-800">
+              {PARENTESCO_LABEL[familiar.parentesco] ?? familiar.parentesco}
+            </span>
+            {familiar.es_contacto_emergencia && (
+              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-[#65B39B]/15 text-[#3a7a6b] border border-[#65B39B]/40">
+                Contacto de emergencia
+              </span>
+            )}
+          </div>
           <span className="text-s text-gray-500 mt-0.5">
             {familiar.nombre}
           </span>
@@ -118,6 +127,11 @@ export default function EstudianteInfoFamiliar() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  const contactoExistente = familiares.find(
+    f => f.es_contacto_emergencia && f.id !== editingId
+  ) ?? null;
+  const checkboxBloqueado = contactoExistente !== null && !form.es_contacto_emergencia;
+
   const openCreate = () => {
     setEditingId(null);
     setForm(EMPTY_FORM);
@@ -133,6 +147,7 @@ export default function EstudianteInfoFamiliar() {
       telefono: familiar.telefono,
       parentesco: familiar.parentesco,
       observacion: familiar.observacion ?? '',
+      es_contacto_emergencia: familiar.es_contacto_emergencia ?? false,
     });
     setError('');
     setModalOpen(true);
@@ -152,6 +167,7 @@ export default function EstudianteInfoFamiliar() {
           telefono: form.telefono,
           parentesco: form.parentesco,
           observacion: form.observacion || undefined,
+          es_contacto_emergencia: form.es_contacto_emergencia,
         };
         await familiarService.update(editingId, update);
       } else {
@@ -162,6 +178,7 @@ export default function EstudianteInfoFamiliar() {
           telefono: form.telefono,
           parentesco: form.parentesco,
           observacion: form.observacion || undefined,
+          es_contacto_emergencia: form.es_contacto_emergencia,
         };
         await familiarService.create(create);
       }
@@ -294,6 +311,23 @@ export default function EstudianteInfoFamiliar() {
             valor={form.observacion}
             onChange={(v) => setForm(f => ({ ...f, observacion: v }))}
           />
+          <div className="pt-1">
+            <label className={`flex items-start gap-3 cursor-pointer ${checkboxBloqueado ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              <input
+                type="checkbox"
+                checked={form.es_contacto_emergencia}
+                disabled={checkboxBloqueado}
+                onChange={(e) => setForm(f => ({ ...f, es_contacto_emergencia: e.target.checked }))}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#65B39B] focus:ring-[#65B39B]"
+              />
+              <span className="text-sm font-medium text-gray-700">Contacto de emergencia</span>
+            </label>
+            {checkboxBloqueado && contactoExistente && (
+              <p className="mt-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                Ya hay un contacto de emergencia: <strong>{contactoExistente.nombre}</strong>. Edítalo para cambiar la designación.
+              </p>
+            )}
+          </div>
         </div>
       </Modal>
 

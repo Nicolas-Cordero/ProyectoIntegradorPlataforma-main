@@ -22,3 +22,9 @@ export { periodoAcademicoService } from './periodo-academico.service';
 export { beneficiosService } from './beneficios.service';
 export { informacionAdmisionService } from './informacion-admision.service';
 export { liceoService } from './liceo.service';
+
+// Avance curricular
+export { universidadService } from './universidad.service';
+export { carreraAvanceService } from './carrera-avance.service';
+export { semestreAvanceService } from './semestre-avance.service';
+export { ramoAvanceService } from './ramo-avance.service';

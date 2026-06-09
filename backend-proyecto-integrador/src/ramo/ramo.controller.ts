@@ -12,19 +12,15 @@ export class RamoController {
     return this.ramoService.create(createRamoDto);
   }
 
+  // Rutas con segmentos literales ANTES de rutas con parámetros puros para evitar ambigüedad
+  @Get('carrera/:codigo_carrera')
+  findAllByCarrera(@Param('codigo_carrera', ParseIntPipe) codigo_carrera: number) {
+    return this.ramoService.findAllByCarrera(codigo_carrera);
+  }
+
   @Get(':id_ramo')
   findOne(@Param('id_ramo', ParseIntPipe) id_ramo: number) {
     return this.ramoService.findOne(id_ramo);
-  }
-
-  @Get(':id_ramo/nota-final')
-  getNotaFinal(@Param('id_ramo', ParseIntPipe) id_ramo: number) {
-    return this.ramoService.getNotaFinal(id_ramo);
-  }
-
-  @Get(':id_ramo/nota-final')
-  getNotas(@Param('id_ramo', ParseIntPipe) id_ramo: number) {
-    return this.ramoService.getNotas(id_ramo);
   }
 
   @Patch(':id_ramo')

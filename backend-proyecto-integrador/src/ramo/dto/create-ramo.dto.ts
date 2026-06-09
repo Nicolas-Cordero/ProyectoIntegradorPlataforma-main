@@ -1,6 +1,6 @@
 import { EstadoRamo } from "@prisma/client";
 import { Type } from "class-transformer";
-import { IsEnum, IsNotEmpty, IsString } from "class-validator";
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
 
 export class CreateRamoDto {
 
@@ -25,10 +25,17 @@ export class CreateRamoDto {
   estado!: EstadoRamo;
 
   @IsString()
-  @IsNotEmpty()
-  comentario!: string;
+  @IsOptional()
+  comentario?: string;
 
   @Type(()=> Number)
-  @IsNotEmpty()
-  intento!: number;
+  @IsOptional()
+  intento?: number;
+
+  @Type(()=> Number)
+  @IsNumber({ maxDecimalPlaces: 1 })
+  @Min(1)
+  @Max(7)
+  @IsOptional()
+  nota_final?: number;
 }

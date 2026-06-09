@@ -274,32 +274,14 @@ model ramo {
   estado          EstadoRamo
   comentario      String
   intento         Int
+  nota_final      Decimal?
 
   estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
   semestre   semestre   @relation(fields: [semestre_id], references: [semestre_id])
   carrera    carrera    @relation(fields: [codigo_carrera], references: [codigo_carrera])
 
-  notas nota[]
-
   @@unique([nombre, semestre_id, rut_estudiante, codigo_carrera])
 }
-
-
-
-
-
-model nota {
-  id         Int      @id @default(autoincrement())
-  ramo_id    Int
-  fecha_hora DateTime
-  nota       Decimal
-
-  ramo ramo @relation(fields: [ramo_id], references: [id])
-
-  @@unique([ramo_id, fecha_hora])
-}
-
-
 
 
 

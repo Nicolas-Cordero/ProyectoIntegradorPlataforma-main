@@ -7,11 +7,9 @@
  */
 export function formatDate(date: string | Date | null | undefined): string {
   if (!date) return '-';
-  try {
-    return new Date(date).toLocaleDateString('es-CL');
-  } catch {
-    return '-';
-  }
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return '-';
+  return d.toLocaleDateString('es-CL');
 }
 
 /**
@@ -19,15 +17,13 @@ export function formatDate(date: string | Date | null | undefined): string {
  */
 export function formatDateLong(date: string | Date | null | undefined): string {
   if (!date) return '-';
-  try {
-    return new Date(date).toLocaleDateString('es-CL', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-  } catch {
-    return '-';
-  }
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return '-';
+  return d.toLocaleDateString('es-CL', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
 }
 
 /**
@@ -72,12 +68,9 @@ export function getCurrentYear(): number {
  */
 export function formatDateTime(date: string | Date | null | undefined): string {
   if (!date) return '-';
-  try {
-    const d = new Date(date);
-    return `${d.toLocaleDateString('es-CL')} ${d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}`;
-  } catch {
-    return '-';
-  }
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return '-';
+  return `${d.toLocaleDateString('es-CL')} ${d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}`;
 }
 
 /**

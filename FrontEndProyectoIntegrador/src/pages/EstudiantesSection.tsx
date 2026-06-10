@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { estudianteService, entrevistaService } from '../services';
+import { estudianteService, entrevistaService, alertasService } from '../services';
 import { logger } from '../config';
 import { Spinner, ErrorMessage, useConfirmDialog } from '../components/ui';
 import { StudentsTable } from '../components/features/generacion-view';
 import { CreateEstudianteModal } from '../components/features/estudiantes';
-import { daysSince } from '../utils/dateHelpers';
 import type { Estudiante } from '../types';
 import type { UIStudent } from './GeneracionSection/GeneracionView';
 
@@ -18,7 +17,7 @@ const SORT_OPTIONS: { label: string; field: keyof UIStudent; dir: 'asc' | 'desc'
   { label: 'Entrevista más antigua', field: 'ultimaEntrevista', dir: 'asc' },
 ];
 
-type StudentWithStats = UIStudent & { _diasSinEntrevista?: number };
+type StudentWithStats = UIStudent;
 
 const SELECT_CLASS =
   'text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] transition-colors flex-1 min-w-[140px]';
@@ -28,6 +27,7 @@ export const EstudiantesSection: React.FC = () => {
   const { showConfirm, ConfirmDialog } = useConfirmDialog();
 
   const [students, setStudents] = useState<StudentWithStats[]>([]);
+  const [alertasRuts, setAlertasRuts] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [enriching, setEnriching] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +40,6 @@ export const EstudiantesSection: React.FC = () => {
   const [filterGeneracion, setFilterGeneracion] = useState('');
   const [filterLiceo, setFilterLiceo] = useState('');
   const [filterAlertas, setFilterAlertas] = useState<'todas' | 'con' | 'sin'>('todas');
-  const [filterEntrevista, setFilterEntrevista] = useState<'todas' | 'reciente' | 'sin'>('todas');
 
   const [sortField, setSortField] = useState<keyof UIStudent>('apellido');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -89,7 +88,6 @@ export const EstudiantesSection: React.FC = () => {
           promedio: typeof student.promedios_media === 'number' ? student.promedios_media : undefined,
           ultimaEntrevista,
           totalEntrevistasAno,
-          _diasSinEntrevista: ultimaEntrevista ? daysSince(ultimaEntrevista) : undefined,
         };
       })
     );
@@ -99,7 +97,13 @@ export const EstudiantesSection: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const raw = await estudianteService.getAll();
+      const [raw, alertasData] = await Promise.all([
+        estudianteService.getAll(),
+        alertasService.getAlertas().catch(() => []),
+      ]);
+      setAlertasRuts(
+        alertasData.map((a) => a.rut_estudiante).filter((r): r is string => Boolean(r))
+      );
       setLoading(false);
       setEnriching(true);
       const enriched = await enrichStudents(raw);
@@ -136,7 +140,6 @@ export const EstudiantesSection: React.FC = () => {
     setFilterGeneracion('');
     setFilterLiceo('');
     setFilterAlertas('todas');
-    setFilterEntrevista('todas');
     setSortField('apellido');
     setSortDirection('asc');
   };
@@ -145,10 +148,10 @@ export const EstudiantesSection: React.FC = () => {
     !!searchTerm ||
     !!filterGeneracion ||
     !!filterLiceo ||
-    filterAlertas !== 'todas' ||
-    filterEntrevista !== 'todas';
+    filterAlertas !== 'todas';
 
   const filteredStudents = useMemo(() => {
+    const alertasSet = new Set(alertasRuts);
     let result: StudentWithStats[] = students;
 
     if (searchTerm) {
@@ -170,19 +173,8 @@ export const EstudiantesSection: React.FC = () => {
 
     if (filterAlertas !== 'todas') {
       result = result.filter((s) => {
-        const tieneAlerta =
-          s._diasSinEntrevista === undefined || s._diasSinEntrevista >= 30;
+        const tieneAlerta = alertasSet.has(s.rut_estudiante);
         return filterAlertas === 'con' ? tieneAlerta : !tieneAlerta;
-      });
-    }
-
-    if (filterEntrevista !== 'todas') {
-      result = result.filter((s) => {
-        if (filterEntrevista === 'sin') return !s.ultimaEntrevista;
-        if (filterEntrevista === 'reciente') {
-          return !!s.ultimaEntrevista && (s._diasSinEntrevista ?? Infinity) < 30;
-        }
-        return true;
       });
     }
 
@@ -199,20 +191,14 @@ export const EstudiantesSection: React.FC = () => {
     });
   }, [
     students,
+    alertasRuts,
     searchTerm,
     filterGeneracion,
     filterLiceo,
     filterAlertas,
-    filterEntrevista,
     sortField,
     sortDirection,
   ]);
-
-  // Elimina _diasSinEntrevista antes de pasar a StudentsTable (columna alertas queda vacía)
-  const studentsForTable = useMemo(
-    () => filteredStudents.map(({ _diasSinEntrevista: _, ...s }) => s),
-    [filteredStudents]
-  );
 
   const handleSort = (field: keyof UIStudent) => {
     if (sortField === field) {
@@ -332,15 +318,6 @@ export const EstudiantesSection: React.FC = () => {
                 <option value="sin">Sin alertas</option>
               </select>
 
-              <select
-                value={filterEntrevista}
-                onChange={(e) => setFilterEntrevista(e.target.value as 'todas' | 'reciente' | 'sin')}
-                className={SELECT_CLASS}
-              >
-                <option value="todas">Entrevista: Todas</option>
-                <option value="reciente">Con entrevista reciente</option>
-                <option value="sin">Sin entrevistas</option>
-              </select>
             </div>
           </div>
 
@@ -407,12 +384,13 @@ export const EstudiantesSection: React.FC = () => {
             </div>
           ) : (
             <StudentsTable
-              students={studentsForTable}
+              students={filteredStudents}
               sortField={sortField}
               sortDirection={sortDirection}
               onSort={handleSort}
               onViewDetails={handleVerDetalles}
               onDelete={handleDeleteStudent}
+              alertasRuts={alertasRuts}
             />
           )}
 
@@ -420,7 +398,6 @@ export const EstudiantesSection: React.FC = () => {
       </div>
       <ConfirmDialog />
 
-      {/* Modal: crear nuevo estudiante (con selector de generación) */}
       <CreateEstudianteModal
         open={openCrear}
         onClose={() => setOpenCrear(false)}

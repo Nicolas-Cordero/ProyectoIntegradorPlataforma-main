@@ -1,114 +1,46 @@
-import { Box, TextField, MenuItem } from '@mui/material';
+const SELECT_CLASS =
+  'text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] transition-colors flex-1 min-w-[140px]';
 
 interface StudentFilterPanelProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
-  selectedCarrera: string;
-  onCarreraChange: (value: string) => void;
   selectedEstado: string;
   onEstadoChange: (value: string) => void;
-  carreras: string[];
   estados: string[];
 }
 
-/**
- * Filter panel component for students
- * Includes search by name/RUT and filters for career and status
- */
 export function StudentFilterPanel({
   searchTerm,
   onSearchChange,
-  selectedCarrera,
-  onCarreraChange,
   selectedEstado,
   onEstadoChange,
-  carreras,
   estados,
 }: StudentFilterPanelProps) {
   return (
-    <Box 
-      sx={{ 
-        backgroundColor: 'grey.100', 
-        p: 2.5, 
-        borderRadius: 2, 
-        mb: 2.5,
-        display: 'grid',
-        gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-        gap: 2
-      }}
+    <div
+      className="bg-white rounded-xl px-5 py-4 space-y-3"
+      style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}
     >
-      <TextField
-        fullWidth
-        label="Buscar estudiante"
-        value={searchTerm}
-        onChange={(e) => onSearchChange(e.target.value)}
-        placeholder="Nombre, apellido o RUT..."
-        size="small"
-        variant="outlined"
-        sx={{
-          backgroundColor: '#FFFEF5',
-          '& .MuiOutlinedInput-root': {
-            '&:hover fieldset': {
-              borderColor: '#65B39B'
-            },
-            '&.Mui-focused fieldset': {
-              borderColor: '#65B39B'
-            }
-          }
-        }}
-      />
-
-      <TextField
-        fullWidth
-        select
-        label="Carrera"
-        value={selectedCarrera}
-        onChange={(e) => onCarreraChange(e.target.value)}
-        size="small"
-        variant="outlined"
-        sx={{
-          backgroundColor: '#FFFEF5',
-          '& .MuiOutlinedInput-root': {
-            '&:hover fieldset': {
-              borderColor: '#65B39B'
-            },
-            '&.Mui-focused fieldset': {
-              borderColor: '#65B39B'
-            }
-          }
-        }}
-      >
-        <MenuItem value="">Todas las carreras</MenuItem>
-        {carreras.map(carrera => (
-          <MenuItem key={carrera} value={carrera}>{carrera}</MenuItem>
-        ))}
-      </TextField>
-
-      <TextField
-        fullWidth
-        select
-        label="Estado"
-        value={selectedEstado}
-        onChange={(e) => onEstadoChange(e.target.value)}
-        size="small"
-        variant="outlined"
-        sx={{
-          backgroundColor: '#FFFEF5',
-          '& .MuiOutlinedInput-root': {
-            '&:hover fieldset': {
-              borderColor: '#65B39B'
-            },
-            '&.Mui-focused fieldset': {
-              borderColor: '#65B39B'
-            }
-          }
-        }}
-      >
-        <MenuItem value="">Todos los estados</MenuItem>
-        {estados.map(estado => (
-          <MenuItem key={estado} value={estado}>{estado}</MenuItem>
-        ))}
-      </TextField>
-    </Box>
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Búsqueda y filtros</p>
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Nombre, apellido o RUT..."
+          className="w-56 text-sm border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] transition-colors bg-gray-50 focus:bg-white"
+        />
+        <select
+          value={selectedEstado}
+          onChange={(e) => onEstadoChange(e.target.value)}
+          className={SELECT_CLASS}
+        >
+          <option value="">Todos los estados</option>
+          {estados.map((estado) => (
+            <option key={estado} value={estado}>{estado}</option>
+          ))}
+        </select>
+      </div>
+    </div>
   );
 }

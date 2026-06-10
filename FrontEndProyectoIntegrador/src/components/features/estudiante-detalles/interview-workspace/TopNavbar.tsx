@@ -9,13 +9,11 @@ interface TopNavbarProps {
 }
 
 export function TopNavbar({ estudiante, onNavigateBack }: TopNavbarProps) {
-  // DATOS: Obtener información con compatibilidad híbrida
-  const nombreCompleto = estudiante.nombre || 
-    `${estudiante.nombres || ''} ${estudiante.apellidos || ''}`.trim();
-  const carrera = estudiante.carrera || estudiante.institucion?.carrera_especialidad || 'Sin especificar';
-  const universidad = estudiante.universidad || 
-    estudiante.institucion?.nombre_institucion || 
-    'Sin especificar';
+  // DATOS: nombre completo y carrera activa (si la relación viene poblada)
+  const nombreCompleto = `${estudiante.nombre || ''} ${estudiante.apellido || ''}`.trim() || 'Estudiante';
+  const carreraActual = estudiante.carreras?.find((c) => c.activa) ?? estudiante.carreras?.[0];
+  const carrera = carreraActual?.nombre_carrera || 'Sin especificar';
+  const universidad = carreraActual?.institucion || 'Sin especificar';
   const { showConfirm, ConfirmDialog } = useConfirmDialog();
 
   return (

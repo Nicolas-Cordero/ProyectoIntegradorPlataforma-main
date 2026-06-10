@@ -39,7 +39,7 @@ export const getEstudianteStatus = (estudiante: Estudiante): string => {
 export const getEstudianteSemestre = (estudiante: Estudiante): number | undefined => {
   // Prioriza cualquier campo ya presente en el modelo antes de recurrir al servicio real
   const semestre =
-    estudiante.semestre ??
+    (estudiante as any).semestre ??
     (estudiante as any).semestre_actual ??
     (estudiante as any).semestre_activo ??
     (estudiante as any)?.estadoAcademico?.semestre;

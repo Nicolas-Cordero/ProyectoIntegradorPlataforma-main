@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Link, CircularProgress, Stack } from '@mui/material';
-import { Login as LoginIcon } from '@mui/icons-material';
+import { Box, Link, Stack } from '@mui/material';
 import { Input, Alert, Button } from '../../../ui';
 import { authService } from '../../../../services/authService';
 import { logger } from '../../../../config';
@@ -34,24 +33,11 @@ export function LoginForm() {
 
     try {
       logger.log('🔐 Intentando iniciar sesión...');
-      const response = await authService.login(credentials);
-      
-      logger.log('✅ Login exitoso, redirigiendo según tipo de usuario...');
-      
-      switch (response.user.role) {
-        case 'admin':
-          navigate('/admin');
-          break;
-        case 'academico':
-          navigate('/academico');
-          break;
-        case 'estudiante':
-          navigate('/estudiante');
-          break;
-        default:
-          setError('Tipo de usuario no reconocido');
-      }
-      
+      await authService.login(credentials);
+
+      logger.log('✅ Login exitoso, redirigiendo...');
+      navigate('/estudiantes');
+
     } catch (error: any) {
       logger.error('❌ Error en login:', error);
       

@@ -3,27 +3,27 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   estudianteService,
   entrevistaService,
+  alertasService,
 } from '../../services';
 import { logger } from '../../config';
-import { GenerationHeader, StudentFilterPanel, StudentsTable } from '../../components/features/generacion-view';
+import { GenerationHeader, StudentsTable } from '../../components/features/generacion-view';
 import { CreateEstudianteModal } from '../../components/features/estudiantes';
 import { ExcelImportModal } from '../../components/features/estudiantes/ExcelImportModal';
 import { Spinner, ErrorMessage, useConfirmDialog } from '../../components/ui';
-import { daysSince } from '../../utils/dateHelpers';
 import type { Estudiante } from '../../types';
+
+const SELECT_CLASS =
+  'text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] transition-colors flex-1 min-w-[140px]';
 
 export type UIStudent = Estudiante & {
   ultimaEntrevista?: string;
   totalEntrevistasAno?: number;
-  diasSinEntrevista?: number;
-  tienePendienteNotas?: boolean;
   promedio?: number;
 };
 
 export default function GeneracionViewSimple() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  // El param :id ahora es el ID real de la generación (no el año)
   const generacionId = parseInt(id || '0', 10);
 
   const [año, setAño] = useState<number>(0);
@@ -31,11 +31,12 @@ export default function GeneracionViewSimple() {
   const [generacionError, setGeneracionError] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCarrera, setFilterCarrera] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
+  const [filterAlertas, setFilterAlertas] = useState<'todas' | 'con' | 'sin'>('todas');
   const [sortField, setSortField] = useState<keyof UIStudent>('apellido');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [students, setStudents] = useState<UIStudent[]>([]);
+  const [alertasRuts, setAlertasRuts] = useState<string[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [openCreateEstudiante, setOpenCreateEstudiante] = useState(false);
   const [openExcelImport, setOpenExcelImport] = useState(false);
@@ -51,6 +52,16 @@ export default function GeneracionViewSimple() {
       .catch(() => setGeneracionError(`No se encontró la generación (id ${generacionId}).`))
       .finally(() => setGeneracionLoading(false));
   }, [generacionId]);
+
+  // 2. Cargar alertas cuando el año esté disponible
+  useEffect(() => {
+    if (!año) return;
+    alertasService.getAlertasByGeneracion(String(año))
+      .then((data) =>
+        setAlertasRuts(data.map((a) => a.rut_estudiante).filter((r): r is string => Boolean(r)))
+      )
+      .catch(() => setAlertasRuts([]));
+  }, [año]);
 
   const normalizeNumber = (value?: number | string | null) => {
     if (value === null || value === undefined) return undefined;
@@ -92,19 +103,12 @@ export default function GeneracionViewSimple() {
           const f = e?.fecha ? new Date(e.fecha) : undefined;
           return f?.getFullYear() === currentYear;
         }).length;
-        const diasSinEntrevista = ultimaEntrevista ? daysSince(ultimaEntrevista) : undefined;
-
-        const tienePendienteNotas = student.ramos
-          ? student.ramos.some((r) => r.estado === 'CURSANDO')
-          : false;
 
         return {
           ...student,
           promedio: normalizeNumber(student.promedios_media),
           ultimaEntrevista,
           totalEntrevistasAno,
-          diasSinEntrevista,
-          tienePendienteNotas,
         };
       })
     );
@@ -136,18 +140,15 @@ export default function GeneracionViewSimple() {
     loadStudents();
   }, [loadStudents]);
 
-  const carreras = [...new Set(students.map((s) =>
-    (s.carreras && s.carreras.length > 0 ? s.carreras[0].nombre_carrera : null) || 'Sin carrera'
-  ).filter(Boolean))];
-
   const estados = [...new Set(students.map((s) => s.estado || 'ACTIVO'))];
 
   const filteredAndSortedStudents = useMemo(() => {
+    const alertasSet = new Set(alertasRuts);
+
     let filtered = students.filter((student) => {
       const nombre = student.nombre || '';
       const apellido = student.apellido || '';
       const rut = student.rut_estudiante || '';
-      const carrera = (student.carreras && student.carreras.length > 0 ? student.carreras[0].nombre_carrera : '') || '';
       const estado = student.estado || 'ACTIVO';
 
       const matchesSearch =
@@ -155,11 +156,17 @@ export default function GeneracionViewSimple() {
         apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
         rut.includes(searchTerm);
 
-      const matchesCarrera = !filterCarrera || carrera === filterCarrera;
       const matchesEstado = !filterEstado || estado === filterEstado;
 
-      return matchesSearch && matchesCarrera && matchesEstado;
+      return matchesSearch && matchesEstado;
     });
+
+    if (filterAlertas !== 'todas') {
+      filtered = filtered.filter((s) => {
+        const tieneAlerta = alertasSet.has(s.rut_estudiante || '');
+        return filterAlertas === 'con' ? tieneAlerta : !tieneAlerta;
+      });
+    }
 
     filtered.sort((a, b) => {
       let aVal: any = a[sortField];
@@ -179,7 +186,7 @@ export default function GeneracionViewSimple() {
     });
 
     return filtered;
-  }, [students, searchTerm, filterCarrera, filterEstado, sortField, sortDirection]);
+  }, [students, alertasRuts, searchTerm, filterEstado, filterAlertas, sortField, sortDirection]);
 
   const handleSort = (field: keyof UIStudent) => {
     if (sortField === field) {
@@ -221,31 +228,57 @@ export default function GeneracionViewSimple() {
         onUploadExcel={() => setOpenExcelImport(true)}
       />
 
-      <StudentFilterPanel
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        selectedCarrera={filterCarrera}
-        onCarreraChange={setFilterCarrera}
-        selectedEstado={filterEstado}
-        onEstadoChange={setFilterEstado}
-        carreras={carreras}
-        estados={estados}
-      />
+      <div
+        className="bg-white rounded-xl px-5 py-4 space-y-3"
+        style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}
+      >
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Búsqueda y filtros</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Nombre, apellido o RUT..."
+            className="w-56 text-sm border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] transition-colors bg-gray-50 focus:bg-white"
+          />
+          <select
+            value={filterAlertas}
+            onChange={(e) => setFilterAlertas(e.target.value as 'todas' | 'con' | 'sin')}
+            className={SELECT_CLASS}
+          >
+            <option value="todas">Alertas: Todas</option>
+            <option value="con">Con alerta</option>
+            <option value="sin">Sin alerta</option>
+          </select>
+          <select
+            value={filterEstado}
+            onChange={(e) => setFilterEstado(e.target.value)}
+            className={SELECT_CLASS}
+          >
+            <option value="">Todos los estados</option>
+            {estados.map((estado) => (
+              <option key={estado} value={estado}>{estado}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="mt-6">
+        {studentsLoading ? (
+          <Spinner message="Cargando estudiantes..." />
+        ) : (
+          <StudentsTable
+            students={filteredAndSortedStudents}
+            sortField={sortField}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            onViewDetails={handleVerDetalles}
+            onDelete={handleDeleteStudent}
+            alertasRuts={alertasRuts}
+          />
+        )}
+      </div>
 
-      {studentsLoading ? (
-        <Spinner message="Cargando estudiantes..." />
-      ) : (
-        <StudentsTable
-          students={filteredAndSortedStudents}
-          sortField={sortField}
-          sortDirection={sortDirection}
-          onSort={handleSort}
-          onViewDetails={handleVerDetalles}
-          onDelete={handleDeleteStudent}
-        />
-      )}
 
-      {/* Modal: crear estudiante individual */}
       {generacionId !== null && (
         <>
           <CreateEstudianteModal

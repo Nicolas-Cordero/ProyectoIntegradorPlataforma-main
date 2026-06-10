@@ -5,9 +5,6 @@ import type { Estudiante } from '../../../types';
 type UIStudent = Estudiante & {
   ultimaEntrevista?: string;
   totalEntrevistasAno?: number;
-  diasSinEntrevista?: number;
-  tienePendienteNotas?: boolean;
-  // computed display fields
   promedio?: number;
 };
 
@@ -18,12 +15,9 @@ interface StudentsTableProps {
   onSort: (field: keyof UIStudent) => void;
   onViewDetails: (studentId: string | number) => void;
   onDelete: (studentId: string | number) => void;
+  alertasRuts?: string[];
 }
 
-/**
- * Table component for displaying students
- * Includes sorting, status badges, and action buttons
- */
 export const StudentsTable: React.FC<StudentsTableProps> = ({
   students,
   sortField,
@@ -31,10 +25,9 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
   onSort,
   onViewDetails,
   onDelete,
+  alertasRuts = [],
 }) => {
-  // Umbrales de alerta por días sin entrevista
-  const WARNING_DAYS = 30;
-  const ALERT_DAYS = 60;
+  const alertasSet = new Set(alertasRuts);
 
   const getSortIcon = (field: keyof UIStudent) => {
     if (sortField !== field) return '↕️';
@@ -101,6 +94,7 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
           {students.map((student, index) => {
             const promedioDisplay = student.promedio ?? (typeof student.promedios_media === 'number' ? student.promedios_media : undefined);
             const { value: promedioValor, colorClass: promedioColor } = getPromedioInfo(promedioDisplay);
+            const tieneAlerta = alertasSet.has(student.rut_estudiante);
 
             return (
               <tr
@@ -122,7 +116,7 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
                   </div>
                 </td>
                 <td className="py-3 px-3 border-b border-gray-300 text-center">
-                  <span 
+                  <span
                     className={`px-3 py-1 rounded-full text-xs font-bold border ${(() => {
                       const estado = (student.estado || 'activo').toLowerCase();
                       if (estado === 'activo') return 'bg-green-100 text-green-800 border-green-300';
@@ -145,51 +139,32 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
                   {student.totalEntrevistasAno || 0}
                 </td>
                 <td className="py-3 px-3 border-b border-gray-300 text-center">
-                  <div className="flex gap-1 justify-center flex-wrap">
-                    {student.diasSinEntrevista !== undefined && (
-                      <span
-                        className={`px-2.5 py-1 rounded text-sm font-bold border ${
-                          student.diasSinEntrevista >= ALERT_DAYS
-                            ? 'bg-red-100 text-red-800 border-red-300'
-                            : student.diasSinEntrevista >= WARNING_DAYS
-                              ? 'bg-yellow-100 text-yellow-800 border-yellow-300'
-                              : 'bg-green-100 text-green-800 border-green-300'
-                        }`}
-                        title={`${student.diasSinEntrevista} días sin entrevista`}
-                      >
-                        ⏰ {student.diasSinEntrevista}d
-                      </span>
-                    )}
-                    {student.tienePendienteNotas && (
-                      <span 
-                        className="px-1.5 py-0.5 rounded text-xs font-bold bg-red-100 text-red-800 border border-red-300"
-                        title="Pendiente de notas"
-                      >
-                        📝
-                      </span>
-                    )}
-                    {student.diasSinEntrevista === undefined && !student.tienePendienteNotas ? (
-                      <span className="text-gray-400 text-sm">—</span>
-                    ) : null}
-                  </div>
+                  {tieneAlerta && (
+                    <span
+                      className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-700 font-bold text-sm border border-red-300"
+                      title="Este estudiante tiene alertas activas"
+                    >
+                      !
+                    </span>
+                  )}
                 </td>
                 <td className="py-3 px-3 border-b border-gray-300 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <Button
-                        variante="primary"
-                        tamano="sm"
-                        onClick={() => onViewDetails(student.rut_estudiante)}
-                      >
-                        Ver Detalles
-                      </Button>
-                      <Button
-                        variante="danger"
-                        tamano="sm"
-                        onClick={() => onDelete(student.rut_estudiante)}
-                      >
-                        Eliminar
-                      </Button>
-                    </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <Button
+                      variante="primary"
+                      tamano="sm"
+                      onClick={() => onViewDetails(student.rut_estudiante)}
+                    >
+                      Ver Detalles
+                    </Button>
+                    <Button
+                      variante="danger"
+                      tamano="sm"
+                      onClick={() => onDelete(student.rut_estudiante)}
+                    >
+                      Eliminar
+                    </Button>
+                  </div>
                 </td>
               </tr>
             );

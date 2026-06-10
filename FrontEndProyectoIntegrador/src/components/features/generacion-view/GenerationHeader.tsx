@@ -22,32 +22,6 @@ export function GenerationHeader({
 }: GenerationHeaderProps) {
   return (
     <Box sx={{ mb: 4 }}>
-      {/* Breadcrumb / Navigation */}
-      <Breadcrumbs
-        separator={<NavigateNextIcon fontSize="small" />}
-        sx={{ mb: 2 }}
-      >
-        <Link
-          component="button"
-          onClick={onBack}
-          underline="hover"
-          color="text.secondary"
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            cursor: 'pointer',
-            transition: 'color 0.3s ease',
-            '&:hover': {
-              color: '#EEB35D'
-            }
-          }}
-        >
-          Dashboard
-        </Link>
-        <Typography color="text.primary" fontWeight={500}>
-          Generación {generationYear}
-        </Typography>
-      </Breadcrumbs>
 
       {/* Header con estilo de carpeta */}
       <Paper

@@ -28,3 +28,7 @@ export { universidadService } from './universidad.service';
 export { carreraAvanceService } from './carrera-avance.service';
 export { semestreAvanceService } from './semestre-avance.service';
 export { ramoAvanceService } from './ramo-avance.service';
+
+// Alertas
+export { alertasService } from './alertas.service';
+export type { Alerta } from './alertas.service';

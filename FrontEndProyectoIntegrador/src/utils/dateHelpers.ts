@@ -9,16 +9,16 @@
  */
 export const formatDateChilean = (isoDate: string | undefined | null): string => {
   if (!isoDate) return 'Sin registro';
-  
-  try {
-    return new Date(isoDate).toLocaleDateString('es-CL', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  } catch {
-    return 'Fecha inválida';
-  }
+
+  // new Date('basura') no lanza: devuelve Invalid Date. Validar con getTime().
+  const date = new Date(isoDate);
+  if (isNaN(date.getTime())) return 'Fecha inválida';
+
+  return date.toLocaleDateString('es-CL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
 };
 
 /**

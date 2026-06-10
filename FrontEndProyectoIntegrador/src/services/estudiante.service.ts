@@ -73,7 +73,8 @@ class EstudianteService extends BaseHttpClient {
   }
 
   // Ruta corregida: /estudiante/generacion/:generacion_id (Int)
-  async getByGeneracion(generacion_id: number): Promise<Estudiante[]> {
+  // Acepta number o string (el valor se interpola en la URL de cualquier forma).
+  async getByGeneracion(generacion_id: number | string): Promise<Estudiante[]> {
     return await this.request<Estudiante[]>(`/estudiante/generacion/${generacion_id}`);
   }
 

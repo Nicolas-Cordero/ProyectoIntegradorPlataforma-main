@@ -30,9 +30,9 @@ export function NoteEditor({
 }: NoteEditorProps) {
   const draftKey = useMemo(() => {
     // Clave de almacenamiento local por entrevista y etiqueta
-    const entrevistaKey = entrevistaId || estudiante?.id_estudiante || 'sin-entrevista';
+    const entrevistaKey = entrevistaId || estudiante?.rut_estudiante || 'sin-entrevista';
     return `entrevistaDraft:${entrevistaKey}:${sectionTitle}`;
-  }, [entrevistaId, estudiante?.id_estudiante, sectionTitle]);
+  }, [entrevistaId, estudiante?.rut_estudiante, sectionTitle]);
 
   // ESTADOS: Gestión de notas y búsqueda
   const [notes, setNotes] = useState<Note[]>([]);
@@ -72,7 +72,7 @@ export function NoteEditor({
     }
 
     const loadNotas = async () => {
-      if (!entrevistaId && !estudiante?.id_estudiante) return;
+      if (!entrevistaId && !estudiante?.rut_estudiante) return;
       try {
         setIsLoading(true);
         let textos = [];
@@ -89,8 +89,8 @@ export function NoteEditor({
             console.warn('No se pudo cargar la fecha de la entrevista', err);
           }
           const textosActuales = await entrevistaService.getTextos(entrevistaId);
-          const textosHistoricos = estudiante?.id_estudiante
-            ? await entrevistaService.getAllTextosByEstudiante(estudiante.id_estudiante.toString())
+          const textosHistoricos = estudiante?.rut_estudiante
+            ? await entrevistaService.getAllTextosByEstudiante(estudiante.rut_estudiante.toString())
             : [];
           // Unificar textos actuales e históricos sin duplicados
           const vistos = new Set<string>();
@@ -100,9 +100,9 @@ export function NoteEditor({
             vistos.add(t.id);
             return true;
           });
-        } else if (estudiante?.id_estudiante) {
+        } else if (estudiante?.rut_estudiante) {
           // Fallback: textos históricos del estudiante (vista consolidada)
-          textos = await entrevistaService.getAllTextosByEstudiante(estudiante.id_estudiante.toString());
+          textos = await entrevistaService.getAllTextosByEstudiante(estudiante.rut_estudiante.toString());
         }
         // Filtrar por etiqueta (sectionTitle)
         const textosFiltrados = textos.filter(
@@ -125,7 +125,7 @@ export function NoteEditor({
       }
     };
     loadNotas();
-  }, [tabId, sectionTitle, entrevistaId, estudiante?.id_estudiante, draftKey, draftLoaded]);
+  }, [tabId, sectionTitle, entrevistaId, estudiante?.rut_estudiante, draftKey, draftLoaded]);
 
   // Persistir borrador localmente mientras se escribe
   useEffect(() => {
@@ -156,7 +156,7 @@ export function NoteEditor({
       const textoGuardado = await entrevistaService.addTexto(entrevistaId, {
         nombre_etiqueta: sectionTitle,
         contenido: newNote.trim(),
-        contexto: `Entrevista con ${estudiante.nombre || estudiante.nombres}`,
+        contexto: `Entrevista con ${estudiante.nombre} ${estudiante.apellido}`.trim(),
         fecha: fechaBase.toISOString(),
       });
       

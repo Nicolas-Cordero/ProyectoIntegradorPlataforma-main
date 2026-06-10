@@ -84,8 +84,9 @@ export const CreateEstudianteModal: React.FC<Props> = ({
     }
   }, [open, generacionId]);
 
-  const set = (field: keyof FormState) => (value: string) =>
-    setForm((prev) => ({ ...prev, [field]: value }));
+  // Acepta string | number porque Select.onChange emite ese tipo; el form guarda strings.
+  const set = (field: keyof FormState) => (value: string | number) =>
+    setForm((prev) => ({ ...prev, [field]: String(value) }));
 
   const validate = (): string => {
     if (!form.rut_estudiante.trim()) return 'El RUT es obligatorio.';

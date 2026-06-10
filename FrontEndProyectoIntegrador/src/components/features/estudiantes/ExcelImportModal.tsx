@@ -33,9 +33,9 @@ const COLUMNS = [
 
 type RawRow = Record<string, string>;
 
-interface PreviewRow extends RawRow {
-  _idx: number;
-}
+// Intersección en vez de `extends`: `_idx: number` no puede convivir con el índice
+// de string de RawRow dentro de una interface (TS2411).
+type PreviewRow = RawRow & { _idx: number };
 
 type ImportStatus = 'idle' | 'preview' | 'importing' | 'done';
 
@@ -84,7 +84,8 @@ function parseFileToRows(file: File): Promise<PreviewRow[]> {
           dateNF: 'yyyy-mm-dd',
           defval: '',
         });
-        resolve(raw.map((r, i) => ({ ...r, _idx: i + 2 }))); // +2: fila 1 = header
+        // Object.assign preserva la intersección RawRow & { _idx } (el spread la pierde).
+        resolve(raw.map((r, i) => Object.assign({}, r, { _idx: i + 2 }))); // +2: fila 1 = header
       } catch (err) {
         reject(new Error('No se pudo leer el archivo. Verifica que sea .xlsx o .csv válido.'));
       }
@@ -170,7 +171,7 @@ export const ExcelImportModal: React.FC<Props> = ({
     if (result.creados > 0) onSuccess();
   };
 
-  const PREVIEW_COLS: (keyof typeof COLUMNS[number] | string)[] = [
+  const PREVIEW_COLS: string[] = [
     'rut_estudiante', 'nombre', 'apellido', 'genero', 'estado', 'promedios_media',
   ];
 

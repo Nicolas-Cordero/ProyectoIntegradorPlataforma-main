@@ -85,7 +85,7 @@ export const DebugPermissions: React.FC = () => {
     });
   };
 
-  const detectedRole = user?.role || null;
+  const detectedRole = user?.rol || null;
 
   const permissions = user ? {
     'Acceder a Dashboard':  PermissionService.canAccessDashboard(user),

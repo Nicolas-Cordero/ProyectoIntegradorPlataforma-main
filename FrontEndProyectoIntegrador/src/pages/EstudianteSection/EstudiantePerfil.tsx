@@ -3,7 +3,8 @@ import { useOutletContext } from 'react-router-dom';
 import { Avatar, Button, LinearProgress } from '@mui/material';
 import { AccountCircle as AccountCircleIcon, CloudUpload as CloudUploadIcon, Edit as EditIcon } from '@mui/icons-material';
 import { Modal, Input, Select, Alert } from '../../components/ui';
-import { estudianteService } from '../../services';
+import { estudianteService, alertasService } from '../../services';
+import type { Alerta } from '../../services';
 import { getEstudianteStatus } from '../../utils/migration-helpers';
 import type { EstudianteOutletContext } from './EstudianteDetail';
 import type { EstadoEstudiante, Genero } from '../../types';
@@ -23,6 +24,8 @@ export default function EstudiantePerfil() {
   const [errorUpload, setErrorUpload] = useState('');
   const [errorDB, setErrorDB] = useState('');
 
+  const [alertas, setAlertas] = useState<Alerta[]>([]);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editForm, setEditForm] = useState<Partial<UpdateEstudianteDto>>({});
   const [saving, setSaving] = useState(false);
@@ -31,6 +34,12 @@ export default function EstudiantePerfil() {
   useEffect(() => {
     setFotoUrl(estudiante.foto_url);
   }, [estudiante]);
+
+  useEffect(() => {
+    alertasService.getAlertasByEstudiante(estudiante.rut_estudiante)
+      .then(setAlertas)
+      .catch(() => setAlertas([]));
+  }, [estudiante.rut_estudiante]);
 
   const openEditModal = () => {
     // Bug 10 fix: normalizar promedios_media (puede llegar con coma decimal del backend)
@@ -178,6 +187,20 @@ export default function EstudiantePerfil() {
                 </div>
               ))}
             </div>
+
+            {alertas.length > 0 && (
+              <div className="mt-4 space-y-2">
+                {alertas.map((alerta, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"
+                  >
+                    <span className="font-bold text-amber-600">!</span>
+                    <span>{alerta.message}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

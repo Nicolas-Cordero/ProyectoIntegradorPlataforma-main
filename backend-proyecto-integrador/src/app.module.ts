@@ -19,6 +19,7 @@ import { UniversidadModule } from './universidad/universidad.module';
 import { UsersModule } from './users';
 import { SemestreModule } from './semestre/semestre.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { AlertasModule } from './alertas/alertas.module';
 
 
 
@@ -47,6 +48,7 @@ import { PrismaModule } from './prisma/prisma.module';
     UniversidadModule,
     UsersModule,
     SemestreModule,
+    AlertasModule,
   ],
   providers: [PrismaService]
 })

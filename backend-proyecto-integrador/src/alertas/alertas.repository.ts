@@ -30,4 +30,26 @@ export class AlertasRepository {
       select: { id: true, rut_estudiante: true, fecha_hora: true },
     });
   }
+
+  async getAllRamosbyEstudiante(rut_estudiante: string) {
+    return this.prisma.ramo.findMany({
+      where: { rut_estudiante },
+      select: {
+        id: true,
+        nombre: true,
+        estado: true,
+        codigo_carrera: true,
+        rut_estudiante: true,
+        nota_final: true,
+        semestre_id: true,
+      },
+    });
+  }
+
+  async getSemestreById(semestre_id: number) {
+    return this.prisma.semestre.findUnique({
+      where: { semestre_id },
+      select: { semestre_id: true, year: true, semestre: true, tipo: true },
+    });
+  }
 }

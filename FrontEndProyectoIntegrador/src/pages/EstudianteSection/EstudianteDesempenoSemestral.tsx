@@ -205,7 +205,7 @@ export default function EstudianteDesempenoSemestral() {
         <h2 className="text-2xl font-bold text-gray-800">Desempeño Semestral</h2>
         <p className="text-base font-medium text-gray-600 mt-1.5">
           Visualización del rendimiento semestre a semestre{' '}
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500 rounded-full border border-gray-200 align-middle">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-sm font-semibold bg-gray-100 text-gray-500 rounded-full border border-gray-200 align-middle">
             solo lectura
           </span>
         </p>

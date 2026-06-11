@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import {
   Add as AddIcon,
@@ -916,6 +916,14 @@ function CarreraAcordeon({
   onCerrarSemestre, onEliminarSemestre, onAgregarRamo, onEditarRamo, onEliminarRamo,
 }: CarreraAcordeonProps) {
   const [expandido, setExpandido] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!expandido || carrera.cargando || carrera.semestres.length === 0) return;
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ left: scrollRef.current.scrollWidth, behavior: 'smooth' });
+    });
+  }, [expandido, carrera.cargando, carrera.semestres.length]);
 
   const ultimoSem = carrera.semestres.at(-1) ?? null;
   // Bloquear si está cargando O si el último semestre no está cerrado
@@ -1003,7 +1011,7 @@ function CarreraAcordeon({
                   </button>
                 </div>
               ) : (
-                <div className="overflow-x-auto pb-2">
+                <div ref={scrollRef} className="overflow-x-auto pb-2">
                   <div className="flex gap-5" style={{ minWidth: 'max-content' }}>
                     {carrera.semestres.map(sem => (
                       <SemestreColumna

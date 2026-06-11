@@ -26,7 +26,7 @@ function calcularEdad(fechaNacimiento: Date | string | undefined): string {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
-      <h2 className="text-base font-bold text-gray-800 mb-3 pb-2 border-b border-gray-100">{title}</h2>
+      <h2 className="text-lg font-bold text-gray-800 mb-3 pb-2 border-b border-gray-100">{title}</h2>
       {children}
     </div>
   );
@@ -82,8 +82,8 @@ function InlineField({ label, value, fieldKey, type = 'text', options, editable,
   };
 
   return (
-    <div className="py-2.5 grid grid-cols-[180px_1fr] gap-4 items-center border-b border-gray-50 last:border-0 group">
-      <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">{label}</span>
+    <div className="py-3 grid grid-cols-[210px_1fr] gap-4 items-center border-b border-gray-50 last:border-0 group">
+      <span className="text-sm text-gray-500 uppercase tracking-wide font-medium">{label}</span>
       {editing && fieldKey ? (
         options ? (
           <select
@@ -92,7 +92,7 @@ function InlineField({ label, value, fieldKey, type = 'text', options, editable,
             onChange={(e) => setDraft(e.target.value)}
             onBlur={save}
             onKeyDown={onKeyDown}
-            className="text-sm border-2 border-[#65B39B] rounded-md px-2 py-1.5 focus:outline-none w-full max-w-xs"
+            className="text-base border-2 border-[#65B39B] rounded-md px-2 py-1.5 focus:outline-none w-full max-w-xs"
           >
             {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -104,14 +104,14 @@ function InlineField({ label, value, fieldKey, type = 'text', options, editable,
             onChange={(e) => setDraft(e.target.value)}
             onBlur={save}
             onKeyDown={onKeyDown}
-            className="text-sm border-2 border-[#65B39B] rounded-md px-2 py-1.5 focus:outline-none w-full max-w-xs"
+            className="text-base border-2 border-[#65B39B] rounded-md px-2 py-1.5 focus:outline-none w-full max-w-xs"
           />
         )
       ) : (
         <span
           onDoubleClick={startEdit}
           title={editable && !readOnly ? 'Doble clic para editar' : undefined}
-          className={`text-sm font-semibold text-gray-800 select-none ${
+          className={`text-base font-semibold text-gray-800 select-none ${
             editable && !readOnly
               ? 'cursor-pointer rounded px-1 -mx-1 group-hover:bg-[#65B39B]/10 group-hover:text-[#3a7a6b] transition-colors'
               : ''

@@ -4,6 +4,7 @@ import {
   estudianteService,
   entrevistaService,
   alertasService,
+  liceoService,
 } from '../../services';
 import { logger } from '../../config';
 import { GenerationHeader, StudentsTable } from '../../components/features/generacion-view';
@@ -119,8 +120,16 @@ export default function GeneracionViewSimple() {
     logger.log('🔍 Cargando estudiantes de generación id:', generacionId);
     setStudentsLoading(true);
     try {
-      const dataStudents = await estudianteService.getByGeneracion(generacionId);
-      const studentsWithStats = await enrichStudentsWithStats(dataStudents);
+      const [dataStudents, liceos] = await Promise.all([
+        estudianteService.getByGeneracion(generacionId),
+        liceoService.getAll().catch(() => []),
+      ]);
+      const liceoMap = new Map(liceos.map(l => [l.rbd, l]));
+      const dataConLiceo = dataStudents.map(s => ({
+        ...s,
+        liceo: liceoMap.get(s.rbd_liceo) ?? s.liceo,
+      }));
+      const studentsWithStats = await enrichStudentsWithStats(dataConLiceo);
       setStudents(studentsWithStats);
       logger.log('✅ Estudiantes cargados:', dataStudents.length);
 

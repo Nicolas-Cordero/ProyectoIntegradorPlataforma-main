@@ -154,6 +154,7 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
                       variante="primary"
                       tamano="sm"
                       onClick={() => onViewDetails(student.rut_estudiante)}
+                      sx={{ alignSelf: 'center', flexShrink: 0 }}
                     >
                       Ver Detalles
                     </Button>
@@ -161,6 +162,7 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
                       variante="danger"
                       tamano="sm"
                       onClick={() => onDelete(student.rut_estudiante)}
+                      sx={{ alignSelf: 'center', flexShrink: 0 }}
                     >
                       Eliminar
                     </Button>

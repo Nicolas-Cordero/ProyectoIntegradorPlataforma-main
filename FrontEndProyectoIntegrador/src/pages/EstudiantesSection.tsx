@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { estudianteService, entrevistaService, alertasService } from '../services';
+import { estudianteService, entrevistaService, alertasService, liceoService } from '../services';
 import { logger } from '../config';
 import { Spinner, ErrorMessage, useConfirmDialog } from '../components/ui';
 import { StudentsTable } from '../components/features/generacion-view';
@@ -97,16 +97,22 @@ export const EstudiantesSection: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const [raw, alertasData] = await Promise.all([
+      const [raw, alertasData, liceos] = await Promise.all([
         estudianteService.getAll(),
         alertasService.getAlertas().catch(() => []),
+        liceoService.getAll().catch(() => []),
       ]);
+      const liceoMap = new Map(liceos.map(l => [l.rbd, l]));
+      const rawConLiceo = raw.map(s => ({
+        ...s,
+        liceo: liceoMap.get(s.rbd_liceo) ?? s.liceo,
+      }));
       setAlertasRuts(
         alertasData.map((a) => a.rut_estudiante).filter((r): r is string => Boolean(r))
       );
       setLoading(false);
       setEnriching(true);
-      const enriched = await enrichStudents(raw);
+      const enriched = await enrichStudents(rawConLiceo);
       setStudents(enriched);
     } catch (err) {
       logger.error('Error al cargar estudiantes:', err);

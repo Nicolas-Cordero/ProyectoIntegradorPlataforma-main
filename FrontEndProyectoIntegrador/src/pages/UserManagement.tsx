@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, userService, PermissionService } from '../services';
 import type { Usuario } from '../types';
-// TODO: migrate Table*, Tabs, Tab
+// TODO: migrate Table*
 import {
   Paper,
   Table,
@@ -11,8 +11,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Tab,
-  Tabs,
 } from '@mui/material';
 import { Modal, Input, Select, Button, Alert } from '../components/ui';
 import { PasswordChangeModal } from '../components/features/auth/password-recovery';
@@ -20,8 +18,6 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  SupervisorAccount as TutorIcon,
-  Visibility as VisibilityIcon,
   Lock as LockIcon,
 } from '@mui/icons-material';
 import { TypingText } from '../components/common/TypingText';
@@ -224,42 +220,23 @@ export const UserManagement: React.FC = () => {
           </button>
         </div>
 
-        {/* Tabs de filtro */}
-        {/* TODO: migrate Tabs, Tab */}
+        {/* Filtro por rol */}
         <div
-          className="mb-8 rounded-lg border border-[rgba(238,179,93,0.3)]"
-          style={{
-            background: 'linear-gradient(135deg, rgba(238,179,93,0.15) 0%, rgba(238,179,93,0.08) 100%), rgba(255,255,255,0.85)',
-            backdropFilter: 'blur(10px)',
-            boxShadow: '0 8px 32px rgba(238,179,93,0.12)',
-          }}
+          className="mb-8 bg-white rounded-xl px-5 py-4 space-y-3"
+          style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}
         >
-          <Tabs
-            value={tabValue}
-            onChange={(_, newValue) => setTabValue(newValue)}
-            sx={{
-              borderBottom: '2px solid',
-              borderColor: 'rgba(238, 179, 93, 0.2)',
-              '& .MuiTab-root': {
-                textTransform: 'none',
-                fontWeight: 600,
-                fontSize: '0.95rem',
-                transition: 'all 0.3s ease',
-                color: 'rgba(31, 41, 55, 0.6)',
-                '&.Mui-selected': { color: '#EEB35D', fontWeight: 700 },
-                '&:hover': { backgroundColor: 'rgba(238, 179, 93, 0.08)', color: 'rgba(238, 179, 93, 0.9)' },
-              },
-              '& .MuiTabs-indicator': {
-                background: 'linear-gradient(135deg, #f9b150 0%, #EEB35D 100%)',
-                height: 3,
-                borderRadius: '3px 3px 0 0',
-              },
-            }}
-          >
-            <Tab label={`Todos (${users.length})`} value="todos" />
-            <Tab label={`Tutores (${users.filter(u => u.rol === 'TUTOR').length})`} value="tutores" icon={<TutorIcon />} iconPosition="start" />
-            <Tab label={`Visitas (${users.filter(u => u.rol === UserRol.VISITA || u.rol === UserRol.INVITADO).length})`} value="visitas" icon={<VisibilityIcon />} iconPosition="start" />
-          </Tabs>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Filtrar usuarios</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={tabValue}
+              onChange={(e) => setTabValue(e.target.value as 'todos' | 'tutores' | 'visitas')}
+              className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] transition-colors flex-1 min-w-[140px] max-w-xs"
+            >
+              <option value="todos">Todos ({users.length})</option>
+              <option value="tutores">Tutores ({users.filter(u => u.rol === UserRol.TUTOR).length})</option>
+              <option value="visitas">Visitas ({users.filter(u => u.rol === UserRol.VISITA || u.rol === UserRol.INVITADO).length})</option>
+            </select>
+          </div>
         </div>
 
         {/* Tabla — TODO: migrate Table* */}

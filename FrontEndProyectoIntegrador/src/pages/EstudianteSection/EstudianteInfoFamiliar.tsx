@@ -70,7 +70,7 @@ function FamiliarCard({ familiar, canEdit, onEdit, onDelete }: FamiliarCardProps
               </span>
             )}
           </div>
-          <span className="text-s text-gray-500 mt-0.5">
+          <span className="text-base text-gray-500 mt-0.5">
             {familiar.nombre}
           </span>
         </div>
@@ -94,19 +94,19 @@ function FamiliarCard({ familiar, canEdit, onEdit, onDelete }: FamiliarCardProps
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mt-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
         <div>
-          <span className="text-xs text-gray-500 uppercase tracking-wide">RUT</span>
-          <p className="font-medium text-gray-800">{familiar.rut_familiar}</p>
+          <span className="text-sm text-gray-500 uppercase tracking-wide">RUT</span>
+          <p className="text-base font-medium text-gray-800">{familiar.rut_familiar}</p>
         </div>
         <div>
-          <span className="text-xs text-gray-500 uppercase tracking-wide">Teléfono</span>
-          <p className="font-medium text-gray-800">{familiar.telefono}</p>
+          <span className="text-sm text-gray-500 uppercase tracking-wide">Teléfono</span>
+          <p className="text-base font-medium text-gray-800">{familiar.telefono}</p>
         </div>
         {familiar.observacion && (
           <div className="sm:col-span-2">
-            <span className="text-xs text-gray-500 uppercase tracking-wide">Observación</span>
-            <p className="text-gray-700 mt-0.5">{familiar.observacion}</p>
+            <span className="text-sm text-gray-500 uppercase tracking-wide">Observación</span>
+            <p className="text-base text-gray-700 mt-0.5">{familiar.observacion}</p>
           </div>
         )}
       </div>
@@ -208,13 +208,19 @@ export default function EstudianteInfoFamiliar() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-800">Información Familiar</h2>
-          {/* Bug 15 fix: texto con mejor contraste */}
-          <p className="text-sm text-gray-600 font-medium mt-1">
+          <h2 className="text-2xl font-bold text-gray-800">Información Familiar</h2>
+          <p className="text-base font-medium text-gray-600 mt-1.5">
             {familiaresRaw === undefined
               ? 'Cargando información familiar...'
               : familiares.length > 0
-                ? `${familiares.length} familiar(es) registrado(s)`
+                ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold bg-[#65B39B]/15 text-[#3a7a6b] rounded-full">
+                      {familiares.length}
+                    </span>
+                    familiar{familiares.length > 1 ? 'es' : ''} registrado{familiares.length > 1 ? 's' : ''}
+                  </span>
+                )
                 : 'Sin familiares registrados'}
           </p>
         </div>

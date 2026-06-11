@@ -41,6 +41,15 @@ const BACKEND_TO_UI: Record<BackendSemestre, CodigoSemUI> = {
   VERANO:           'VERANO',
 };
 
+// Orden cronológico dentro de un mismo año:
+// Sem 1 → Rec. Invierno → Sem 2 → Rec. Verano
+const ORDEN_SEMESTRE: Record<CodigoSemUI, number> = {
+  '1':        0,
+  'INVIERNO': 1,
+  '2':        2,
+  'VERANO':   3,
+};
+
 function semLabel(year: number, tipo: TipoSemestre, codigo: CodigoSemUI): string {
   if (tipo === 'REGULAR') return `${year} — Semestre ${codigo}`;
   return `${year} — Rec. ${codigo === 'INVIERNO' ? 'Invierno' : 'Verano'}`;
@@ -189,7 +198,7 @@ export default function EstudianteAvanceCurricular() {
       }
 
       const semestres = Array.from(semestresMap.values()).sort((a, b) =>
-        a.year !== b.year ? a.year - b.year : a.codigo.localeCompare(b.codigo)
+        a.year !== b.year ? a.year - b.year : ORDEN_SEMESTRE[a.codigo] - ORDEN_SEMESTRE[b.codigo]
       );
 
       setCarreras(cs => cs.map(c => c.codigo_carrera === codigo_carrera
@@ -455,9 +464,9 @@ export default function EstudianteAvanceCurricular() {
     const intento = parseInt(formRamo.intento, 10);
     if (isNaN(intento) || intento < 1) { setErrRamo('El intento debe ser un número mayor a 0'); return; }
 
-    // Nota final: opcional, pero si se ingresa debe estar entre 1.0 y 7.0
+    // Nota final: no aplica para eliminados; opcional para el resto (1.0–7.0)
     let notaFinal: number | null = null;
-    if (formRamo.nota_final.trim() !== '') {
+    if (formRamo.estado !== 'ELIMINADO' && formRamo.nota_final.trim() !== '') {
       notaFinal = Number(formRamo.nota_final.replace(',', '.'));
       if (isNaN(notaFinal) || notaFinal < 1 || notaFinal > 7) {
         setErrRamo('La nota final debe ser un número entre 1.0 y 7.0');
@@ -591,10 +600,17 @@ export default function EstudianteAvanceCurricular() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Avance Curricular</h2>
-          <p className="text-base text-gray-500 mt-1">
-            {carreras.length === 0
-              ? 'Sin carreras registradas'
-              : `${carreras.length} carrera${carreras.length > 1 ? 's' : ''} registrada${carreras.length > 1 ? 's' : ''}`}
+          <p className="text-base font-medium text-gray-600 mt-1.5">
+            {carreras.length === 0 ? (
+              'Sin carreras registradas'
+            ) : (
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold bg-[#65B39B]/15 text-[#3a7a6b] rounded-full">
+                  {carreras.length}
+                </span>
+                carrera{carreras.length > 1 ? 's' : ''} registrada{carreras.length > 1 ? 's' : ''}
+              </span>
+            )}
           </p>
         </div>
         <button
@@ -861,11 +877,12 @@ export default function EstudianteAvanceCurricular() {
           <Input
             etiqueta="Nota final (opcional)"
             tipo="number"
-            valor={formRamo.nota_final}
+            valor={formRamo.estado === 'ELIMINADO' ? '' : formRamo.nota_final}
             onChange={v => setFormRamo(f => ({ ...f, nota_final: v }))}
-            placeholder="Ej: 5.5"
-            ayuda="Ingresa la nota final entre 1.0 y 7.0. Déjalo vacío si aún no tiene nota."
+            placeholder={formRamo.estado === 'ELIMINADO' ? 'No aplica para ramos eliminados' : 'Ej: 5.5'}
+            ayuda={formRamo.estado === 'ELIMINADO' ? undefined : 'Ingresa la nota final entre 1.0 y 7.0. Déjalo vacío si aún no tiene nota.'}
             inputProps={{ step: 0.1, min: 1, max: 7 }}
+            deshabilitado={formRamo.estado === 'ELIMINADO'}
           />
           <Input
             etiqueta="Comentario (opcional)"
@@ -918,7 +935,7 @@ function CarreraAcordeon({
           <SchoolIcon sx={{ color: '#65B39B', fontSize: 22, flexShrink: 0 }} />
           <div className="min-w-0">
             <p className="text-base font-bold text-gray-800 truncate">{carrera.nombre}</p>
-            <p className="text-sm text-gray-400 truncate">
+            <p className="text-base text-gray-400 truncate">
               {carrera.via_acceso} · {carrera.duracion_sem} semestres
             </p>
           </div>
@@ -1036,7 +1053,7 @@ function SemestreColumna({ semestre, onCerrar, onEliminar, onAgregarRamo, onEdit
       {/* Encabezado */}
       <div className={`px-4 py-3 flex items-center justify-between ${cerrado ? 'bg-green-50' : 'bg-gray-50'}`}>
         <div>
-          <p className="text-sm font-bold text-gray-800">
+          <p className="text-base font-bold text-gray-800">
             {semLabel(semestre.year, semestre.tipo, semestre.codigo)}
           </p>
           <div className="flex items-center gap-2 mt-1">
@@ -1130,7 +1147,7 @@ function RamoCard({ ramo, semAbierto, onEditar, onEliminar }: RamoCardProps) {
       `}
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="text-sm font-semibold text-gray-800 leading-snug break-words flex-1">
+        <span className="text-base font-semibold text-gray-800 leading-snug break-words flex-1">
           {ramo.nombre}
         </span>
         {semAbierto && (
@@ -1145,14 +1162,14 @@ function RamoCard({ ramo, semAbierto, onEditar, onEliminar }: RamoCardProps) {
       </div>
 
       <div className="flex items-center gap-2 mt-2">
-        <span className={`text-base font-bold tabular-nums leading-none ${notaColor}`}>
+        <span className={`text-lg font-bold tabular-nums leading-none ${notaColor}`}>
           {ramo.nota_final !== null ? ramo.nota_final.toFixed(1) : '—'}
         </span>
         <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${chip.bg} ${chip.text}`}>
           {chip.label}
         </span>
         {ramo.intento > 1 && (
-          <span className="text-xs text-gray-400">· {ramo.intento}° intento</span>
+          <span className="text-sm text-gray-400">· {ramo.intento}° intento</span>
         )}
       </div>
 

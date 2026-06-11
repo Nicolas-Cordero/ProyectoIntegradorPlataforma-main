@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-// TODO: migrate ToggleButtonGroup, ToggleButton
-import { ToggleButtonGroup, ToggleButton } from '@mui/material';
-import { School as SchoolIcon, ArrowUpward, ArrowDownward, Add as AddIcon } from '@mui/icons-material';
+import { School as SchoolIcon, Add as AddIcon } from '@mui/icons-material';
 import { estudianteService } from '../services';
 import { logger } from '../config';
 import { Spinner, ErrorMessage, Alert } from '../components/ui';
@@ -103,25 +101,19 @@ export const GeneracionesPanel: React.FC = () => {
         )}
 
         {/* Controles de orden */}
-        {/* TODO: migrate ToggleButtonGroup, ToggleButton */}
         <div
           className="rounded-xl bg-white mb-6 px-6 py-4 flex items-center gap-4"
           style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}
         >
-          <span className="text-sm text-gray-500 font-medium">Ordenar por año:</span>
-          <ToggleButtonGroup
-            size="small"
+          <span className="text-sm text-gray-500 font-medium whitespace-nowrap">Ordenar por año:</span>
+          <select
             value={orden}
-            exclusive
-            onChange={(_, value) => { if (value) setOrden(value); }}
+            onChange={(e) => setOrden(e.target.value as 'desc' | 'asc')}
+            className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] transition-colors"
           >
-            <ToggleButton value="desc">
-              <ArrowDownward fontSize="small" sx={{ mr: 0.5 }} /> Mayor a menor
-            </ToggleButton>
-            <ToggleButton value="asc">
-              <ArrowUpward fontSize="small" sx={{ mr: 0.5 }} /> Menor a mayor
-            </ToggleButton>
-          </ToggleButtonGroup>
+            <option value="desc">Mayor a menor</option>
+            <option value="asc">Menor a mayor</option>
+          </select>
         </div>
 
         {/* Estado vacío */}

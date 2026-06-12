@@ -56,7 +56,7 @@ export const NuevaPassword: React.FC = () => {
         navigate('/', { state: { message: 'Contraseña actualizada exitosamente' } });
       }, 2000);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('❌ Error restableciendo contraseña:', error);
       setError('Error al restablecer la contraseña. El código puede haber expirado.');
     } finally {

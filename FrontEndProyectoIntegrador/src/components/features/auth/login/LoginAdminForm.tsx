@@ -32,7 +32,6 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
   const { setAuthenticated } = useAuthContext();
 
   const handleInputChangeSimple = (field: string, value: string) => {
-    const { name } = { name: field } as any;
     setCredentials(prev => ({
       ...prev,
       [field]: value
@@ -67,7 +66,7 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
 
       navigate('/estudiantes');
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('❌ Error en login:', error);
       setError('Credenciales incorrectas. Por favor, verifica tus datos.');
     } finally {
@@ -139,7 +138,7 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
           tamano="lg"
           type="submit"
           deshabilitado={loading}
-          onClick={(e: any) => { e.preventDefault(); handleSubmit(e as any); }}
+          onClick={() => {}}
           sx={{
             mt: 1,
             py: 1.5,

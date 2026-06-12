@@ -94,10 +94,10 @@ class EstudianteService extends BaseHttpClient {
       try {
         await this.create(dto);
         creados++;
-      } catch (err: any) {
+      } catch (err: unknown) {
         errores.push({
           rut: dto.rut_estudiante,
-          motivo: err?.message ?? 'Error desconocido',
+          motivo: err instanceof Error ? err.message : 'Error desconocido',
         });
       }
     }

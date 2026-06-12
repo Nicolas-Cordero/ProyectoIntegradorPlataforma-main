@@ -55,7 +55,7 @@ export default function EstudianteDetail() {
         setEstudiante(est);
 
         // Cargar liceo y generacion por separado ya que el endpoint /complete no los incluye
-        const generacionId = est.generacion_id ?? (est as any).generacion_id;
+        const generacionId = est.generacion_id;
         const rbdLiceo = est.rbd_liceo;
 
         await Promise.allSettled([

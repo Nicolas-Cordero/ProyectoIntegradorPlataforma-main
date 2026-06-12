@@ -40,8 +40,8 @@ export function CreateGeneracionModal({ open, onClose, onSuccess }: CreateGenera
       });
       onSuccess(nueva);
       handleClose();
-    } catch (err: any) {
-      const msg = err?.message || 'Error al crear la generación. Intenta de nuevo.';
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error al crear la generación. Intenta de nuevo.';
       setError(msg);
     } finally {
       setLoading(false);

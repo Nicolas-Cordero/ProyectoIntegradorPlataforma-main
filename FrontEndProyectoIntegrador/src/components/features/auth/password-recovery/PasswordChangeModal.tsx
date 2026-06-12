@@ -84,9 +84,9 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
       onCerrar();
       onSuccess?.();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('❌ Error cambiando contraseña:', error);
-      const errorMessage = error.message || 'Error al cambiar contraseña';
+      const errorMessage = error instanceof Error ? error.message : 'Error al cambiar contraseña';
       setError(errorMessage);
     } finally {
       setLoading(false);

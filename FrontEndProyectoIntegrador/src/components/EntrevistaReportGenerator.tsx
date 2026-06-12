@@ -3,8 +3,47 @@ import jsPDF from 'jspdf';
 import { Button } from '@mui/material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
+interface EntrevistaDetalle {
+  numero_entrevista?: number;
+  fecha?: string;
+  estado?: string;
+  duracion_minutos?: number;
+  observaciones?: string;
+  informacion_adicional?: string;
+  temas_abordados?: string | string[];
+}
+
+interface EntrevistaTexto {
+  etiqueta?: { nombre_etiqueta?: string };
+  nombre_etiqueta?: string;
+  fecha?: string;
+  contexto?: string;
+  contenido?: string;
+}
+
+interface EntrevistaReport {
+  estudiante?: {
+    nombre?: string;
+    apellido_paterno?: string;
+    apellido_materno?: string;
+    rut?: string;
+  };
+  fecha: string;
+  numero_entrevista?: number;
+  numero_Entrevista?: number;
+  estado?: string;
+  duracion_minutos?: number;
+  tutor?: string;
+  nombre_Tutor?: string;
+  temas_abordados?: string | string[];
+  observaciones?: string;
+  informacion_adicional?: string;
+  detalleEntrevistas?: EntrevistaDetalle[];
+  textos?: EntrevistaTexto[];
+}
+
 interface EntrevistaReportGeneratorProps {
-  entrevista: any;
+  entrevista: EntrevistaReport;
 }
 
 export const EntrevistaReportGenerator: React.FC<EntrevistaReportGeneratorProps> = ({ entrevista }) => {
@@ -164,7 +203,7 @@ export const EntrevistaReportGenerator: React.FC<EntrevistaReportGeneratorProps>
       doc.text('Detalle de entrevistas:', margin, yPosition);
       yPosition += 10;
 
-      detalleEntrevistas.forEach((det: any, index: number) => {
+      detalleEntrevistas.forEach((det: EntrevistaDetalle, index: number) => {
         checkPageBreak(24);
         doc.setFontSize(11);
         doc.text(`Entrevista ${det.numero_entrevista || index + 1}`, margin, yPosition);
@@ -231,8 +270,8 @@ export const EntrevistaReportGenerator: React.FC<EntrevistaReportGeneratorProps>
       yPosition += 10;
 
       // Agrupar por etiqueta
-      const textosPorEtiqueta: { [etiqueta: string]: any[] } = {};
-      textos.forEach((texto: any) => {
+      const textosPorEtiqueta: Record<string, EntrevistaTexto[]> = {};
+      textos.forEach((texto: EntrevistaTexto) => {
         const etiqueta = texto.etiqueta?.nombre_etiqueta || texto.nombre_etiqueta || 'Sin etiqueta';
         if (!textosPorEtiqueta[etiqueta]) textosPorEtiqueta[etiqueta] = [];
         textosPorEtiqueta[etiqueta].push(texto);
@@ -246,7 +285,7 @@ export const EntrevistaReportGenerator: React.FC<EntrevistaReportGeneratorProps>
         doc.text(etiqueta, margin, yPosition);
         yPosition += 6;
 
-        textosDeEtiqueta.forEach((texto: any) => {
+        textosDeEtiqueta.forEach((texto: EntrevistaTexto) => {
           checkPageBreak(18);
           const fechaBase = texto.fecha || entrevista.fecha;
           const fechaTxt = fechaBase ? new Date(fechaBase).toLocaleDateString('es-CL') : 'Sin fecha';

@@ -42,7 +42,7 @@ export const VerificarCodigo: React.FC = () => {
         setError('Código inválido o expirado');
       }
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('❌ Error verificando código:', error);
       setError('Error al verificar el código. Intenta de nuevo.');
     } finally {

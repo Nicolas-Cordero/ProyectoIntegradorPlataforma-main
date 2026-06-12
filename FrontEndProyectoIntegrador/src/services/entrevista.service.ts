@@ -5,12 +5,21 @@
 import { BaseHttpClient } from './base.http';
 import type { Entrevista } from '../types';
 
+export interface TextoEntrevista {
+  id?: number | string;
+  nombre_etiqueta?: string;
+  contenido?: string;
+  contexto?: string;
+  fecha?: string;
+  etiqueta?: { nombre_etiqueta?: string };
+}
+
 class EntrevistaService extends BaseHttpClient {
 
   /**
    * Obtiene todos los textos (comentarios/notas) de todas las entrevistas de un estudiante
    */
-  async getAllTextosByEstudiante(estudianteId: string): Promise<any[]> {
+  async getAllTextosByEstudiante(estudianteId: string): Promise<TextoEntrevista[]> {
     const entrevistas = await this.getByEstudiante(estudianteId);
     if (!entrevistas || entrevistas.length === 0) return [];
     const textosArrays = await Promise.all(
@@ -51,24 +60,24 @@ class EntrevistaService extends BaseHttpClient {
     });
   }
 
-  async getTextos(entrevistaId: number): Promise<any[]> {
-    return await this.request<any[]>(`/entrevistas/${entrevistaId}/textos`);
+  async getTextos(entrevistaId: number): Promise<TextoEntrevista[]> {
+    return await this.request<TextoEntrevista[]>(`/entrevistas/${entrevistaId}/textos`);
   }
 
-  async addTexto(entrevistaId: string, textoData: { 
-    nombre_etiqueta: string; 
-    contenido: string; 
+  async addTexto(entrevistaId: string, textoData: {
+    nombre_etiqueta: string;
+    contenido: string;
     contexto?: string;
-    fecha?: string; // Permite forzar la fecha de la nota (p.ej. fecha de la entrevista)
-  }): Promise<any> {
-    return this.request<any>(`/entrevistas/${entrevistaId}/textos`, {
+    fecha?: string;
+  }): Promise<TextoEntrevista> {
+    return this.request<TextoEntrevista>(`/entrevistas/${entrevistaId}/textos`, {
       method: 'POST',
       body: JSON.stringify(textoData),
     });
   }
 
-  async updateTexto(entrevistaId: string, textoId: string, data: Partial<any>): Promise<any> {
-    return this.request<any>(`/entrevistas/${entrevistaId}/textos/${textoId}`, {
+  async updateTexto(entrevistaId: string, textoId: string, data: Partial<TextoEntrevista>): Promise<TextoEntrevista> {
+    return this.request<TextoEntrevista>(`/entrevistas/${entrevistaId}/textos/${textoId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });

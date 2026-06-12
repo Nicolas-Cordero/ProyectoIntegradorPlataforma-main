@@ -50,7 +50,7 @@ export const UserManagement: React.FC = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [passwordChangeUser, setPasswordChangeUser] = useState<Usuario | null>(null);
-  const [usuario, setUsuario] = useState<any>(null);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
 
   const [formData, setFormData] = useState({
     nombres: '',
@@ -83,7 +83,7 @@ export const UserManagement: React.FC = () => {
   const loadUsers = async () => {
     try {
       const usersData = await userService.getAll();
-      const mappedUsers = (usersData as any[]).map((user) => ({
+      const mappedUsers = usersData.map((user) => ({
         ...user,
         role:      user.rol     || user.role     || UserRol.VISITA,
         nombres:   user.nombre  || user.nombres  || '',
@@ -112,7 +112,7 @@ export const UserManagement: React.FC = () => {
         password:  '',
         rut:       user.rut_usuario || '',
         telefono:  user.telefono || '',
-        rol:       (user as any).rol || user.rol as UserRolType,
+        rol:       user.rol as UserRolType,
       });
     } else {
       setEditingUser(null);
@@ -138,19 +138,28 @@ export const UserManagement: React.FC = () => {
     }
 
     try {
-      const userData = {
+      type UserPayload = {
+        rut_usuario: string;
+        nombre: string;
+        apellido: string;
+        email: string;
+        telefono: string;
+        rol: UserRolType;
+        password?: string;
+      };
+      const userData: UserPayload = {
         rut_usuario: formData.rut,
         nombre:      formData.nombres,
         apellido:    formData.apellidos,
         email:       formData.email,
         telefono:    formData.telefono,
         rol:         formData.rol as UserRolType,
-        password:    formData.password,
+        password:    formData.password || undefined,
       };
 
       if (editingUser) {
-        const updateData = { ...userData };
-        if (!updateData.password) delete (updateData as any).password;
+        const updateData: UserPayload = { ...userData };
+        if (!updateData.password) delete updateData.password;
         await userService.update(editingUser.rut_usuario!, updateData);
         setSnackbar({ open: true, message: 'Usuario actualizado exitosamente', severity: 'success' });
       } else {

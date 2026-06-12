@@ -62,18 +62,18 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
         const profileData = await userService.getCurrentProfile(currentUser.rut_usuario);
         const mappedProfileData = {
           ...profileData,
-          nombres:  (profileData as any).nombre  || profileData.nombre,
-          apellidos: (profileData as any).apellido || profileData.apellido,
-          role:     (profileData as any).rol     || profileData.rol,
+          nombres:  profileData.nombre,
+          apellidos: profileData.apellido,
+          role:     profileData.rol,
         };
         setUser(mappedProfileData);
         setEditedUser({ ...mappedProfileData });
       } catch {
         const mappedCurrentUser = {
           ...currentUser,
-          nombres:  (currentUser as any).nombre  || currentUser.nombre,
-          apellidos: (currentUser as any).apellido || currentUser.apellido,
-          role:     (currentUser as any).rol     || currentUser.rol,
+          nombres:  currentUser.nombre,
+          apellidos: currentUser.apellido,
+          role:     currentUser.rol,
         };
         setUser(mappedCurrentUser);
         setEditedUser({ ...mappedCurrentUser });
@@ -97,7 +97,7 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
     if (!editedUser || !user) return;
 
     try {
-      const updateData: any = {};
+      const updateData: Partial<Pick<Usuario, 'nombre' | 'apellido' | 'email'>> = {};
 
       if (editedUser.nombre && editedUser.nombre !== user.nombre)
         updateData.nombre = editedUser.nombre.trim();
@@ -132,8 +132,8 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
       setSnackbarMessage('Perfil actualizado exitosamente');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
-    } catch (error: any) {
-      setSnackbarMessage(`Error: ${error.message || 'Error desconocido al actualizar perfil'}`);
+    } catch (error: unknown) {
+      setSnackbarMessage(`Error: ${error instanceof Error ? error.message : 'Error desconocido al actualizar perfil'}`);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }

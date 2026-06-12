@@ -73,7 +73,11 @@ class HistorialAcademicoService extends BaseHttpClient {
     aprendizajes?: string;
     ultima_actualizacion_por?: string;
   }) {
-    return this.create(data as any);
+    return this.create({
+      ...data,
+      año: data.año ?? undefined,
+      semestre: data.semestre ?? undefined,
+    });
   }
 
   async addTrayectoria(id: number, trayectoria: string) {

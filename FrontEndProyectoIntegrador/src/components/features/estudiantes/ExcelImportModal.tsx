@@ -156,8 +156,8 @@ export const ExcelImportModal: React.FC<Props> = ({
       }
       setRows(parsed);
       setStatus('preview');
-    } catch (err: any) {
-      setError(err.message ?? 'Error al procesar el archivo.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al procesar el archivo.');
     }
   };
 

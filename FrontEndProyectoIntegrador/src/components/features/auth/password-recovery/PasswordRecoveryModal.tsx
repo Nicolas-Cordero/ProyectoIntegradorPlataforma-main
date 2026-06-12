@@ -64,7 +64,7 @@ export const PasswordRecoveryModal: React.FC<PasswordRecoveryModalProps> = ({
       await authService.requestPasswordReset(email);
       setMessage('Se ha enviado un código de recuperación a tu email');
       setStep('verify');
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('❌ Error solicitando recuperación:', error);
       setError('Error al solicitar recuperación. Verifica tu email.');
     } finally {
@@ -93,7 +93,7 @@ export const PasswordRecoveryModal: React.FC<PasswordRecoveryModalProps> = ({
       } else {
         setError('Código inválido o expirado');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('❌ Error verificando código:', error);
       setError('Error al verificar el código. Intenta de nuevo.');
     } finally {
@@ -132,7 +132,7 @@ export const PasswordRecoveryModal: React.FC<PasswordRecoveryModalProps> = ({
         onSuccess?.();
       }, 2000);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('❌ Error restableciendo contraseña:', error);
       setError('Error al restablecer la contraseña. Intenta de nuevo.');
     } finally {

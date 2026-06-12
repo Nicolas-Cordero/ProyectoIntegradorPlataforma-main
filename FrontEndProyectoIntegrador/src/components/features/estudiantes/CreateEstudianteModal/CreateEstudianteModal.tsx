@@ -134,8 +134,8 @@ export const CreateEstudianteModal: React.FC<Props> = ({
       });
       onSuccess();
       onClose();
-    } catch (e: any) {
-      setError(e?.message ?? 'Error al crear el estudiante. Intenta de nuevo.');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error al crear el estudiante. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }

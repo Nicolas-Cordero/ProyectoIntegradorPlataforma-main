@@ -75,8 +75,8 @@ export default function EstudiantePerfil() {
       await estudianteService.update(estudiante.rut_estudiante, payload);
       setModalOpen(false);
       refresh();
-    } catch (err: any) {
-      setSaveError(err?.message || 'Error al guardar los cambios');
+    } catch (err: unknown) {
+      setSaveError(err instanceof Error ? err.message : 'Error al guardar los cambios');
     } finally {
       setSaving(false);
     }
@@ -137,8 +137,8 @@ export default function EstudiantePerfil() {
                   const data = await res.json();
                   secureUrl = data.secure_url as string;
                   setFotoUrl(secureUrl);
-                } catch (err: any) {
-                  setErrorUpload(err.message || 'No se pudo subir la imagen');
+                } catch (err: unknown) {
+                  setErrorUpload(err instanceof Error ? err.message : 'No se pudo subir la imagen');
                   setSubiendo(false);
                   if (e.target) e.target.value = '';
                   return;

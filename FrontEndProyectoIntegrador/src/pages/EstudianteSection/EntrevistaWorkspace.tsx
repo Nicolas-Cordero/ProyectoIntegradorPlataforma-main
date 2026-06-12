@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { authService } from '../../services/authService';
 import { entrevistaService, estudianteService } from '../../services';
 import { logger } from '../../config';
-import type { Estudiante } from '../../types';
+import type { Estudiante, Entrevista } from '../../types';
 import { useWorkspaceTabs } from '../../hooks';
 import { sidebarSections } from '../../config/workspaceSections';
 import { LoadingState, ErrorState } from '../../components/features/estudiante-detalles/entrevista-workspace';
@@ -79,7 +79,7 @@ export function EntrevistaWorkspace() {
         setLoading(true);
         setError(null);
         
-        let entrevistaData: any = null;
+        let entrevistaData: Entrevista | null = null;
 
         try {
           entrevistaData = await entrevistaService.getById(entrevistaIdFromUrl);
@@ -96,17 +96,14 @@ export function EntrevistaWorkspace() {
           entrevistaData = entrevistasDeEstudiante[0]; // última o primera según orden DESC en el backend
         }
 
-        const entrevistaId = entrevistaData.id || entrevistaData._id;
+        const entrevistaId = entrevistaData.id;
         if (!entrevistaId) {
           throw new Error('ID de entrevista no disponible');
         }
-        setEntrevistaId(entrevistaId);
+        setEntrevistaId(String(entrevistaId));
 
-        // Ahora cargar el estudiante usando el id_estudiante de la entrevista
-        const estudianteId =
-          entrevistaData.estudianteId ||
-          entrevistaData.id_estudiante ||
-          entrevistaData.estudiante?.id_estudiante;
+        // Ahora cargar el estudiante usando el rut_estudiante de la entrevista
+        const estudianteId = entrevistaData.rut_estudiante;
 
         if (!estudianteId) {
           throw new Error('ID del estudiante no disponible en los datos de la entrevista');

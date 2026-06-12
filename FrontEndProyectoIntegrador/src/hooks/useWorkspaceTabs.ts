@@ -4,7 +4,7 @@ export interface Tab {
   id: string;
   title: string;
   type: 'note' | 'data';
-  content?: any;
+  content?: Record<string, unknown> | null;
   isActive: boolean;
 }
 

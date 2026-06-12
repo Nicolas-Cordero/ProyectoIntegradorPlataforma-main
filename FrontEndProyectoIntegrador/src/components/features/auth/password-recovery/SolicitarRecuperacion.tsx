@@ -36,7 +36,7 @@ export const SolicitarRecuperacion: React.FC = () => {
         navigate('/verificar-codigo', { state: { email } });
       }, 3000);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('❌ Error solicitando recuperación:', error);
       setError('Error al solicitar recuperación. Verifica tu email.');
     } finally {

@@ -25,16 +25,16 @@ export const config: AppConfig = {
  * Utilidad para logging condicional según configuración
  */
 export const logger = {
-  log: (...args: any[]) => {
+  log: (...args: unknown[]) => {
     if (config.enableDebugLogs) {
       console.log(...args);
     }
   },
-  error: (...args: any[]) => {
+  error: (...args: unknown[]) => {
     // Errores siempre se logean
     console.error(...args);
   },
-  warn: (...args: any[]) => {
+  warn: (...args: unknown[]) => {
     if (config.enableDebugLogs) {
       console.warn(...args);
     }

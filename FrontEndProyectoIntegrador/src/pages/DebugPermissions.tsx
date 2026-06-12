@@ -147,11 +147,11 @@ export const DebugPermissions: React.FC = () => {
               <Table size="small">
                 <TableBody>
                   {[
-                    ['ID',        (user as any).id       || 'N/A'],
-                    ['Email',     user.email              || 'N/A'],
-                    ['Nombres',   (user as any).nombres   || 'N/A'],
-                    ['Apellidos', (user as any).apellidos || 'N/A'],
-                    ['RUT',       (user as any).rut       || 'N/A'],
+                    ['ID',        user.rut_usuario || 'N/A'],
+                    ['Email',     user.email       || 'N/A'],
+                    ['Nombres',   user.nombre      || 'N/A'],
+                    ['Apellidos', user.apellido    || 'N/A'],
+                    ['RUT',       user.rut_usuario || 'N/A'],
                   ].map(([field, val]) => (
                     <TableRow key={field}>
                       <TableCell sx={{ fontWeight: 'bold' }}>{field}</TableCell>
@@ -159,8 +159,8 @@ export const DebugPermissions: React.FC = () => {
                     </TableRow>
                   ))}
                   <TableRow sx={{ backgroundColor: '#fff3cd' }}>
-                    <TableCell sx={{ fontWeight: 'bold' }}>user.role</TableCell>
-                    <TableCell><strong>{(user as any).role || '❌ NO DEFINIDO'}</strong></TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>user.rol</TableCell>
+                    <TableCell><strong>{user.rol || '❌ NO DEFINIDO'}</strong></TableCell>
                   </TableRow>
                 </TableBody>
               </Table>

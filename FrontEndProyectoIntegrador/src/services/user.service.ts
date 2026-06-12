@@ -25,7 +25,7 @@ class UserService extends BaseHttpClient {
     });
   }
 
-  async delete(rut: string): Promise<any> {
+  async delete(rut: string): Promise<void> {
     return this.request(`/users/${rut}`, {
       method: 'DELETE',
     });

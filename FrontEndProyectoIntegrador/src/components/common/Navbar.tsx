@@ -6,6 +6,7 @@ import { Logout as LogoutIcon } from '@mui/icons-material';
 import logoFundacion from '../../assets/logos/logo.svg';
 import { GradientButton } from './GradientButton';
 import { TypingText } from './TypingText';
+import type { Usuario } from '../../types';
 
 export interface NavLink {
   label: string;
@@ -13,7 +14,7 @@ export interface NavLink {
 }
 
 interface NavbarProps {
-  usuario: any;
+  usuario: Usuario | null;
   onLogout: () => void;
   links?: NavLink[];
 }

@@ -268,8 +268,8 @@ export default function EstudianteAvanceCurricular() {
       const nueva = await carreraAvanceService.create(payload);
       setCarreras(cs => [...cs, { ...nueva, semestres: [], cargando: false, error: null }]);
       setModalCarrera(false);
-    } catch (e: any) {
-      setErrCarrera(e?.message || 'Error al crear la carrera.');
+    } catch (e: unknown) {
+      setErrCarrera(e instanceof Error ? e.message : 'Error al crear la carrera.');
     } finally {
       setGuardandoCarrera(false);
     }
@@ -285,8 +285,8 @@ export default function EstudianteAvanceCurricular() {
         try {
           await carreraAvanceService.remove(codigo_carrera);
           setCarreras(cs => cs.filter(c => c.codigo_carrera !== codigo_carrera));
-        } catch (e: any) {
-          setErrorCarreras(e?.message || 'Error al eliminar la carrera.');
+        } catch (e: unknown) {
+          setErrorCarreras(e instanceof Error ? e.message : 'Error al eliminar la carrera.');
         }
       },
     });
@@ -367,9 +367,9 @@ export default function EstudianteAvanceCurricular() {
         : c
       ));
       setModalSemestre(null);
-    } catch (e: any) {
+    } catch (e: unknown) {
       // El error 409 indica que ya existe globalmente pero con distinto tipo — caso edge raro
-      setErrSem(e?.message || 'Error al crear el semestre.');
+      setErrSem(e instanceof Error ? e.message : 'Error al crear el semestre.');
     } finally {
       setGuardandoSem(false);
     }
@@ -394,8 +394,8 @@ export default function EstudianteAvanceCurricular() {
             ? { ...c, semestres: c.semestres.filter(s => s.semestre_id !== semestre_id) }
             : c
           ));
-        } catch (e: any) {
-          setErrorCarreras(e?.message || 'Error al eliminar el semestre.');
+        } catch (e: unknown) {
+          setErrorCarreras(e instanceof Error ? e.message : 'Error al eliminar el semestre.');
         }
       },
     });
@@ -434,8 +434,8 @@ export default function EstudianteAvanceCurricular() {
           }),
         } : s),
       } : c));
-    } catch (e: any) {
-      setErrorCarreras(e?.message || 'Error al cerrar el semestre.');
+    } catch (e: unknown) {
+      setErrorCarreras(e instanceof Error ? e.message : 'Error al cerrar el semestre.');
     }
   };
 
@@ -535,8 +535,8 @@ export default function EstudianteAvanceCurricular() {
         } : c));
       }
       setModalRamo(null);
-    } catch (e: any) {
-      setErrRamo(e?.message || 'Error al guardar el ramo.');
+    } catch (e: unknown) {
+      setErrRamo(e instanceof Error ? e.message : 'Error al guardar el ramo.');
     } finally {
       setGuardandoRamo(false);
     }
@@ -558,8 +558,8 @@ export default function EstudianteAvanceCurricular() {
               : s
             ),
           } : c));
-        } catch (e: any) {
-          setErrorCarreras(e?.message || 'Error al eliminar el ramo.');
+        } catch (e: unknown) {
+          setErrorCarreras(e instanceof Error ? e.message : 'Error al eliminar el ramo.');
         }
       },
     });

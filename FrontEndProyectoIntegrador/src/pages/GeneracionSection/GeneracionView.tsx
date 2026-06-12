@@ -178,8 +178,8 @@ export default function GeneracionViewSimple() {
     }
 
     filtered.sort((a, b) => {
-      let aVal: any = a[sortField];
-      let bVal: any = b[sortField];
+      let aVal: string | number | null | undefined = a[sortField] as string | number | null | undefined;
+      let bVal: string | number | null | undefined = b[sortField] as string | number | null | undefined;
 
       if (aVal === undefined || aVal === null) aVal = '';
       if (bVal === undefined || bVal === null) bVal = '';

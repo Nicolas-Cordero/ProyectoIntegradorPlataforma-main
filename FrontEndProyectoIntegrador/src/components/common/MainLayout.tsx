@@ -4,9 +4,10 @@ import type { NavLink } from './Navbar';
 import { BackgroundParticles } from './Particles';
 import marcoIzquierdo from '../../assets/frames/marco-izquierda.svg';
 import marcoDerecho from '../../assets/frames/mardo-derecha.svg';
+import type { Usuario } from '../../types';
 
 interface MainLayoutProps {
-  usuario: any;
+  usuario: Usuario | null;
   onLogout: () => void;
   links?: NavLink[];
   children: React.ReactNode;

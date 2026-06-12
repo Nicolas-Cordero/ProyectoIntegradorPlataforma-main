@@ -144,8 +144,8 @@ export default function EstudianteDatosPersonales() {
     try {
       await estudianteService.update(estudiante.rut_estudiante, { [key]: value });
       return true;
-    } catch (err: any) {
-      setSaveError(err?.message || 'Error al guardar el campo');
+    } catch (err: unknown) {
+      setSaveError(err instanceof Error ? err.message : 'Error al guardar el campo');
       return false;
     }
   }, [estudiante.rut_estudiante]);

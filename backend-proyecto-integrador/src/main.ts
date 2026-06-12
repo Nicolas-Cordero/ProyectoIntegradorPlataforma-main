@@ -22,7 +22,6 @@ const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [
       origin: string | undefined,
       callback: (err: Error | null, allow?: boolean) => void
     ) => {
-      console.log(`[CORS] origin recibido: "${origin}" | lista: ${JSON.stringify(allowedOrigins)}`);
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule} from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { appConfig, jwtConfig } from './config';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
@@ -36,6 +37,13 @@ import { AlertasModule } from './alertas/alertas.module';
       load: [appConfig, jwtConfig],
       envFilePath: ['.env.local', '.env'],
     }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'global',
+        ttl: 60000,
+        limit: 120,
+      },
+    ]),
     PrismaModule,
     AuthModule,
     BeneficioEstudianteModule,
@@ -55,6 +63,7 @@ import { AlertasModule } from './alertas/alertas.module';
   ],
   providers: [
     PrismaService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],

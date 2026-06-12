@@ -22,6 +22,7 @@ import {
   ValidateTokenResponseDto,
   UserResponseDto,
 } from './dto/auth-response.dto';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
@@ -90,6 +91,7 @@ export class AuthController {
    */
   @Post('login')
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() loginDto: LoginDto,
@@ -209,6 +211,7 @@ export class AuthController {
    */
   @Post('forgot-password')
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
   async requestPasswordReset(
     @Body() dto: RequestPasswordResetDto,
@@ -246,6 +249,7 @@ export class AuthController {
    */
   @Post('reset-password')
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @HttpCode(HttpStatus.OK)
   async resetPassword(
     @Body() dto: ResetPasswordDto,

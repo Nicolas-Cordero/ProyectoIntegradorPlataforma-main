@@ -1,6 +1,6 @@
 import { Topico } from "@prisma/client";
 import { Type } from "class-transformer";
-import { IsEnum, IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsEnum, IsNotEmpty, IsNumber, IsString, MaxLength } from "class-validator";
 
 export class CreateComentarioDto {
 
@@ -15,5 +15,6 @@ export class CreateComentarioDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(2000, { message: 'El comentario no puede superar los 2000 caracteres' })
   texto!: string;
 }

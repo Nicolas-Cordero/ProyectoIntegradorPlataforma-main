@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, MinLength, IsEmail, IsEnum, IsOptional, Matches } from 'class-validator';
+import { IsString, IsNotEmpty, MinLength, IsEmail, IsEnum, Matches } from 'class-validator';
 import { UserRol } from '@prisma/client';
 
 export class LoginDto {
@@ -52,7 +52,7 @@ export class RegisterDto {
   password!: string;
 
 
-  @IsOptional()
+  @IsNotEmpty({ message: 'El rol es requerido' })
   @IsEnum(UserRol, { message: 'El rol debe ser Admin, Tutor o Visita' })
   rol!: UserRol;
 }

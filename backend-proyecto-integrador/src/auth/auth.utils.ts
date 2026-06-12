@@ -178,10 +178,7 @@ const getPasswordChangeTemplate = (): string => {
                 <div class="footer">
                 <p>Sistema de Gestión de Becarios</p>
                 </div>
-            </div>enum Recuperation_Mail {
-    PASSWORD_RESET_EMAIL = getPasswordResetEmailTemplate;
-
-}
+            </div>
             </body>
             </html>
         `

@@ -28,6 +28,22 @@ export default class PermissionService {
     return user.rol === UserRol.TUTOR;
   }
 
+  /**
+   * Verifica si un usuario es visita (invitado, solo lectura)
+   */
+  static isInvitado(user: Usuario | null): boolean {
+    if (!user) return false;
+    return user.rol === UserRol.VISITA;
+  }
+
+  /**
+   * Verifica si un usuario puede acceder al dashboard
+   * Cualquier usuario autenticado con rol válido puede acceder
+   */
+  static canAccessDashboard(user: Usuario | null): boolean {
+    return this.isAdmin(user) || this.isTutor(user) || this.isInvitado(user);
+  }
+
 
 
 
@@ -124,9 +140,10 @@ export default class PermissionService {
    */
   static getRoleDisplayName(role: string): string {
     const roleNames: Record<string, string> = {
-      'admin': 'Administrador',
-      'tutor': 'Tutor',
-      'invitado': 'Invitado'
+      [UserRol.ADMIN]: 'Administrador',
+      [UserRol.TUTOR]: 'Tutor',
+      [UserRol.VISITA]: 'Visita',
+      [UserRol.ESTUDIANTE]: 'Estudiante',
     };
     return roleNames[role] || role;
   }
@@ -136,9 +153,9 @@ export default class PermissionService {
    */
   static getRoleColor(role: string): string {
     const roleColors: Record<string, string> = {
-      'admin': '#D84315', // Coral dark
-      'tutor': '#4DB6AC', // Turquoise
-      'invitado': '#FFB74D' // Orange
+      [UserRol.ADMIN]: '#D84315', // Coral dark
+      [UserRol.TUTOR]: '#4DB6AC', // Turquoise
+      [UserRol.VISITA]: '#FFB74D' // Orange
     };
     return roleColors[role] || '#9E9E9E';
   }

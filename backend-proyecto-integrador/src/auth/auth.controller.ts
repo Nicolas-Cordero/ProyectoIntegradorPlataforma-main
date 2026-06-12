@@ -111,6 +111,8 @@ export class AuthController {
    * LISTO
    */
   @Post('refresh')
+  @Public()
+  @Throttle({ default: { ttl: 60000, limit: 20 } })
   @HttpCode(HttpStatus.OK)
   async refresh(
     @Req() req: Request,
@@ -234,6 +236,7 @@ export class AuthController {
    */
   @Post('verify-reset-code')
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
   async verifyResetCode(
     @Body() dto: VerifyResetCodeDto,

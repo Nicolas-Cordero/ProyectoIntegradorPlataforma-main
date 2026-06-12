@@ -8,7 +8,6 @@ import { TokenService } from './services/token.service';
 import { EmailService } from './services/email.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
-import { AuthRepository } from './auth.repository';
 import emailConfig from '../config/email.config';
 import { RecoveryService } from './services/recovery.service';
 import { UsersRepository } from '../users';
@@ -41,7 +40,6 @@ import { UsersRepository } from '../users';
     RecoveryService,
     JwtStrategy,
     JwtRefreshStrategy,
-    AuthRepository,
     UsersRepository
   ],
 

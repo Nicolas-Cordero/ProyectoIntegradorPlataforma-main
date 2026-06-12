@@ -1,20 +1,25 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const cookieParser = require('cookie-parser');
+import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
 
+  const isProd = process.env.NODE_ENV === 'production';
+  if (isProd && !process.env.CORS_ORIGINS) {
+    throw new Error('CORS_ORIGINS no está definido. Revisa las variables de entorno.');
+  }
 
-const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [
-  'https://api.cloudinary.com',
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://localhost:3001',
-];
+  const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:3001',
+  ];
 
+  app.use(helmet());
   app.use(cookieParser());
 
   app.enableCors({
@@ -44,9 +49,8 @@ const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [
 
   const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
-  
-  console.log(`- Server running on port: ${port}`); //muestra el puerto
-  console.log(`- Environment: ${process.env.NODE_ENV || 'development'}`); //muestra el ambiente
-  console.log(`- CORS enabled for: ${allowedOrigins.join(', ')}`); //muestra los origenes permitidos
+
+  logger.log(`Server running on port: ${port}`);
+  logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 }
 bootstrap();

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService, userService } from '../services';
+import { authService, userService, PermissionService } from '../services';
 import type { Usuario } from '../types';
+import { UserRol } from '../types';
 import { Input, Alert } from '../components/ui';
 import { PasswordChangeModal } from '../components/features/auth/password-recovery';
 import {
@@ -17,20 +18,14 @@ import {
 
 interface UserProfileProps {}
 
-const getRoleDisplayName = (role: string) => {
-  const map: Record<string, string> = {
-    admin:      'Administrador',
-    academico:  'Académico',
-    estudiante: 'Estudiante',
-  };
-  return map[role] || role;
-};
+const getRoleDisplayName = (role: string) => PermissionService.getRoleDisplayName(role);
 
 const getRoleChipClasses = (role: string): string => {
   const map: Record<string, string> = {
-    admin:      'bg-red-100 text-red-700',
-    academico:  'bg-blue-100 text-blue-700',
-    estudiante: 'bg-green-100 text-green-700',
+    [UserRol.ADMIN]:      'bg-red-100 text-red-700',
+    [UserRol.TUTOR]:      'bg-blue-100 text-blue-700',
+    [UserRol.VISITA]:     'bg-amber-100 text-amber-700',
+    [UserRol.ESTUDIANTE]: 'bg-green-100 text-green-700',
   };
   return map[role] || 'bg-blue-100 text-blue-700';
 };
@@ -127,7 +122,6 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
 
       setUser(mappedProfile);
       setEditedUser(mappedProfile);
-      localStorage.setItem('user', JSON.stringify(mappedProfile));
       setIsEditing(false);
       setSnackbarMessage('Perfil actualizado exitosamente');
       setSnackbarSeverity('success');

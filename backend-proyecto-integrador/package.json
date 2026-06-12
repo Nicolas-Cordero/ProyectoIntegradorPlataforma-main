@@ -38,7 +38,7 @@
     "cloudinary": "^2.5.1",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.4.2",
-    "mongodb": "^6.20.0",
+    "helmet": "^8.2.0",
     "nodemailer": "^7.0.12",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",

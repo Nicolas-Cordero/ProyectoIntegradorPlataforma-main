@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { usuario } from '@prisma/client'
@@ -11,17 +11,31 @@ import { TokensResponseDto } from '../dto/auth-response.dto';
 //TODO: revisar este script
 //TODO: refactorizar magic strings
 
+const CLEAN_EXPIRED_TOKENS_INTERVAL_MS = 60 * 60 * 1000; // 1 hora
+
 @Injectable()
-export class TokenService {
+export class TokenService implements OnModuleInit, OnModuleDestroy {
 
 
   // En producción, migrar a Redis o base de datos!!!!!
   private readonly refreshTokens = new Map<string, StoredRefreshToken>();
+  private cleanupInterval?: NodeJS.Timeout;
 
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
+
+  onModuleInit(): void {
+    this.cleanupInterval = setInterval(
+      () => this.cleanExpiredTokens(),
+      CLEAN_EXPIRED_TOKENS_INTERVAL_MS,
+    );
+  }
+
+  onModuleDestroy(): void {
+    if (this.cleanupInterval) clearInterval(this.cleanupInterval);
+  }
 
 
 

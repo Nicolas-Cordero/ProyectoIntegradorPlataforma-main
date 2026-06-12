@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   UnauthorizedException,
   ConflictException,
   NotFoundException,
@@ -8,12 +9,15 @@ import {
 import { UsersRepository } from "../../users";
 import { EmailService } from "./email.service";
 import * as bcrypt from 'bcrypt';
+import { randomInt } from 'crypto';
 
 
 
 @Injectable()
 export class RecoveryService{
-  constructor( 
+  private readonly logger = new Logger(RecoveryService.name);
+
+  constructor(
     private readonly userRepo: UsersRepository,
     private readonly emailService: EmailService,
   ){}
@@ -27,7 +31,7 @@ export class RecoveryService{
    * @returns Código de 6 dígitos con 15 mins de tiempo
    */
   generateResetCode(minutes: number): {resetCode: string, expirationDate: Date} {
-    const resetCode = Math.floor(100000 + Math.random() * 900000).toString()
+    const resetCode = randomInt(100000, 1000000).toString()
 
     // Calcular fecha de expiración (15 minutos por defecto)
     const expirationDate = new Date()
@@ -197,9 +201,10 @@ export class RecoveryService{
         // Enviar email de notificación (opcional, no falla si hay error)
         try {
           await this.emailService.sendPasswordChangedNotification(email);
-        } catch (error) {
+        } catch (error: unknown) {
           // Log el error pero no fallar el proceso
-          console.error('Error al enviar notificación de cambio de contraseña:', error);
+          const message = error instanceof Error ? error.message : 'Error desconocido';
+          this.logger.error(`Error al enviar notificación de cambio de contraseña: ${message}`);
         }
       }
     

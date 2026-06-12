@@ -1,14 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
-import { Recuperation_Mail } from '../ auth.utils';
+import { Recuperation_Mail } from '../auth.utils';
 import { Transporter } from 'nodemailer';
-
-//TODO: ELIMINAR MAGIC STRINGS
-//TODO: ARREGLAR ERROR (ANY) DEBERIA SER UNKNOWN
-
-
-
 
 @Injectable()
 export class EmailService {
@@ -50,7 +44,6 @@ export class EmailService {
 
 
 
-  //TODO ARREGLAR LA EL TEMA DEL ERROR.
   /**
    * Verifica que la conexión con el servidor de email funcione
    */
@@ -58,8 +51,9 @@ export class EmailService {
     try {
       await this.transporter.verify();
       this.logger.log('Conexión con servidor de email verificada exitosamente');
-    } catch (error:any) {
-      this.logger.error('Error al verificar conexión con servidor de email:', error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      this.logger.error(`Error al verificar conexión con servidor de email: ${message}`);
       this.logger.warn('El envío de emails puede fallar. Verifica tu configuración.');
     }
   }
@@ -87,8 +81,9 @@ export class EmailService {
     try {
       const info = await this.transporter.sendMail(mailOptions);
       this.logger.log(`Email de recuperación enviado a: ${email} - ID: ${info.messageId}`);
-    } catch (error: any) {
-      this.logger.error(`Error al enviar email a ${email}:`, error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      this.logger.error(`Error al enviar email a ${email}: ${message}`);
       throw new Error('No se pudo enviar el email de recuperación');
     }
   }
@@ -116,12 +111,12 @@ export class EmailService {
 
 
 
-    //TODO ARREGLAR ERROR
     try {
       await this.transporter.sendMail(mailOptions);
       this.logger.log(`Notificación de cambio de contraseña enviada a: ${email}`);
-    } catch (error: any) {
-      this.logger.error(`Error al enviar notificación a ${email}:`, error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      this.logger.error(`Error al enviar notificación a ${email}: ${message}`);
       // No lanzar error aquí, es solo una notificación
     }
   }

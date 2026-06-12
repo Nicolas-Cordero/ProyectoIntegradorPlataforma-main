@@ -5,12 +5,15 @@ import CssBaseline from '@mui/material/CssBaseline'
 import './index.css'
 import App from './App.tsx'
 import { theme } from './theme'
+import { ErrorBoundary } from './components/common/ErrorBoundary'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <App />
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <App />
+      </ThemeProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )

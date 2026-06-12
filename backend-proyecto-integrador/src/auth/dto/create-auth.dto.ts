@@ -19,6 +19,9 @@ export class LoginDto {
 
 export class RegisterDto {
 
+  @IsNotEmpty({ message: 'El rut es requerido' })
+  @IsString()
+  @Matches(/^\d{7,8}-[\dkK]$/, { message: 'Formato de RUT inválido. Usa XXXXXXXX-D (ej: 12345678-9)' })
   rut!: string;
   
   @IsNotEmpty({ message: 'El nombre es requerido' })

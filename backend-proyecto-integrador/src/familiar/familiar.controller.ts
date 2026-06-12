@@ -13,8 +13,11 @@ import {
   CreateFamiliarDto,
   UpdateFamiliarDto,
 } from './dto';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRol } from '@prisma/client';
 
 @Controller('familiar')
+@Roles(UserRol.ADMIN, UserRol.TUTOR)
 export class FamiliarController {
   constructor(private readonly familiarService: FamiliarService) {}
 
@@ -25,11 +28,13 @@ export class FamiliarController {
   }
 
   @Get(':id_familiar')
+  @Roles(UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA)
   findOne(@Param('id_familiar', ParseIntPipe) id_familiar: number) {
     return this.familiarService.findOne(id_familiar);
   }
 
   @Get('estudiante/:rut_estudiante')
+  @Roles(UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA)
   findByEstudiante(@Param('rut_estudiante') rut_estudiante: string) {
     return this.familiarService.findByEstudiante(rut_estudiante);
   }

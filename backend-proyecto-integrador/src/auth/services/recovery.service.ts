@@ -76,14 +76,15 @@ export class RecoveryService{
       const {resetCode, expirationDate} = this.generateResetCode(15);
 
 
-      // Guardar código y fecha de expiración en la base de datos
-      await this.userRepo.updateResetToken(user.rut_usuario, resetCode, expirationDate)
+      const hashedResetCode = await bcrypt.hash(resetCode, 10);
 
-      const hashedResetCode = await bcrypt.hash(resetCode);
+      // Guardar código y fecha de expiración en la base de datos
+      await this.userRepo.updateResetToken(user.rut_usuario, hashedResetCode, expirationDate)
+
 
       // Enviar email con el código
       try {
-        await this.emailService.sendPasswordResetEmail(email, hashedResetCode);
+        await this.emailService.sendPasswordResetEmail(email, resetCode);
       } catch (error) {
 
 
@@ -122,7 +123,7 @@ export class RecoveryService{
       }
 
       // Verificar si el código coincide
-      return await bcrypt.compare(user.reset_token, code);
+      return await bcrypt.compare(code, user.reset_token);
     }
 
 
@@ -147,14 +148,6 @@ export class RecoveryService{
           throw new NotFoundException('Usuario no encontrado');
         }
 
-    
-        /*
-        // Verificar que el usuario esté activo
-        if (!user.activo) {
-          throw new BadRequestException('El usuario no está activo');
-        }
-        */
-    
         // Verificar que exista un código de reset
         if (!user.reset_token || !user.reset_token_expires) {
           throw new BadRequestException(
@@ -177,8 +170,8 @@ export class RecoveryService{
           );
         }
     
-        // Verificar si el código coincide
-        if (!(await bcrypt.compare(code, user.reset_token))) {
+
+        if (!(await this.verifyResetCode(email, code))){
           throw new BadRequestException(
             'El código de verificación es inválido'
           );

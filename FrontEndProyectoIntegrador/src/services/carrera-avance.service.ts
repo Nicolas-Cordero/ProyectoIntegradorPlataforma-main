@@ -21,7 +21,7 @@ export interface CreateCarreraAvanceDto {
 
 class CarreraAvanceService extends BaseHttpClient {
   getByEstudiante(rut_estudiante: string): Promise<CarreraAvanceDto[]> {
-    return this.request<CarreraAvanceDto[]>(`/carrera/${rut_estudiante}`);
+    return this.request<CarreraAvanceDto[]>(`/carrera/estudiante/${rut_estudiante}`);
   }
 
   create(data: CreateCarreraAvanceDto): Promise<CarreraAvanceDto> {

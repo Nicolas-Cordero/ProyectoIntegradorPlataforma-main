@@ -127,7 +127,8 @@ function InlineField({ label, value, fieldKey, type = 'text', options, editable,
 export default function EstudianteDatosPersonales() {
   const { estudiante, liceo, generacion, canEdit } = useOutletContext<EstudianteOutletContext>();
   const [saveError, setSaveError] = useState('');
-  const carreraActual = estudiante.carreras?.find(c => c.activa) ?? estudiante.carreras?.[0] ?? null;
+  //const carreraActual = estudiante.carreras?.find(c => c.activa) ?? estudiante.carreras?.[0] ?? null; CORREGIR DEBIDO A QUE HAY QUE INCLUIR EL ESTADO DE LA CARRERA
+  const carreraActual = estudiante.carreras?.[0] ?? null;
   const contactoEmergencia = estudiante.familiares?.find(f => f.es_contacto_emergencia) ?? null;
   const generacionLabel = generacion
     ? `${generacion.año}${generacion.descripcion ? ` — ${generacion.descripcion}` : ''}`
@@ -209,13 +210,10 @@ export default function EstudianteDatosPersonales() {
       <Section title="Liceo de Origen">
         {liceo ? (
           <>
-            <InlineField label="Nombre"    value={liceo.nombre}    readOnly />
-            <InlineField label="RBD"       value={liceo.rbd}       fieldKey="rbd_liceo" editable={e} onSave={handleSave} />
-            <InlineField label="Dirección" value={liceo.direccion ?? 'No especificado'} readOnly />
-            <InlineField label="Comuna"    value={liceo.comuna    ?? 'No especificado'} readOnly />
-            <InlineField label="Región"    value={liceo.region    ?? 'No especificado'} readOnly />
-            <InlineField label="Teléfono"  value={liceo.telefono  ?? 'No especificado'} readOnly />
-            <InlineField label="Email"     value={liceo.email     ?? 'No especificado'} readOnly />
+            <InlineField label="Nombre"    value={liceo.nombre}       readOnly />
+            <InlineField label="RBD"       value={liceo.rbd}          readOnly />
+            <InlineField label="Comuna"    value={liceo.comuna}       readOnly />
+            <InlineField label="Comuna"    value={liceo.especialidad} readOnly />
           </>
         ) : (
           <div>
@@ -228,12 +226,11 @@ export default function EstudianteDatosPersonales() {
       <Section title="Carrera">
         {carreraActual ? (
           <>
-            <InlineField label="Nombre"         value={carreraActual.nombre_carrera}          readOnly />
-            <InlineField label="Institución"    value={carreraActual.institucion              ?? 'No especificado'} readOnly />
-            <InlineField label="Año de Ingreso" value={carreraActual.año_ingreso              ?? 'No especificado'} readOnly />
-            <InlineField label="Año de Egreso"  value={carreraActual.año_egreso               ?? 'No especificado'} readOnly />
-            <InlineField label="Estado"         value={carreraActual.activa ? 'Activa' : 'Finalizada'} readOnly />
-            {carreraActual.observaciones && <InlineField label="Observaciones" value={carreraActual.observaciones} readOnly />}
+            <InlineField label="Nombre"         value={carreraActual.nombre}          readOnly />
+            <InlineField label="Institución"    value={'fixear'} readOnly />
+            <InlineField label="Año de Ingreso" value={'fixear (incluir año ingreso)'} readOnly />
+            <InlineField label="Duración"       value={carreraActual.duracion_sem} readOnly />
+            <InlineField label="Estado"         value={'fixear (incluir estado)'} readOnly />
           </>
         ) : (
           <p className="text-sm text-gray-400 italic">Sin carrera registrada</p>

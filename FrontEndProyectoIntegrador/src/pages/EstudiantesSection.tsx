@@ -37,7 +37,6 @@ export const EstudiantesSection: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [filterGeneracion, setFilterGeneracion] = useState('');
   const [filterLiceo, setFilterLiceo] = useState('');
   const [filterAlertas, setFilterAlertas] = useState<'todas' | 'con' | 'sin'>('todas');
 
@@ -73,13 +72,13 @@ export const EstudiantesSection: React.FC = () => {
         const lista = Array.isArray(entrevistas) ? entrevistas : [];
 
         const ultimaDate = lista
-          .map((e) => (e?.fecha ? new Date(e.fecha) : undefined))
+          .map((e) => (e?.fecha_hora ? new Date(e.fecha_hora) : undefined))
           .filter((d): d is Date => Boolean(d))
           .sort((a, b) => b.getTime() - a.getTime())[0];
 
         const ultimaEntrevista = ultimaDate?.toISOString();
         const totalEntrevistasAno = lista.filter((e) => {
-          const f = e?.fecha ? new Date(e.fecha) : undefined;
+          const f = e?.fecha_hora ? new Date(e.fecha_hora) : undefined;
           return f?.getFullYear() === currentYear;
         }).length;
 
@@ -130,11 +129,6 @@ export const EstudiantesSection: React.FC = () => {
     };
   }, [loadStudents]);
 
-  const generacionOptions = useMemo(
-    () => [...new Set(students.map((s) => s.generacion).filter(Boolean))].sort().reverse(),
-    [students]
-  );
-
   const liceoOptions = useMemo(
     () => [...new Set(students.map((s) => s.liceo?.nombre || s.rbd_liceo || '').filter(Boolean))].sort(),
     [students]
@@ -143,7 +137,6 @@ export const EstudiantesSection: React.FC = () => {
   const limpiarFiltros = () => {
     setSearchInput('');
     setSearchTerm('');
-    setFilterGeneracion('');
     setFilterLiceo('');
     setFilterAlertas('todas');
     setSortField('apellido');
@@ -152,7 +145,6 @@ export const EstudiantesSection: React.FC = () => {
 
   const hayFiltrosActivos =
     !!searchTerm ||
-    !!filterGeneracion ||
     !!filterLiceo ||
     filterAlertas !== 'todas';
 
@@ -167,10 +159,6 @@ export const EstudiantesSection: React.FC = () => {
         const liceo = (s.liceo?.nombre || s.rbd_liceo || '').toLowerCase();
         return nombre.includes(lower) || liceo.includes(lower);
       });
-    }
-
-    if (filterGeneracion) {
-      result = result.filter((s) => s.generacion === filterGeneracion);
     }
 
     if (filterLiceo) {
@@ -199,7 +187,6 @@ export const EstudiantesSection: React.FC = () => {
     students,
     alertasRuts,
     searchTerm,
-    filterGeneracion,
     filterLiceo,
     filterAlertas,
     sortField,
@@ -292,17 +279,6 @@ export const EstudiantesSection: React.FC = () => {
                 placeholder="Buscar por nombre o liceo..."
                 className="w-56 text-sm border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] transition-colors bg-gray-50 focus:bg-white"
               />
-              <select
-                value={filterGeneracion}
-                onChange={(e) => setFilterGeneracion(e.target.value)}
-                className={SELECT_CLASS}
-              >
-                <option value="">Todas las generaciones</option>
-                {generacionOptions.map((g) => (
-                  <option key={g} value={g}>{g}</option>
-                ))}
-              </select>
-
               <select
                 value={filterLiceo}
                 onChange={(e) => setFilterLiceo(e.target.value)}

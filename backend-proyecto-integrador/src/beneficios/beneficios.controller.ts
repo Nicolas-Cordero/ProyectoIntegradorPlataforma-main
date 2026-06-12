@@ -13,10 +13,13 @@ import {
   CreateBeneficioDto,
   UpdateBeneficioDto,
 } from './dto';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRol } from '@prisma/client';
 
 
 
 @Controller('beneficios')
+@Roles(UserRol.ADMIN)
 export class BeneficiosController {
   constructor(private readonly beneficiosService: BeneficiosService) {}
 

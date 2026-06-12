@@ -97,7 +97,7 @@ export class AuthService {
         nombre: savedUser.nombre,
         apellido: savedUser.apellido,
         email: savedUser.email,
-        telefono: savedUser.apellido,
+        telefono: savedUser.telefono,
         rol: savedUser.rol,
       },
     };

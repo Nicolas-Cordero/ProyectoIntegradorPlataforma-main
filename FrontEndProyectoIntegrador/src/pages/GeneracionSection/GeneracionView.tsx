@@ -95,13 +95,13 @@ export default function GeneracionViewSimple() {
         const entrevistasList = Array.isArray(entrevistas) ? entrevistas : [];
 
         const ultimaEntrevistaDate = entrevistasList
-          .map((e) => (e?.fecha ? new Date(e.fecha) : undefined))
+          .map((e) => (e?.fecha_hora ? new Date(e.fecha_hora) : undefined))
           .filter((d): d is Date => Boolean(d))
           .sort((a, b) => b.getTime() - a.getTime())[0];
 
         const ultimaEntrevista = ultimaEntrevistaDate?.toISOString();
         const totalEntrevistasAno = entrevistasList.filter((e) => {
-          const f = e?.fecha ? new Date(e.fecha) : undefined;
+          const f = e?.fecha_hora ? new Date(e.fecha_hora) : undefined;
           return f?.getFullYear() === currentYear;
         }).length;
 

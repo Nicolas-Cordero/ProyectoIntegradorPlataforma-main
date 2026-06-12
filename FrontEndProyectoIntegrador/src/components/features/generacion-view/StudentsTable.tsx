@@ -62,7 +62,7 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
               onClick={() => onSort('rbd_liceo')}
               className="py-4 px-3 text-left font-bold cursor-pointer border-b-2 border-gray-300 text-gray-700 hover:bg-gray-300 transition-colors"
             >
-              Liceo / Carrera {getSortIcon('rbd_liceo')}
+              Liceo {getSortIcon('rbd_liceo')}
             </th>
             <th
               onClick={() => onSort('estado')}
@@ -111,9 +111,6 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
                 </td>
                 <td className="py-3 px-3 border-b border-gray-300 text-gray-600">
                   {student.liceo?.nombre || student.rbd_liceo || 'N/A'}
-                  <div className="text-xs text-gray-400">
-                    {student.carreras && student.carreras.length > 0 ? student.carreras[0].nombre_carrera : ''}
-                  </div>
                 </td>
                 <td className="py-3 px-3 border-b border-gray-300 text-center">
                   <span

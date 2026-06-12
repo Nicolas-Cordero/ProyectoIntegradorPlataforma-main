@@ -13,6 +13,7 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto, ChangeOwnPasswordDto } from '../auth/dto/change-password.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -34,7 +35,7 @@ export class UsersController {
 
 
   @Get()
-  @Roles(UserRol.ADMIN, UserRol.TUTOR)
+  @Roles(UserRol.ADMIN)
   findAll(): Promise<usuario[]> {
     return this.usersService.findAll();
   }
@@ -61,6 +62,7 @@ export class UsersController {
 
 
   @Delete(':rut')
+  @Roles(UserRol.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('rut') rut: string): Promise<{message: string}> {
     await this.usersService.remove(rut);
@@ -73,7 +75,7 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async changePassword(
     @Param('rut') rut: string,
-    @Body() changePasswordDto: { password: string },
+    @Body() changePasswordDto: ChangePasswordDto,
   ): Promise<{ message: string }> {
     await this.usersService.changePassword(rut, changePasswordDto.password);
     return { message: 'Contraseña actualizada exitosamente' };
@@ -84,7 +86,7 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async changeOwnPassword(
     @Param('rut') rut: string,
-    @Body() changeOwnPasswordDto: { currentPassword: string; newPassword: string },
+    @Body() changeOwnPasswordDto: ChangeOwnPasswordDto,
   ): Promise<{ message: string }> {
     await this.usersService.changeOwnPassword(
       rut,

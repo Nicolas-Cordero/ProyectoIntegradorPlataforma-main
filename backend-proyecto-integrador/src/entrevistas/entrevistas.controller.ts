@@ -55,8 +55,8 @@ export class EntrevistasController {
 
 
   //Busca todas las entrevistas
-  @Get(':estudiante')
-  findAllByEstudiante(@Param('estudiante') rut_estudiante: string) {
+  @Get('estudiante/:rut')
+  findAllByEstudiante(@Param('rut') rut_estudiante: string) {
     return this.entrevistasService.findAllByEstudiante(rut_estudiante);
   }
 

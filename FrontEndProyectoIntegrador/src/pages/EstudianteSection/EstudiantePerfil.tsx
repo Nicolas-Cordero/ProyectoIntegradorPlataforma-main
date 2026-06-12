@@ -5,7 +5,6 @@ import { AccountCircle as AccountCircleIcon, CloudUpload as CloudUploadIcon, Edi
 import { Modal, Input, Select, Alert } from '../../components/ui';
 import { estudianteService, alertasService } from '../../services';
 import type { Alerta } from '../../services';
-import { getEstudianteStatus } from '../../utils/migration-helpers';
 import type { EstudianteOutletContext } from './EstudianteDetail';
 import type { EstadoEstudiante, Genero } from '../../types';
 import type { UpdateEstudianteDto } from '../../services/estudiante.service';
@@ -83,6 +82,7 @@ export default function EstudiantePerfil() {
     }
   };
 
+  //Incluir el estado de la carrera.
   const carreraActual = estudiante.carreras?.[0] ?? null;
 
   const infoFields = [
@@ -92,7 +92,7 @@ export default function EstudiantePerfil() {
     { label: 'Teléfono',        value: estudiante.telefono },
     { label: 'Liceo',           value: liceo?.nombre ?? `RBD: ${estudiante.rbd_liceo}` },
     { label: 'Generación',      value: generacion ? `${generacion.año}${generacion.descripcion ? ` — ${generacion.descripcion}` : ''}` : `ID: ${estudiante.generacion_id ?? '—'}` },
-    { label: 'Carrera',         value: carreraActual?.nombre_carrera ?? 'Sin carrera' },
+    { label: 'Carrera',         value: carreraActual?.nombre ?? 'Sin carrera' },
     // Bug 8 fix: etiqueta clara para distinguir del estado académico
     { label: 'Estado en sistema', value: estudiante.estado },
   ];
@@ -230,7 +230,7 @@ export default function EstudiantePerfil() {
           </div>
           <div>
             <p className="text-gray-400 text-xs mb-0.5">Estado académico</p>
-            <p className="font-bold text-gray-800">{getEstudianteStatus(estudiante) || estudiante.estado || '—'}</p>
+            <p className="font-bold text-gray-800">{estudiante.estado || '—'}</p>
           </div>
         </div>
       </div>

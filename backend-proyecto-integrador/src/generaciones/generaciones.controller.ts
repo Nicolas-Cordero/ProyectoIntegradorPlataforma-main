@@ -11,8 +11,11 @@ import {
 import { GeneracionesService } from './generaciones.service';
 import { CreateGeneracionDto } from './dto/create-generacion.dto';
 import { UpdateGeneracionDto } from './dto/update-generacion.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRol } from '@prisma/client';
 
 @Controller('generacion')
+@Roles(UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA)
 export class GeneracionesController {
   constructor(private readonly generacionesService: GeneracionesService) {}
 
@@ -32,6 +35,7 @@ export class GeneracionesController {
   }
 
   @Post()
+  @Roles(UserRol.ADMIN, UserRol.TUTOR)
   create(@Body() createGeneracionDto: CreateGeneracionDto) {
     return this.generacionesService.create(createGeneracionDto);
   }
@@ -45,6 +49,7 @@ export class GeneracionesController {
   }
 
   @Delete(':id')
+  @Roles(UserRol.ADMIN)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.generacionesService.remove(id);
   }

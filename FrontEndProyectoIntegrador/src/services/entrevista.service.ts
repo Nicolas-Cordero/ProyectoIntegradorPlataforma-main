@@ -51,7 +51,7 @@ class EntrevistaService extends BaseHttpClient {
     });
   }
 
-  async getTextos(entrevistaId: string): Promise<any[]> {
+  async getTextos(entrevistaId: number): Promise<any[]> {
     return await this.request<any[]>(`/entrevistas/${entrevistaId}/textos`);
   }
 

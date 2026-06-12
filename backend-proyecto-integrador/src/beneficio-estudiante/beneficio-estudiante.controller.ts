@@ -2,8 +2,11 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from 
 import { BeneficioEstudianteService } from './beneficio-estudiante.service';
 import { CreateBeneficioEstudianteDto } from './dto/create-beneficio-estudiante.dto';
 import { UpdateBeneficioEstudianteDto } from './dto/update-beneficio-estudiante.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRol } from '@prisma/client';
 
 @Controller('beneficios/estudiantes')
+@Roles(UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA)
 export class BeneficioEstudianteController {
   constructor(private readonly beneficioEstudianteService: BeneficioEstudianteService) {}
 
@@ -18,6 +21,7 @@ export class BeneficioEstudianteController {
 
 
   @Post(':id_beneficio/:rut_estudiante')
+  @Roles(UserRol.ADMIN, UserRol.TUTOR)
   create(@Body() createBeneficioEstudianteDto: CreateBeneficioEstudianteDto) {
     return this.beneficioEstudianteService.createAsociation(createBeneficioEstudianteDto);
   }
@@ -32,7 +36,7 @@ export class BeneficioEstudianteController {
     return this.beneficioEstudianteService.findEstudiantesByBeneficio(codigo_beneficio);
   }
 
-  @Get(':rut_estudiante')
+  @Get('rut/:rut_estudiante')
   findBeneficiosByEstudiante(@Param('rut_estudiante') rut_estudiante: string) {
     return this.beneficioEstudianteService.findBeneficiosByEstudiante(rut_estudiante);
   }
@@ -45,6 +49,7 @@ export class BeneficioEstudianteController {
   }
 
   @Patch(':id_beneficio/:rut_estudiante')
+  @Roles(UserRol.ADMIN, UserRol.TUTOR)
   update(
     @Param('id_beneficio', ParseIntPipe) codigo_beneficio: number,
     @Param('rut_estudiante') rut_estudiante: string,
@@ -53,6 +58,7 @@ export class BeneficioEstudianteController {
   }
 
   @Delete(':id_beneficio/:rut_estudiante')
+  @Roles(UserRol.ADMIN, UserRol.TUTOR)
   remove(
     @Param('id_beneficio', ParseIntPipe) codigo_beneficio: number,
     @Param('rut_estudiante') rut_estudiante: string,

@@ -22,6 +22,7 @@ export class CreateEstudianteDto {
   // CAMPOS OBLIGATORIOS
   @IsString()
   @IsNotEmpty()
+  @Matches(/^\d{7,8}-[\dkK]$/, { message: 'Formato de RUT inválido. Usa XXXXXXXX-D (ej: 12345678-9)' })
   rut_estudiante!: string;
 
 

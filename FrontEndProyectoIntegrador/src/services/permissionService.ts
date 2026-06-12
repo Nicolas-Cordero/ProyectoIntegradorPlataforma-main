@@ -28,13 +28,12 @@ export default class PermissionService {
     return user.rol === UserRol.TUTOR;
   }
 
-  /**
-   * Verifica si un usuario es invitado
-   */
-  static isInvitado(user: Usuario | null): boolean {
-    if (!user) return false;
-    return user.rol === UserRol.INVITADO;
-  }
+
+
+
+
+
+
 
   /**
    * Verifica si un usuario puede gestionar otros usuarios
@@ -69,6 +68,13 @@ export default class PermissionService {
   }
 
 
+
+
+
+
+
+
+  
   /**
    * Verifica si un usuario puede ver entrevistas
    * Administradores y tutores pueden ver entrevistas
@@ -96,13 +102,6 @@ export default class PermissionService {
     return false;
   }
 
-  /**
-   * Verifica si un usuario puede acceder al dashboard
-   * Todos los usuarios autenticados pueden acceder
-   */
-  static canAccessDashboard(user: Usuario | null): boolean {
-    return user !== null;
-  }
 
   /**
    * Verifica si un usuario puede ver reportes
@@ -151,7 +150,6 @@ export default class PermissionService {
     return [
       { value: UserRol.ADMIN, label: 'Administrador' },
       { value: UserRol.TUTOR, label: 'Tutor' },
-      { value: UserRol.INVITADO, label: 'Invitado' }
     ];
   }
 

@@ -33,9 +33,7 @@ const getRoleChipClasses = (role: UserRolType): string => {
     [UserRol.ADMIN]:      'bg-red-100 text-red-700',
     [UserRol.TUTOR]:      'bg-blue-100 text-blue-700',
     [UserRol.VISITA]:     'bg-sky-100 text-sky-700',
-    [UserRol.ACADEMICO]:  'bg-green-100 text-green-700',
     [UserRol.ESTUDIANTE]: 'bg-yellow-100 text-yellow-700',
-    [UserRol.INVITADO]:   'bg-gray-100 text-gray-600',
   };
   return map[role] ?? 'bg-gray-100 text-gray-600';
 };
@@ -101,7 +99,7 @@ export const UserManagement: React.FC = () => {
   const filterUsers = () => {
     if (tabValue === 'todos') setFilteredUsers(users);
     else if (tabValue === 'tutores') setFilteredUsers(users.filter(u => u.rol === UserRol.TUTOR));
-    else setFilteredUsers(users.filter(u => u.rol === UserRol.VISITA || u.rol === UserRol.INVITADO));
+    else setFilteredUsers(users.filter(u => u.rol === UserRol.VISITA ));
   };
 
   const handleOpenDialog = (user?: Usuario) => {
@@ -234,7 +232,7 @@ export const UserManagement: React.FC = () => {
             >
               <option value="todos">Todos ({users.length})</option>
               <option value="tutores">Tutores ({users.filter(u => u.rol === UserRol.TUTOR).length})</option>
-              <option value="visitas">Visitas ({users.filter(u => u.rol === UserRol.VISITA || u.rol === UserRol.INVITADO).length})</option>
+              <option value="visitas">Visitas ({users.filter(u => u.rol === UserRol.VISITA).length})</option>
             </select>
           </div>
         </div>

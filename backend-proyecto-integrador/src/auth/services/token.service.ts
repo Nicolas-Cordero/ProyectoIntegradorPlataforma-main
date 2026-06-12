@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { usuario } from '@prisma/client'
 import { randomUUID } from 'crypto';
 import { JwtPayload, JwtRefreshPayload, StoredRefreshToken } from '../interfaces/auth.interfaces';
@@ -39,15 +39,15 @@ export class TokenService {
       tokenId,
     };
 
-    const accessToken = this.jwtService.sign(accessPayload as any, {
-      secret: this.configService.get<string>('jwt.access.secret'),
-      expiresIn: this.configService.get<string>('jwt.access.expiresIn'),
-    } as any);
+    const accessToken = this.jwtService.sign(accessPayload, {
+      secret: this.configService.get<string>('jwt.access.secret')!,
+      expiresIn: this.configService.get<string>('jwt.access.expiresIn') as unknown as JwtSignOptions['expiresIn'],
+    });
 
-    const refreshToken = this.jwtService.sign(refreshPayload as any, {
-      secret: this.configService.get<string>('jwt.refresh.secret'),
-      expiresIn: this.configService.get<string>('jwt.refresh.expiresIn'),
-    } as any);
+    const refreshToken = this.jwtService.sign(refreshPayload, {
+      secret: this.configService.get<string>('jwt.refresh.secret')!,
+      expiresIn: this.configService.get<string>('jwt.refresh.expiresIn') as unknown as JwtSignOptions['expiresIn'],
+    });
 
     // Almacenar el refresh token
     this.storeRefreshToken(refreshToken, user.rut_usuario, tokenId);

@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule} from '@nestjs/config';
 import { appConfig, jwtConfig } from './config';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { RolesGuard } from './auth/guards/roles.guard';
 
 import { PrismaService } from './prisma/prisma.service';
 
@@ -50,6 +53,10 @@ import { AlertasModule } from './alertas/alertas.module';
     SemestreModule,
     AlertasModule,
   ],
-  providers: [PrismaService]
+  providers: [
+    PrismaService,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
 })
 export class AppModule {}

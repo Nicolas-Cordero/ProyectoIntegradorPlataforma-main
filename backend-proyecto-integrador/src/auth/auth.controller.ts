@@ -24,6 +24,9 @@ import {
 } from './dto/auth-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { Public } from './decorators/public.decorator';
+import { Roles } from './decorators/roles.decorator';
+import { UserRol } from '@prisma/client';
 import type { AuthenticatedUser } from './interfaces/auth.interfaces';
 
 
@@ -65,6 +68,7 @@ export class AuthController {
    * LISTO
    */
   @Post('register')
+  @Roles(UserRol.ADMIN)
   @HttpCode(HttpStatus.CREATED)
   async register(
     @Body() registerDto: RegisterDto,
@@ -85,6 +89,7 @@ export class AuthController {
    * LISTO
    */
   @Post('login')
+  @Public()
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() loginDto: LoginDto,
@@ -203,6 +208,7 @@ export class AuthController {
    * @returns Mensaje de confirmación
    */
   @Post('forgot-password')
+  @Public()
   @HttpCode(HttpStatus.OK)
   async requestPasswordReset(
     @Body() dto: RequestPasswordResetDto,
@@ -224,6 +230,7 @@ export class AuthController {
    * @returns Indica si el código es válido
    */
   @Post('verify-reset-code')
+  @Public()
   @HttpCode(HttpStatus.OK)
   async verifyResetCode(
     @Body() dto: VerifyResetCodeDto,
@@ -238,6 +245,7 @@ export class AuthController {
    * @returns Mensaje de confirmación
    */
   @Post('reset-password')
+  @Public()
   @HttpCode(HttpStatus.OK)
   async resetPassword(
     @Body() dto: ResetPasswordDto,

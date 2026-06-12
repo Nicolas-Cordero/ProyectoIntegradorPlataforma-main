@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Body, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { SemestreService } from './semestre.service';
 import { CreateSemestreDto } from './dto/create-semestre.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRol } from '@prisma/client';
 
 
 @Controller('semestre')
@@ -8,6 +10,7 @@ export class SemestreController {
   constructor(private readonly semestreService: SemestreService) {}
 
   @Post()
+  @Roles(UserRol.ADMIN)
   create(@Body() createSemestreDto: CreateSemestreDto) {
     return this.semestreService.create(createSemestreDto);
   }
@@ -23,6 +26,7 @@ export class SemestreController {
   }
 
   @Delete(':id')
+  @Roles(UserRol.ADMIN)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.semestreService.remove(id);
   }

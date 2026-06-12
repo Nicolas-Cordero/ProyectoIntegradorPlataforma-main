@@ -2,9 +2,11 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query 
 import { ComentarioService } from './comentario.service';
 import { CreateComentarioDto } from './dto/create-comentario.dto';
 import { UpdateComentarioDto } from './dto/update-comentario.dto';
-import { Topico } from '@prisma/client';
+import { Topico, UserRol } from '@prisma/client';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('comentario')
+@Roles(UserRol.ADMIN, UserRol.TUTOR)
 export class ComentarioController {
   constructor(private readonly comentarioService: ComentarioService) {}
 
@@ -13,8 +15,8 @@ export class ComentarioController {
     return this.comentarioService.create(createComentarioDto);
   }
 
-  @Get(':entrevista')
-  findAllByEntrevista(@Param('entrevista', ParseIntPipe) id_entrevista: number) {
+  @Get('entrevista/:id_entrevista')
+  findAllByEntrevista(@Param('id_entrevista', ParseIntPipe) id_entrevista: number) {
     return this.comentarioService.findAllByEntrevista(id_entrevista);
   }
 
@@ -27,13 +29,13 @@ export class ComentarioController {
     return this.comentarioService.findAllByTopico(topico, rut_estudiante);
   }
 
-  @Get(':estudiante')
-  findByEstudiante(@Param('esttudiante') rut_estudiante: string) {
+  @Get('estudiante/:rut_estudiante')
+  findByEstudiante(@Param('rut_estudiante') rut_estudiante: string) {
     return this.comentarioService.findAllByEstudiante(rut_estudiante);
   }
 
-  @Get(':comentario')
-  findOne(@Param('comentario', ParseIntPipe) id_comentario: number) {
+  @Get(':id_comentario')
+  findOne(@Param('id_comentario', ParseIntPipe) id_comentario: number) {
     return this.comentarioService.findOne(id_comentario);
   }
 

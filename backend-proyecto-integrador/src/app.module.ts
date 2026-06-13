@@ -24,6 +24,7 @@ import { UsersModule } from './users';
 import { SemestreModule } from './semestre/semestre.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AlertasModule } from './alertas/alertas.module';
+import { StorageModule } from './storage/storage.module';
 
 
 
@@ -60,6 +61,7 @@ import { AlertasModule } from './alertas/alertas.module';
     UsersModule,
     SemestreModule,
     AlertasModule,
+    StorageModule,
   ],
   providers: [
     PrismaService,

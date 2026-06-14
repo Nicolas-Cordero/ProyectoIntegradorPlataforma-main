@@ -39,6 +39,8 @@ describe('PaesService', () => {
       rut_estudiante: "21427760-3",
       matematicas: 500,
       lenguaje: 600,
+      nem: 650,
+      ranking: 700,
       matematicas2: 500,
       ciencias: 500,
       historia: 600,
@@ -50,6 +52,8 @@ describe('PaesService', () => {
     mockRepository.create.mockResolvedValue({
       matematicas: 500,
       lenguaje: 600,
+      nem: 650,
+      ranking: 700,
       matematicas2: 500,
       ciencias: 500,
       historia: 600,
@@ -60,6 +64,8 @@ describe('PaesService', () => {
     expect(response).toEqual({
       matematicas: 500,
       lenguaje: 600,
+      nem: 650,
+      ranking: 700,
       matematicas2: 500,
       ciencias: 500,
       historia: 600,
@@ -73,6 +79,8 @@ describe('PaesService', () => {
       rut_estudiante: "21427760-3",
       matematicas: 500,
       lenguaje: 600,
+      nem: 650,
+      ranking: 700,
       matematicas2: 500,
       ciencias: 500,
       historia: 600,
@@ -81,6 +89,8 @@ describe('PaesService', () => {
     mockRepository.update.mockResolvedValue({
       matematicas: 100,
       lenguaje: 100,
+      nem: 100,
+      ranking: 100,
       matematicas2: 100,
       ciencias: 100,
       historia: 100,
@@ -89,6 +99,8 @@ describe('PaesService', () => {
     const updatePaesDto: UpdatePaesDto = {
       matematicas: 100,
       lenguaje: 100,
+      nem: 100,
+      ranking: 100,
       matematicas2: 100,
       ciencias: 100,
       historia: 100,
@@ -99,6 +111,8 @@ describe('PaesService', () => {
     expect(response).toEqual({
       matematicas: 100,
       lenguaje: 100,
+      nem: 100,
+      ranking: 100,
       matematicas2: 100,
       ciencias: 100,
       historia: 100,
@@ -112,6 +126,8 @@ describe('PaesService', () => {
       rut_estudiante: "21427760-3",
       matematicas: 500,
       lenguaje: 600,
+      nem: 650,
+      ranking: 700,
       matematicas2: 500,
       ciencias: 500,
       historia: 600,
@@ -125,6 +141,8 @@ describe('PaesService', () => {
         rut_estudiante: "21427760-3",
         matematicas: 500,
         lenguaje: 600,
+        nem: 650,
+        ranking: 700,
         matematicas2: 500,
         ciencias: 500,
         historia: 600,
@@ -133,6 +151,8 @@ describe('PaesService', () => {
     mockRepository.create.mockResolvedValue({
       matematicas: 500,
       lenguaje: 600,
+      nem: 650,
+      ranking: 700,
       matematicas2: 500,
       ciencias: 500,
       historia: 600,
@@ -142,6 +162,8 @@ describe('PaesService', () => {
     expect(response).toEqual({
       matematicas: 500,
       lenguaje: 600,
+      nem: 650,
+      ranking: 700,
       matematicas2: 500,
       ciencias: 500,
       historia: 600,
@@ -157,6 +179,8 @@ describe('PaesService', () => {
       rut_estudiante: "21427760-3",
       matematicas: 500,
       lenguaje: 600,
+      nem: 650,
+      ranking: 700,
       matematicas2: 500,
       ciencias: 500,
       historia: 600,
@@ -165,6 +189,8 @@ describe('PaesService', () => {
     mockRepository.update.mockResolvedValue({
       matematicas: 100,
       lenguaje: 600,
+      nem: 650,
+      ranking: 700,
       matematicas2: 500,
       ciencias: 500,
       historia: 600,
@@ -179,10 +205,46 @@ describe('PaesService', () => {
     expect(response).toEqual({
       matematicas: 100,
       lenguaje: 600,
+      nem: 650,
+      ranking: 700,
       matematicas2: 500,
       ciencias: 500,
       historia: 600,
     });
+  });
+
+
+
+  it('Se debe poder actualizar solo el NEM o el Ranking sin afectar los demás campos', async () => {
+    mockRepository.findPaesByEstudiante.mockResolvedValue({
+      rut_estudiante: "21427760-3",
+      matematicas: 500,
+      lenguaje: 600,
+      nem: 650,
+      ranking: 700,
+      matematicas2: 500,
+      ciencias: 500,
+      historia: 600,
+    });
+
+    mockRepository.update.mockResolvedValue({
+      matematicas: 500,
+      lenguaje: 600,
+      nem: 720,
+      ranking: 700,
+      matematicas2: 500,
+      ciencias: 500,
+      historia: 600,
+    });
+
+    const updatePaesDto: UpdatePaesDto = { nem: 720 };
+
+    const response = await service.update('21427760-3', updatePaesDto);
+
+    expect(response.nem).toBe(720);
+    expect(response.ranking).toBe(700);
+    expect(response.matematicas).toBe(500);
+    expect(response.lenguaje).toBe(600);
   });
 
 
@@ -199,6 +261,8 @@ describe('PaesService', () => {
         rut_estudiante: '12345678-9',
         matematicas: 500,
         lenguaje: 300,
+        nem: 600,
+        ranking: 650,
         matematicas2: 500,
         ciencias: 500,
         historia: 600,
@@ -207,6 +271,8 @@ describe('PaesService', () => {
         rut_estudiante: '98765432-1',
         matematicas: 500,
         lenguaje: 600,
+        nem: 610,
+        ranking: 660,
         matematicas2: 500,
         ciencias: 200,
         historia: 600,
@@ -215,6 +281,8 @@ describe('PaesService', () => {
         rut_estudiante: '11111111-1',
         matematicas: 500,
         lenguaje: 600,
+        nem: 620,
+        ranking: 670,
         matematicas2: 500,
         ciencias: 200,
         historia: 600,
@@ -228,6 +296,8 @@ describe('PaesService', () => {
         rut_estudiante: '12345678-9',
         matematicas: 500,
         lenguaje: 300,
+        nem: 600,
+        ranking: 650,
         matematicas2: 500,
         ciencias: 500,
         historia: 600,
@@ -236,6 +306,8 @@ describe('PaesService', () => {
         rut_estudiante: '98765432-1',
         matematicas: 500,
         lenguaje: 600,
+        nem: 610,
+        ranking: 660,
         matematicas2: 500,
         ciencias: 200,
         historia: 600,
@@ -251,6 +323,8 @@ describe('PaesService', () => {
         rut_estudiante: '12345678-9',
         matematicas: 500,
         lenguaje: 300,
+        nem: 600,
+        ranking: 650,
         matematicas2: 500,
         ciencias: 500,
         historia: 600,
@@ -259,6 +333,8 @@ describe('PaesService', () => {
         rut_estudiante: '98765432-1',
         matematicas: 500,
         lenguaje: 600,
+        nem: 610,
+        ranking: 660,
         matematicas2: 500,
         ciencias: 200,
         historia: 600,
@@ -267,6 +343,8 @@ describe('PaesService', () => {
         rut_estudiante: '11111111-1',
         matematicas: 500,
         lenguaje: 600,
+        nem: 620,
+        ranking: 670,
         matematicas2: 500,
         ciencias: 200,
         historia: 600,
@@ -280,6 +358,8 @@ describe('PaesService', () => {
         rut_estudiante: '12345678-9',
         matematicas: 500,
         lenguaje: 300,
+        nem: 600,
+        ranking: 650,
         matematicas2: 500,
         ciencias: 500,
         historia: 600,
@@ -288,6 +368,8 @@ describe('PaesService', () => {
         rut_estudiante: '98765432-1',
         matematicas: 500,
         lenguaje: 600,
+        nem: 610,
+        ranking: 660,
         matematicas2: 500,
         ciencias: 200,
         historia: 600,
@@ -296,6 +378,8 @@ describe('PaesService', () => {
         rut_estudiante: '11111111-1',
         matematicas: 500,
         lenguaje: 600,
+        nem: 620,
+        ranking: 670,
         matematicas2: 500,
         ciencias: 200,
         historia: 600,
@@ -311,6 +395,8 @@ describe('PaesService', () => {
       rut_estudiante: '12345678-9',
       matematicas: 500,
       lenguaje: 300,
+      nem: 600,
+      ranking: 650,
       matematicas2: 500,
       ciencias: 500,
       historia: 600,

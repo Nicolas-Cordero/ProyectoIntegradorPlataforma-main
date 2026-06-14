@@ -19,6 +19,16 @@ export class CreatePaesDto {
 
   @Type(()=>Number)
   @IsNumber()
+  @IsNotEmpty()
+  nem!: number;
+
+  @Type(()=>Number)
+  @IsNumber()
+  @IsNotEmpty()
+  ranking!: number;
+
+  @Type(()=>Number)
+  @IsNumber()
   @IsOptional()
   matematicas2?: number;
 

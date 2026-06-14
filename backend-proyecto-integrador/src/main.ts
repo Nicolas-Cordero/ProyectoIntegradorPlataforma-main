@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe, BadRequestException } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { AllExceptionsFilter, HttpExceptionFilter } from './common';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 
@@ -38,12 +39,20 @@ async function bootstrap() {
 
 
 
-  //no permite que metan info extra en los DTO
+  app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter());
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       transform: true,
       forbidNonWhitelisted: true,
+      transformOptions: { enableImplicitConversion: true },
+      exceptionFactory: (errors) => {
+        const messages = errors
+          .flatMap(err => Object.values(err.constraints || {}))
+          .join('; ');
+        return new BadRequestException(messages || 'Datos de entrada inválidos');
+      },
     }),
   );
 

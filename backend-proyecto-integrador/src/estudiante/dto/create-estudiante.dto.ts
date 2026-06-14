@@ -49,7 +49,8 @@ export class CreateEstudianteDto {
   telefono!: string;
 
 
-  @IsInt()
+  @Type(() => Number)
+  @IsInt({ message: 'generacion_id debe ser un número entero' })
   @IsNotEmpty()
   generacion_id!: number;
 

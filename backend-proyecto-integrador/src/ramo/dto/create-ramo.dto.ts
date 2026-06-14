@@ -1,10 +1,11 @@
 import { EstadoRamo } from "@prisma/client";
 import { Type } from "class-transformer";
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
+import { IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
 
 export class CreateRamoDto {
 
-  @Type(()=> Number)
+  @Type(() => Number)
+  @IsInt({ message: 'semestre_id debe ser un número entero' })
   @IsNotEmpty()
   semestre_id!: number;
 
@@ -12,7 +13,8 @@ export class CreateRamoDto {
   @IsNotEmpty()
   rut_estudiante!: string;
 
-  @Type(()=> Number)
+  @Type(() => Number)
+  @IsInt({ message: 'codigo_carrera debe ser un número entero' })
   @IsNotEmpty()
   codigo_carrera!: number;
 
@@ -28,14 +30,15 @@ export class CreateRamoDto {
   @IsOptional()
   comentario?: string;
 
-  @Type(()=> Number)
+  @Type(() => Number)
+  @IsInt({ message: 'intento debe ser un número entero' })
   @IsOptional()
   intento?: number;
 
-  @Type(()=> Number)
-  @IsNumber({ maxDecimalPlaces: 1 })
-  @Min(1)
-  @Max(7)
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 1 }, { message: 'nota_final debe ser un número con máximo 1 decimal' })
+  @Min(1, { message: 'nota_final mínima es 1.0' })
+  @Max(7, { message: 'nota_final máxima es 7.0' })
   @IsOptional()
   nota_final?: number;
 }

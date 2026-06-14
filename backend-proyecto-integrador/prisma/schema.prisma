@@ -327,6 +327,8 @@ model paes {
   rut_estudiante  String @unique
   matematicas     Int
   lenguaje        Int
+  nem             Int
+  ranking         Int
   matematicas2    Int?
   ciencias        Int?
   historia        Int?

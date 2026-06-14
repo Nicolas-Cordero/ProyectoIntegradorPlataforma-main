@@ -28,5 +28,9 @@ export { ramoAvanceService } from './ramo-avance.service';
 export { alertasService } from './alertas.service';
 export type { Alerta } from './alertas.service';
 
+// PAES
+export { paesService } from './paes.service';
+export type { CreatePaesDto, UpdatePaesDto } from './paes.service';
+
 // Storage
 export { storageService } from './storage.service';

@@ -19,6 +19,14 @@ export class PaesService {
     return this.paesRepo.findAll();
   }
 
+  async findByEstudiante(rut_estudiante: string) {
+    const existing = await this.paesRepo.findPaesByEstudiante(rut_estudiante);
+    if (!existing) {
+      throw new NotFoundException(`No se encontró PAES para el estudiante ${rut_estudiante}`);
+    }
+    return existing;
+  }
+
   async update(rut_estudiante: string, updatePaesDto: UpdatePaesDto) {
     const existing = await this.paesRepo.findPaesByEstudiante(rut_estudiante);
     if (!existing) {

@@ -189,6 +189,22 @@ export interface BeneficioEstudiante {
   fin: Date | string;
 }
 
+// ============================================
+// PAES
+// ============================================
+
+export interface Paes {
+  id: number;
+  rut_estudiante: string;
+  matematicas: number;
+  lenguaje: number;
+  nem: number;
+  ranking: number;
+  matematicas2?: number;
+  ciencias?: number;
+  historia?: number;
+}
+
 // ARCHIVOS LEGACY CON ERRORES TRAS LIMPIEZA (pendientes de corrección/eliminación):
 // - src/components/features/estudiante-detalles/interview-workspace/DataTable.tsx
 // - src/components/features/estudiante-detalles/interview-workspace/NoteEditor.tsx

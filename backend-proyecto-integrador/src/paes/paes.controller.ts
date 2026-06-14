@@ -17,6 +17,11 @@ export class PaesController {
     return this.paesService.findAll();
   }
 
+  @Get('estudiante/:rut')
+  findByEstudiante(@Param('rut') rut: string) {
+    return this.paesService.findByEstudiante(rut);
+  }
+
   @Get('generacion/:generacion')
   getByGeneration(@Param('generacion') generacion: string) {
     return this.paesService.getByGeneration(generacion);

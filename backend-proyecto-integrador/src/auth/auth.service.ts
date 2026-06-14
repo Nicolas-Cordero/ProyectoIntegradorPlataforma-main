@@ -212,11 +212,12 @@ export class AuthService {
     storedToken: { userId: string; tokenId: string } | undefined,
     payload: { sub: string; tokenId: string },
   ): void {
-    if (
-      !storedToken ||
+    // Si el token existe en el Map pero no coincide → posible replay attack → rechazar.
+    // Si no está en el Map (ej. servidor reiniciado) → confiar en la firma del JWT.
+    if (storedToken && (
       storedToken.userId !== payload.sub ||
       storedToken.tokenId !== payload.tokenId
-    ) {
+    )) {
       throw new UnauthorizedException(AUTH_MESSAGES.INVALID_REFRESH_TOKEN);
     }
   }

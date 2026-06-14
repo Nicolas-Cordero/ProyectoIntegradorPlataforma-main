@@ -278,7 +278,9 @@ export const UserManagement: React.FC = () => {
                 </TableRow>
               ) : (
                 filteredUsers.map((user) => {
-                  const isSelf = user.rut_usuario === usuario?.rut_usuario;
+                  const isSelf    = user.rut_usuario === usuario?.rut_usuario;
+                  const isAdmin   = user.rol === UserRol.ADMIN;
+                  const isLocked  = isSelf || isAdmin;
                   return (
                   <TableRow key={user.rut_usuario} hover sx={{ '&:hover': { backgroundColor: 'rgba(101,179,155,0.04)' } }}>
                     <TableCell>
@@ -311,16 +313,16 @@ export const UserManagement: React.FC = () => {
                     <TableCell align="center">
                       <button
                         onClick={() => handleOpenDialog(user)}
-                        title={isSelf ? 'No puedes editar tu propio usuario' : 'Editar usuario'}
-                        disabled={isSelf}
+                        title={isSelf ? 'No puedes editar tu propio usuario' : isAdmin ? 'No se puede editar a otro administrador' : 'Editar usuario'}
+                        disabled={isLocked}
                         className="p-1.5 rounded-full text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                       >
                         <EditIcon fontSize="small" />
                       </button>
                       <button
                         onClick={() => { setPasswordChangeUser(user); setShowPasswordChange(true); }}
-                        title={isSelf ? 'Cambia tu contraseña desde tu perfil' : 'Cambiar contraseña'}
-                        disabled={isSelf}
+                        title={isSelf ? 'Cambia tu contraseña desde tu perfil' : isAdmin ? 'No se puede cambiar la contraseña de otro administrador' : 'Cambiar contraseña'}
+                        disabled={isLocked}
                         className="p-1.5 rounded-full text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                       >
                         <LockIcon fontSize="small" />

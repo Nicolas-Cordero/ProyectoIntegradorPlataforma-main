@@ -27,3 +27,6 @@ export { ramoAvanceService } from './ramo-avance.service';
 // Alertas
 export { alertasService } from './alertas.service';
 export type { Alerta } from './alertas.service';
+
+// Storage
+export { storageService } from './storage.service';

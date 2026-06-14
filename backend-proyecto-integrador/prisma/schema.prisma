@@ -198,6 +198,7 @@ model estudiante {
   ramos       ramo[]
   entrevistas entrevista[]
   contactos_emergencia contacto_emergencia[]
+  paes paes?
 }
 
 
@@ -321,6 +322,17 @@ model comentario {
   @@unique([entrevista_id, topico])
 }
 
+model paes {
+  id              Int    @id @default(autoincrement())
+  rut_estudiante  String @unique
+  matematicas     Int
+  lenguaje        Int
+  matematicas2    Int?
+  ciencias        Int?
+  historia        Int?
+
+  estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
+}
 
 
 

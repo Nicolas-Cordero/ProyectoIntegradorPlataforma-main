@@ -25,6 +25,7 @@ import { SemestreModule } from './semestre/semestre.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AlertasModule } from './alertas/alertas.module';
 import { StorageModule } from './storage/storage.module';
+import { PaesModule } from './paes/paes.module';
 
 
 
@@ -62,6 +63,7 @@ import { StorageModule } from './storage/storage.module';
     SemestreModule,
     AlertasModule,
     StorageModule,
+    PaesModule,
   ],
   providers: [
     PrismaService,

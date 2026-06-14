@@ -1,19 +1,30 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { v2 as CloudinaryType, UploadApiErrorResponse } from 'cloudinary';
 import { StorageService } from '../storage.service';
 import { UploadResult } from '../storage.types';
+
+type CloudinaryInstance = typeof CloudinaryType & {
+  folders: {
+    files:  string;
+    images: string;
+  };
+};
 
 @Injectable()
 export class CloudinaryAdapter extends StorageService {
 
-  constructor(@Inject('CLOUDINARY') private readonly cloudinary: any) {
+  constructor(@Inject('CLOUDINARY') private readonly cloudinary: CloudinaryInstance) {
     super();
   }
 
   uploadImage(file: Express.Multer.File, folder?: string): Promise<UploadResult> {
+    const targetFolder = folder
+      ? `${this.cloudinary.folders.images}/${folder}`
+      : this.cloudinary.folders.images;
     return new Promise((resolve, reject) => {
       const stream = this.cloudinary.uploader.upload_stream(
-        { resource_type: 'image', folder },
-        (error: Error | null, result: any) => {
+        { resource_type: 'image', folder: targetFolder },
+        (error: UploadApiErrorResponse | undefined, result: any) => {
           if (error) return reject(error);
           resolve({ url: result.secure_url, publicId: result.public_id });
         },
@@ -23,10 +34,13 @@ export class CloudinaryAdapter extends StorageService {
   }
 
   uploadPDF(file: Express.Multer.File, folder?: string): Promise<UploadResult> {
+    const targetFolder = folder
+      ? `${this.cloudinary.folders.files}/${folder}`
+      : this.cloudinary.folders.files;
     return new Promise((resolve, reject) => {
       const stream = this.cloudinary.uploader.upload_stream(
-        { resource_type: 'raw', folder },
-        (error: Error | null, result: any) => {
+        { resource_type: 'raw', folder: targetFolder },
+        (error: UploadApiErrorResponse | undefined, result: any) => {
           if (error) return reject(error);
           resolve({ url: result.secure_url, publicId: result.public_id });
         },

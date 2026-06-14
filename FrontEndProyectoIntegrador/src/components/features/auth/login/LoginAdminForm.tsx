@@ -42,8 +42,6 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    logger.log('🔍 Datos del formulario (admin):', { email: credentials.email });
-    
     if (!credentials.email || !credentials.password) {
       setError('Por favor, completa todos los campos');
       return;

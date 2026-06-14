@@ -24,8 +24,6 @@ interface FormState {
   rbd_liceo: string;
   promedios_media: string;
   estado: EstadoEstudiante | '';
-  puntaje_paes: string;
-  foto_url: string;
   generacion_id: string; // string para el <select>
 }
 
@@ -41,12 +39,18 @@ const EMPTY: FormState = {
   rbd_liceo: '',
   promedios_media: '',
   estado: 'ACTIVO',
-  puntaje_paes: '',
-  foto_url: '',
   generacion_id: '',
 };
 
 const PHONE_RE = /^\+569\s?\d{4}\s?\d{4}$/;
+
+function normalizarRut(rut: string): string {
+  let clean = rut.replace(/\./g, '').replace(/\s/g, '').toUpperCase();
+  if (!clean.includes('-') && clean.length >= 2) {
+    clean = `${clean.slice(0, -1)}-${clean.slice(-1)}`;
+  }
+  return clean;
+}
 
 const INPUT_CLASS =
   'w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] bg-white transition-colors';
@@ -117,7 +121,7 @@ export const CreateEstudianteModal: React.FC<Props> = ({
       const promRedondeado = Math.round(prom * 10) / 10;
 
       await estudianteService.create({
-        rut_estudiante: form.rut_estudiante.trim(),
+        rut_estudiante: normalizarRut(form.rut_estudiante.trim()),
         nombre: form.nombre.trim(),
         apellido: form.apellido.trim(),
         email: form.email.trim(),
@@ -129,8 +133,6 @@ export const CreateEstudianteModal: React.FC<Props> = ({
         rbd_liceo: form.rbd_liceo.trim(),
         promedios_media: promRedondeado,
         estado: form.estado as EstadoEstudiante,
-        puntaje_paes: form.puntaje_paes ? parseInt(form.puntaje_paes) : undefined,
-        foto_url: form.foto_url.trim() || undefined,
       });
       onSuccess();
       onClose();
@@ -341,21 +343,13 @@ export const CreateEstudianteModal: React.FC<Props> = ({
           />
         </Box>
 
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
           <Input
             etiqueta="Promedio Media * (1.0 – 7.0)"
             tipo="number"
             valor={form.promedios_media}
             onChange={set('promedios_media')}
             placeholder="5.5"
-            deshabilitado={loading}
-          />
-          <Input
-            etiqueta="Puntaje PAES"
-            tipo="number"
-            valor={form.puntaje_paes}
-            onChange={set('puntaje_paes')}
-            placeholder="Opcional"
             deshabilitado={loading}
           />
           <Select
@@ -375,13 +369,6 @@ export const CreateEstudianteModal: React.FC<Props> = ({
           />
         </Box>
 
-        <Input
-          etiqueta="URL de Foto (opcional)"
-          valor={form.foto_url}
-          onChange={set('foto_url')}
-          placeholder="https://ejemplo.com/foto.jpg"
-          deshabilitado={loading}
-        />
       </Box>
     </Modal>
   );

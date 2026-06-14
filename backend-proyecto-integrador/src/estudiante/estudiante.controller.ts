@@ -1,13 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { EstudianteService } from './estudiante.service';
 import { CreateEstudianteDto } from './dto/create-estudiante.dto';
 import { UpdateEstudianteDto } from './dto/update-estudiante.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRol } from '@prisma/client';
+import { StorageService } from '../storage/storage.service';
 
 @Controller('estudiante')
 export class EstudianteController {
-  constructor(private readonly estudianteService: EstudianteService) {}
+  constructor(
+    private readonly estudianteService: EstudianteService,
+    private readonly storageService: StorageService,
+  ) {}
 
   @Post()
   @Roles(UserRol.ADMIN)
@@ -45,6 +51,18 @@ export class EstudianteController {
   @Roles(UserRol.ADMIN, UserRol.TUTOR)
   update(@Param('rut_estudiante') rut_estudiante: string, @Body() updateEstudianteDto: UpdateEstudianteDto) {
     return this.estudianteService.update(rut_estudiante, updateEstudianteDto);
+  }
+
+  @Post(':rut_estudiante/foto')
+  @Roles(UserRol.ADMIN, UserRol.ESTUDIANTE)
+  @UseInterceptors(FileInterceptor('foto', { storage: memoryStorage() }))
+  async uploadFoto(
+    @Param('rut_estudiante') rut_estudiante: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const { url } = await this.storageService.uploadImage(file, 'perfil');
+    await this.estudianteService.update(rut_estudiante, { foto_url: url });
+    return { foto_url: url };
   }
 
   @Delete(':id')

@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Avatar, Button, LinearProgress } from '@mui/material';
-import { AccountCircle as AccountCircleIcon, CloudUpload as CloudUploadIcon, Edit as EditIcon } from '@mui/icons-material';
-import { Modal, Input, Select, Alert } from '../../components/ui';
+import { Avatar } from '@mui/material';
+import { Edit as EditIcon } from '@mui/icons-material';
+import { Modal, Input, Select, Alert, Button } from '../../components/ui';
 import { estudianteService, alertasService } from '../../services';
 import type { Alerta } from '../../services';
 import type { EstudianteOutletContext } from './EstudianteDetail';
 import type { EstadoEstudiante, Genero } from '../../types';
 import type { UpdateEstudianteDto } from '../../services/estudiante.service';
+import { FotoPerfilModal } from '../../components/features/estudiante-detalles/FotoPerfilModal';
+import userSvg from '../../assets/icons/user.svg';
 
 // Normaliza coma decimal a punto antes de cualquier operación numérica (Bug 10)
 function normalizarDecimal(v: string | number | undefined | null): string {
@@ -19,9 +21,7 @@ export default function EstudiantePerfil() {
   const { estudiante, liceo, generacion, canEdit, refresh } = useOutletContext<EstudianteOutletContext>();
 
   const [fotoUrl, setFotoUrl] = useState<string | undefined>(estudiante.foto_url);
-  const [subiendo, setSubiendo] = useState(false);
-  const [errorUpload, setErrorUpload] = useState('');
-  const [errorDB, setErrorDB] = useState('');
+  const [fotoModalOpen, setFotoModalOpen] = useState(false);
 
   const [alertas, setAlertas] = useState<Alerta[]>([]);
 
@@ -106,62 +106,23 @@ export default function EstudiantePerfil() {
           {/* Avatar y foto */}
           <div className="flex flex-col items-center gap-2">
             <Avatar
-              sx={{ width: 160, height: 160, bgcolor: 'grey.300', fontSize: '4rem' }}
-              src={fotoUrl}
+              sx={{ width: 160, height: 160, bgcolor: 'grey.200' }}
+              src={fotoUrl || userSvg}
               alt={estudiante.nombre}
-            >
-              {!fotoUrl && <AccountCircleIcon sx={{ fontSize: '7rem', color: 'grey.500' }} />}
-            </Avatar>
-
-            <input id="upload-avatar" type="file" accept="image/*" style={{ display: 'none' }}
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                setErrorUpload('');
-                setErrorDB('');
-                setSubiendo(true);
-
-                // Bug 3 fix: dos bloques try/catch independientes
-                let secureUrl: string;
-                try {
-                  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-                  const preset   = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-                  const folder   = import.meta.env.VITE_CLOUDINARY_FOLDER || 'proyecto-integrador';
-                  if (!cloudName || !preset) throw new Error('Faltan variables de Cloudinary');
-                  const formData = new FormData();
-                  formData.append('file', file);
-                  formData.append('upload_preset', preset);
-                  formData.append('folder', folder);
-                  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: 'POST', body: formData });
-                  if (!res.ok) throw new Error('Error subiendo imagen a Cloudinary');
-                  const data = await res.json();
-                  secureUrl = data.secure_url as string;
-                  setFotoUrl(secureUrl);
-                } catch (err: unknown) {
-                  setErrorUpload(err instanceof Error ? err.message : 'No se pudo subir la imagen');
-                  setSubiendo(false);
-                  if (e.target) e.target.value = '';
-                  return;
-                }
-
-                try {
-                  await estudianteService.update(estudiante.rut_estudiante, { foto_url: secureUrl });
-                } catch {
-                  setErrorDB('La foto se subió pero no se guardó en el perfil. Intenta guardar de nuevo.');
-                } finally {
-                  setSubiendo(false);
-                  if (e.target) e.target.value = '';
-                }
-              }}
             />
-            <label htmlFor="upload-avatar">
-              <Button component="span" variant="outlined" startIcon={<CloudUploadIcon />} disabled={subiendo} sx={{ textTransform: 'none', mt: 1 }}>
-                {subiendo ? 'Subiendo...' : 'Cambiar foto'}
+
+            {canEdit && (
+              <Button variante="outline" tamano="sm" onClick={() => setFotoModalOpen(true)}>
+                Cambiar foto
               </Button>
-            </label>
-            {subiendo && <LinearProgress sx={{ width: '100%', mt: 1 }} />}
-            {errorUpload && <p className="text-red-500 text-xs mt-1 text-center">{errorUpload}</p>}
-            {errorDB && <p className="text-orange-500 text-xs mt-1 text-center">{errorDB}</p>}
+            )}
+
+            <FotoPerfilModal
+              estudianteId={estudiante.rut_estudiante}
+              isOpen={fotoModalOpen}
+              onClose={() => setFotoModalOpen(false)}
+              onSuccess={(url) => setFotoUrl(url)}
+            />
           </div>
 
           {/* Información General */}

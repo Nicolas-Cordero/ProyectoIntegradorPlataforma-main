@@ -22,6 +22,7 @@ const UserManagement = lazy(() => import('./pages/UserManagement'));
 const DebugPermissions = lazy(() => import('./pages/DebugPermissions'));
 const GeneracionesPanel = lazy(() => import('./pages/GeneracionesPanel').then(m => ({ default: m.GeneracionesPanel })));
 const EstadisticasPage  = lazy(() => import('./pages/EstadisticasPage').then(m => ({ default: m.EstadisticasPage })));
+const AcuerdoCompromiso = lazy(() => import('./pages/AcuerdoCompromiso').then(m => ({ default: m.AcuerdoCompromiso })));
 
 
 function AppRoutes() {
@@ -35,7 +36,10 @@ function AppRoutes() {
     { label: 'Generaciones', path: '/generaciones' },
     { label: 'Estadisticas', path: '/estadisticas' },
     { label: 'Perfil', path: '/perfil' },
-    ...(isAdmin ? [{ label: 'Gestion Usuarios', path: '/admin/usuarios' }] : []),
+    ...(isAdmin ? [
+      { label: 'Gestion Usuarios', path: '/admin/usuarios' },
+      { label: 'Acuerdo de Compromiso', path: '/admin/acuerdo-compromiso' },
+    ] : []),
   ];
 
   const handleLogout = async () => {
@@ -72,6 +76,7 @@ function AppRoutes() {
       <Route path="/entrevista/:id" element={<EntrevistaWorkspace />} />
       <Route path="/estadisticas"   element={withLayout(<EstadisticasPage />)} />
       <Route path="/admin/usuarios" element={withLayout(<UserManagement />)} />
+      <Route path="/admin/acuerdo-compromiso" element={withLayout(<AcuerdoCompromiso />)} />
       <Route path="/debug-permissions" element={<DebugPermissions />} />
     </Routes>
   );

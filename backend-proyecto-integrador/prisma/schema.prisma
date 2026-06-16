@@ -336,6 +336,11 @@ model paes {
   estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
 }
 
+model acuerdo {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  documento Json
+}
 
 
 

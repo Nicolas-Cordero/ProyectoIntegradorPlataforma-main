@@ -26,6 +26,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AlertasModule } from './alertas/alertas.module';
 import { StorageModule } from './storage/storage.module';
 import { PaesModule } from './paes/paes.module';
+import { AcuerdoModule } from './acuerdo/acuerdo.module';
 
 
 
@@ -64,6 +65,7 @@ import { PaesModule } from './paes/paes.module';
     AlertasModule,
     StorageModule,
     PaesModule,
+    AcuerdoModule,
   ],
   providers: [
     PrismaService,

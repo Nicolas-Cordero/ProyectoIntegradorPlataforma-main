@@ -52,4 +52,31 @@ export class AlertasRepository {
       select: { semestre_id: true, year: true, semestre: true, tipo: true },
     });
   }
+
+  // Versión vigente del acuerdo = la más reciente (o null si no hay ninguna).
+  async getAcuerdoVigente() {
+    return this.prisma.acuerdo.findFirst({
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, createdAt: true },
+    });
+  }
+
+  // Ruts de los estudiantes que firmaron una versión concreta del acuerdo.
+  // Se trae en bloque para resolver el estado de firma de muchos estudiantes
+  // con una sola consulta (igual que getAllEntrevistas).
+  async getRutsConFirma(acuerdo_id: number): Promise<string[]> {
+    const firmas = await this.prisma.firma_acuerdo.findMany({
+      where: { acuerdo_id },
+      select: { rut_estudiante: true },
+    });
+    return firmas.map(f => f.rut_estudiante);
+  }
+
+  // Verifica si un estudiante puntual firmó una versión del acuerdo.
+  async getFirmaAcuerdo(acuerdo_id: number, rut_estudiante: string) {
+    return this.prisma.firma_acuerdo.findUnique({
+      where: { acuerdo_id_rut_estudiante: { acuerdo_id, rut_estudiante } },
+      select: { id: true },
+    });
+  }
 }

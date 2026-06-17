@@ -101,15 +101,35 @@ model usuario {
   rol           UserRol
   password      String
 
+  activo                Boolean  @default(true)
+  must_change_password  Boolean  @default(true)
+
   ultimo_login  DateTime?
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
-  reset_token           String? 
+  reset_token           String?
   reset_token_expires   DateTime?
 
   entrevistas entrevista[] @relation("Entrevistador")
   audit_logs  audit_log[]
+  refresh_tokens refresh_token[]
+}
+
+
+
+model refresh_token {
+  id          Int      @id @default(autoincrement())
+  rut_usuario String
+  token_hash  String   @unique
+  token_id    String
+  expires_at  DateTime
+  revoked     Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  usuario usuario @relation(fields: [rut_usuario], references: [rut_usuario])
+
+  @@index([rut_usuario])
 }
 
 
@@ -199,6 +219,7 @@ model estudiante {
   entrevistas entrevista[]
   contactos_emergencia contacto_emergencia[]
   paes paes?
+  firmas_acuerdo firma_acuerdo[]
 }
 
 
@@ -340,6 +361,25 @@ model acuerdo {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   documento Json
+
+  firmas    firma_acuerdo[]
+}
+
+// Cada fila registra que un estudiante firmó una versión concreta del acuerdo.
+// La política de negocio es firmar SIEMPRE la versión vigente; como cada edición
+// del acuerdo crea una fila nueva en `acuerdo`, una versión nueva nace sin firmas
+// (la ausencia de fila = "no firmado"), sin necesidad de resetear nada.
+model firma_acuerdo {
+  id             Int      @id @default(autoincrement())
+  acuerdo_id     Int
+  rut_estudiante String
+  firmado_at     DateTime @default(now())
+
+  acuerdo    acuerdo    @relation(fields: [acuerdo_id], references: [id], onDelete: Cascade)
+  estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante], onDelete: Cascade)
+
+  @@unique([acuerdo_id, rut_estudiante]) // idempotente: un estudiante firma una versión a lo más una vez
+  @@index([rut_estudiante])
 }
 
 

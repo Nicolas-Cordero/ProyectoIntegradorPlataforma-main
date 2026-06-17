@@ -5,7 +5,9 @@ import { EstudianteService } from './estudiante.service';
 import { CreateEstudianteDto } from './dto/create-estudiante.dto';
 import { UpdateEstudianteDto } from './dto/update-estudiante.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRol } from '@prisma/client';
+import type { AuthenticatedUser } from '../auth/interfaces/auth.interfaces';
 import { StorageService } from '../storage/storage.service';
 
 @Controller('estudiante')
@@ -25,6 +27,15 @@ export class EstudianteController {
   @Roles(UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA)
   findAll() {
     return this.estudianteService.findAll();
+  }
+
+
+  // El estudiante consulta su propia información (rut tomado del JWT).
+  // Debe declararse antes de las rutas con :rut_estudiante.
+  @Get('me')
+  @Roles(UserRol.ESTUDIANTE)
+  findMe(@CurrentUser() user: AuthenticatedUser) {
+    return this.estudianteService.findOneComplete(user.rut_usuario);
   }
 
 
@@ -53,8 +64,22 @@ export class EstudianteController {
     return this.estudianteService.update(rut_estudiante, updateEstudianteDto);
   }
 
+  // El estudiante sube su propia foto (rut tomado del JWT).
+  // Debe ir ANTES de :rut_estudiante/foto para no ser capturado por esa ruta.
+  @Post('me/foto')
+  @Roles(UserRol.ESTUDIANTE)
+  @UseInterceptors(FileInterceptor('foto', { storage: memoryStorage() }))
+  async uploadMyFoto(
+    @CurrentUser() user: AuthenticatedUser,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const { url } = await this.storageService.uploadImage(file, 'perfil');
+    await this.estudianteService.update(user.rut_usuario, { foto_url: url });
+    return { foto_url: url };
+  }
+
   @Post(':rut_estudiante/foto')
-  @Roles(UserRol.ADMIN, UserRol.ESTUDIANTE)
+  @Roles(UserRol.ADMIN)
   @UseInterceptors(FileInterceptor('foto', { storage: memoryStorage() }))
   async uploadFoto(
     @Param('rut_estudiante') rut_estudiante: string,

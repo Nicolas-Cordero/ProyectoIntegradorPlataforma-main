@@ -1,6 +1,6 @@
 import { Topico } from "./Topico"
 
-export interface DocumentoCompromiso {
+export type DocumentoCompromiso = {
   titulo: string;
   subtitulo: string;
   abstract: string;

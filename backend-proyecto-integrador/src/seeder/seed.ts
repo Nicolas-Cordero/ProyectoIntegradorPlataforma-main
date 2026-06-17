@@ -6,6 +6,8 @@ import {
   liceosSeeder,
   universidadesSeeder,
   semestresSeeder,
+  compromisoSeeder
+
   } from './seeds';
 
 
@@ -17,6 +19,7 @@ async function main() {
   await universidadesSeeder();
   await usersSeeder();
   await semestresSeeder();
+  await compromisoSeeder();
 
   console.log('All seeders executed successfully');
 }

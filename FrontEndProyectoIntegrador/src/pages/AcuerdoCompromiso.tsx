@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   HandshakeOutlined as HandshakeIcon,
   EditOutlined as EditIcon,
@@ -13,39 +13,14 @@ import { TypingText } from '../components/common/TypingText';
 import { Select, Input, Textarea, Button, DateLabel } from '../components/ui';
 import { useConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useSnackbar } from '../hooks/useSnackbar';
-
-// ── Formato del backend (DTO) ───────────────────────────────────────────────────
-// Estructura fija tal como el acuerdo será almacenado/entregado por el backend:
-// titulo + subtitulo + abstract y exactamente 4 tópicos, cada uno con nombre y
-// hasta 4 puntos (puntoA..puntoD). Un campo `null` significa "ausente".
-
-interface TopicoDTO {
-  nombre: string | null;
-  puntoA: string | null;
-  puntoB: string | null;
-  puntoC: string | null;
-  puntoD: string | null;
-}
-
-interface AcuerdoDTO {
-  titulo: string;
-  subtitulo: string;
-  abstract: string;
-  topico1: TopicoDTO;
-  topico2: TopicoDTO;
-  topico3: TopicoDTO;
-  topico4: TopicoDTO;
-}
-
-const TOPICO_KEYS = ['topico1', 'topico2', 'topico3', 'topico4'] as const;
-const PUNTO_KEYS = ['puntoA', 'puntoB', 'puntoC', 'puntoD'] as const;
-
-const MAX_TOPICOS = TOPICO_KEYS.length;
-const MAX_PUNTOS = PUNTO_KEYS.length;
+import { acuerdoService } from '../services';
+import type { AcuerdoResponse, DocumentoCompromiso } from '../services/acuerdo.service';
 
 // ── Modelo interno (ergonómico para la UI) ──────────────────────────────────────
-// Internamente trabajamos con arrays; la conversión a/desde el DTO ocurre solo en
-// los límites (carga y guardado), para mapear arrays ↔ topico1..4 / puntoA..D.
+// El backend entrega/recibe el documento como { titulo, subtitulo, abstract,
+// topicos: [{ nombre, puntos: string[] }] }. Internamente trabajamos con ids
+// estables para las claves de React; la conversión ocurre solo en los límites
+// (carga y guardado) vía fromBackend / toBackend.
 
 interface Punto {
   id: number;
@@ -65,112 +40,72 @@ interface Acuerdo {
   topicos: Topico[];
 }
 
+// Límites de la UI: deshabilitan los botones "agregar" y se respetan al guardar.
+const MAX_TOPICOS = 4;
+const MAX_PUNTOS = 4;
+
 // Contador monotónico de ids para tópicos y puntos (claves estables de React).
 let _idSeq = 0;
 const nextId = () => ++_idSeq;
 
-// DTO → modelo interno: descarta tópicos/puntos en `null` y compacta a arrays.
-const fromDTO = (dto: AcuerdoDTO): Acuerdo => ({
-  titulo: dto.titulo,
-  subtitulo: dto.subtitulo,
-  abstract: dto.abstract,
-  topicos: TOPICO_KEYS.map((k) => dto[k])
-    .filter((t): t is TopicoDTO => !!t && t.nombre !== null)
-    .map((t) => ({
-      id: nextId(),
-      nombre: t.nombre ?? '',
-      puntos: PUNTO_KEYS.map((pk) => t[pk])
-        .filter((p): p is string => p !== null && p !== undefined)
-        .map((texto) => ({ id: nextId(), texto })),
-    })),
+// documento backend → modelo interno: asigna ids estables a tópicos y puntos.
+const fromBackend = (doc: DocumentoCompromiso): Acuerdo => ({
+  titulo: doc.titulo,
+  subtitulo: doc.subtitulo,
+  abstract: doc.abstract,
+  topicos: (doc.topicos ?? []).map((t) => ({
+    id: nextId(),
+    nombre: t.nombre ?? '',
+    puntos: (t.puntos ?? []).map((texto) => ({ id: nextId(), texto })),
+  })),
 });
 
-// Modelo interno → DTO: compacta (descarta vacíos) y rellena con `null` los huecos
-// hasta completar topico1..4 / puntoA..D, replicando el formato del backend.
-const toDTO = (acuerdo: Acuerdo): AcuerdoDTO => {
-  const topicoVacio = (): TopicoDTO => ({
-    nombre: null, puntoA: null, puntoB: null, puntoC: null, puntoD: null,
+// modelo interno → documento backend: descarta nombres/puntos vacíos y respeta los
+// máximos. Un tópico sin nombre se envía con `nombre: null`.
+const toBackend = (acuerdo: Acuerdo): DocumentoCompromiso => ({
+  titulo: acuerdo.titulo,
+  subtitulo: acuerdo.subtitulo,
+  abstract: acuerdo.abstract,
+  topicos: acuerdo.topicos
+    .map((t) => ({
+      nombre: t.nombre.trim() || null,
+      puntos: t.puntos
+        .map((p) => p.texto.trim())
+        .filter((texto) => texto.length > 0)
+        .slice(0, MAX_PUNTOS),
+    }))
+    .filter((t) => t.nombre !== null || t.puntos.length > 0)
+    .slice(0, MAX_TOPICOS),
+});
+
+// Etiqueta legible de una versión a partir de su createdAt (fecha + hora, para
+// distinguir versiones creadas el mismo día).
+const formatVersionLabel = (createdAt: string): string =>
+  new Date(createdAt).toLocaleString('es-CL', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
-
-  const topicoToDTO = (topico?: Topico): TopicoDTO => {
-    if (!topico) return topicoVacio();
-    const dto = topicoVacio();
-    dto.nombre = topico.nombre.trim() || null;
-    topico.puntos
-      .map((p) => p.texto.trim())
-      .filter((texto) => texto.length > 0)
-      .slice(0, MAX_PUNTOS)
-      .forEach((texto, i) => { dto[PUNTO_KEYS[i]] = texto; });
-    return dto;
-  };
-
-  const topicosLlenos = acuerdo.topicos
-    .filter((t) => t.nombre.trim() || t.puntos.some((p) => p.texto.trim()))
-    .slice(0, MAX_TOPICOS);
-
-  return {
-    titulo: acuerdo.titulo,
-    subtitulo: acuerdo.subtitulo,
-    abstract: acuerdo.abstract,
-    topico1: topicoToDTO(topicosLlenos[0]),
-    topico2: topicoToDTO(topicosLlenos[1]),
-    topico3: topicoToDTO(topicosLlenos[2]),
-    topico4: topicoToDTO(topicosLlenos[3]),
-  };
-};
-
-// ── Datos mockeados (en el formato del backend) ─────────────────────────────────
-// TODO: reemplazar por el acuerdo proveniente del backend (GET por año).
-
-const AÑO_ACTUAL = new Date().getFullYear();
-
-const acuerdoDTOInicial: AcuerdoDTO = {
-  titulo: 'Renovación compromiso Becarias y Becarios',
-  subtitulo: `Beca Carmen Goudie año ${AÑO_ACTUAL}`,
-  abstract:
-    'El presente documento expone los compromisos que adquiere un/a estudiante para ' +
-    'mantener la beca Carmen Goudie durante la realización de sus estudios superiores.',
-  topico1: {
-    nombre: 'Compromisos académicos',
-    puntoA: '-Mantenerse como alumna/o regular de su establecimiento de educación superior.',
-    puntoB: '-Presentar una alta asistencia a clases.',
-    puntoC: '-Participar de las instancias de apoyo académico, psicopedagógico y psicológico que ofrece el Establecimiento de Educación Superior en el que está matriculada/o, en el caso de que sea requerido.',
-    puntoD: '-Comunicar con anticipación a la Fundación en caso de que exista voluntad de suspensión de estudios, cambio de carrera o de abandono de la carrera.',
-  },
-  topico2: {
-    nombre: 'Compromisos de comunicación',
-    puntoA: '-Responder oportunamente (en un plazo de 48 horas) a las comunicaciones que establece la Fundación en sus distintas modalidades: telefónica, whatsapp (personal y grupal) y correo electrónico.',
-    puntoB: '-Asistir a las entrevistas individuales convocadas por la Fundación en una fecha mutuamente acordada (mínimo 2 a 3 entrevistas por semestre).',
-    puntoC: '-Avisar con anticipación y justificar las ausencias a las entrevistas individuales agendadas.',
-    puntoD: null,
-  },
-  topico3: {
-    nombre: 'Compromisos de participación',
-    puntoA: '-Participar de los encuentros grupales convocados por la Fundación (mínimo 1 vez por semestre).',
-    puntoB: '-Participar de la red de becarios, colaborando con los becarios que requieran apoyo académico, orientación vocacional, apoyo en la inserción en una nueva ciudad, etc.',
-    puntoC: '-Participar del Paseo Anual de Becarios, a realizarse en el mes de diciembre.',
-    puntoD: null,
-  },
-  topico4: {
-    nombre: null,
-    puntoA: null,
-    puntoB: null,
-    puntoC: null,
-    puntoD: null,
-  },
-};
-
-const acuerdoMock = fromDTO(acuerdoDTOInicial);
 
 // ── Página ────────────────────────────────────────────────────────────────────
 
 export function AcuerdoCompromiso() {
-  const { showSuccess, showInfo, SnackbarComponent } = useSnackbar();
+  const { showSuccess, showError, showInfo, SnackbarComponent } = useSnackbar();
   const { showConfirm, ConfirmDialog } = useConfirmDialog();
 
-  const [añoSeleccionado, setAñoSeleccionado] = useState<number>(AÑO_ACTUAL);
-  const [fechaActualizacion, setFechaActualizacion] = useState<string>(`${AÑO_ACTUAL}-03-15`);
-  const [acuerdo, setAcuerdo] = useState<Acuerdo>(acuerdoMock);
+  // Todas las versiones (filas de `acuerdo`) y la seleccionada. `versionId` es a la
+  // vez la opción activa de la combo y la base del PATCH al guardar.
+  const [versiones, setVersiones] = useState<AcuerdoResponse[]>([]);
+  const [versionId, setVersionId] = useState<number | null>(null);
+  const [fechaActualizacion, setFechaActualizacion] = useState<string>('');
+  const [acuerdo, setAcuerdo] = useState<Acuerdo | null>(null);
+
+  // Estado de la carga inicial / recarga por fecha.
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState(false);
 
   // Edición global del acuerdo completo. `borrador` es una copia profunda editable
   // que se confirma al guardar y se descarta al cancelar.
@@ -181,13 +116,58 @@ export function AcuerdoCompromiso() {
   const [recienGuardado, setRecienGuardado] = useState(false);
   const guardadoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Opciones de la combobox agrupadas por año. En esta versión placeholder solo
-  // existe el año actual; el componente queda preparado para recibir la lista
-  // completa de años desde el backend.
-  const opcionesAño = useMemo(
-    () => [{ valor: AÑO_ACTUAL, etiqueta: `Acuerdo ${AÑO_ACTUAL}` }],
-    [],
+  // Aplica una versión a la vista: combo, documento mostrado y fecha.
+  const seleccionarVersion = useCallback((version: AcuerdoResponse) => {
+    setVersionId(version.id);
+    setAcuerdo(fromBackend(version.documento));
+    setFechaActualizacion(version.createdAt.slice(0, 10));
+  }, []);
+
+  // Carga todas las versiones y selecciona la más reciente (la vigente).
+  const cargarVersiones = useCallback(async () => {
+    setCargando(true);
+    setError(null);
+    try {
+      const lista = await acuerdoService.getAcuerdos();
+      setVersiones(lista);
+      if (lista.length > 0) {
+        seleccionarVersion(lista[0]);
+      } else {
+        setVersionId(null);
+        setAcuerdo(null);
+        setError('No hay acuerdos registrados.');
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo cargar el acuerdo.');
+    } finally {
+      setCargando(false);
+    }
+  }, [seleccionarVersion]);
+
+  useEffect(() => {
+    cargarVersiones();
+  }, [cargarVersiones]);
+
+  // Cada versión existente como opción de la combo; la primera (más reciente) se
+  // marca como vigente.
+  const opcionesVersiones = useMemo(
+    () =>
+      versiones.map((version, i) => ({
+        valor: version.id,
+        etiqueta:
+          i === 0
+            ? `${formatVersionLabel(version.createdAt)} (vigente)`
+            : formatVersionLabel(version.createdAt),
+      })),
+    [versiones],
   );
+
+  // Cambiar de versión no requiere petición: el documento ya viene en la lista.
+  const cambiarVersion = (valor: number | string) => {
+    const id = Number(valor);
+    const version = versiones.find((v) => v.id === id);
+    if (version) seleccionarVersion(version);
+  };
 
   const hayCambiosSinGuardar =
     editando && !!borrador && JSON.stringify(borrador) !== JSON.stringify(acuerdo);
@@ -299,32 +279,74 @@ export function AcuerdoCompromiso() {
     salirDeEdicion();
   };
 
-  const guardarEdicion = () => {
-    if (!borrador) return;
+  const guardarEdicion = async () => {
+    if (!borrador || versionId === null) return;
 
-    // TODO: llamar al endpoint de actualización y notificar a estudiantes.
-    // Se envía en el formato del backend (topico1..4 / puntoA..D, null = ausente).
-    console.log('Guardando acuerdo (placeholder) — formato backend:', toDTO(borrador));
+    setGuardando(true);
+    try {
+      // El backend versiona: cada PATCH crea una fila nueva (nuevo id y createdAt)
+      // a partir del documento enviado, sin mutar la original.
+      const res = await acuerdoService.updateAcuerdo(versionId, {
+        documento: toBackend(borrador),
+      });
 
-    setAcuerdo(borrador);
-    setFechaActualizacion(new Date().toISOString().slice(0, 10));
-    setEditando(false);
-    setBorrador(null);
+      // La nueva versión es la más reciente: encabeza la lista y queda activa.
+      setVersiones((prev) => [res, ...prev]);
+      seleccionarVersion(res);
+      setEditando(false);
+      setBorrador(null);
 
-    showSuccess('Acuerdo guardado correctamente.');
+      showSuccess('Acuerdo guardado correctamente.');
 
-    setRecienGuardado(true);
-    if (guardadoTimer.current) clearTimeout(guardadoTimer.current);
-    guardadoTimer.current = setTimeout(() => setRecienGuardado(false), 2500);
+      setRecienGuardado(true);
+      if (guardadoTimer.current) clearTimeout(guardadoTimer.current);
+      guardadoTimer.current = setTimeout(() => setRecienGuardado(false), 2500);
+    } catch (e) {
+      // Se mantiene el modo edición activo para que el usuario pueda reintentar.
+      showError(e instanceof Error ? e.message : 'No se pudo guardar el acuerdo.');
+    } finally {
+      setGuardando(false);
+    }
   };
 
   const descargarPDF = () => {
     // TODO: solicitar el PDF al backend (endpoint de generación de PDF del acuerdo).
     // La generación de PDF se centralizará en el backend, ya que varias vistas del
     // sistema necesitan exportar documentos. Por ahora es solo un placeholder.
-    console.log('Descargar PDF del acuerdo (placeholder):', { año: añoSeleccionado });
+    console.log('Descargar PDF del acuerdo (placeholder):', { versionId });
     showInfo('La descarga en PDF estará disponible próximamente.');
   };
+
+  // Carga inicial: todavía no hay un acuerdo disponible (cargando o falló la carga).
+  if (!acuerdo) {
+    return (
+      <div className="min-h-screen bg-[#FFFBF0]/90 py-8 rounded-2xl">
+        <div className="max-w-5xl mx-auto px-4">
+          {cargando ? (
+            <div
+              className="rounded-xl bg-white p-8 text-center text-sm text-gray-500"
+              style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}
+            >
+              Cargando acuerdo…
+            </div>
+          ) : (
+            <div
+              className="rounded-xl bg-white p-8 flex flex-col items-center gap-4 text-center"
+              style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}
+            >
+              <p className="text-sm text-red-600">
+                {error ?? 'No se pudo cargar el acuerdo.'}
+              </p>
+              <Button variante="primary" tamano="sm" onClick={() => cargarVersiones()}>
+                Reintentar
+              </Button>
+            </div>
+          )}
+        </div>
+        <SnackbarComponent />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FFFBF0]/90 py-8 rounded-2xl">
@@ -357,11 +379,11 @@ export function AcuerdoCompromiso() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="w-full sm:w-72">
             <Select
-              etiqueta="Acuerdo"
-              opciones={opcionesAño}
-              valor={añoSeleccionado}
-              onChange={(v) => setAñoSeleccionado(Number(v))}
-              deshabilitado={editando}
+              etiqueta="Versión"
+              opciones={opcionesVersiones}
+              valor={versionId ?? ''}
+              onChange={cambiarVersion}
+              deshabilitado={editando || cargando}
               tamano="small"
             />
           </div>
@@ -392,13 +414,23 @@ export function AcuerdoCompromiso() {
 
           {editando ? (
             <div className="flex items-center gap-2">
-              <Button variante="outline" tamano="sm" onClick={cancelarEdicion}>
+              <Button
+                variante="outline"
+                tamano="sm"
+                onClick={cancelarEdicion}
+                deshabilitado={guardando}
+              >
                 <CloseIcon style={{ fontSize: 18 }} />
                 Cancelar
               </Button>
-              <Button variante="primary" tamano="sm" onClick={guardarEdicion}>
+              <Button
+                variante="primary"
+                tamano="sm"
+                onClick={guardarEdicion}
+                deshabilitado={guardando}
+              >
                 <SaveIcon style={{ fontSize: 18 }} />
-                Guardar acuerdo
+                {guardando ? 'Guardando…' : 'Guardar acuerdo'}
               </Button>
             </div>
           ) : (
@@ -412,6 +444,12 @@ export function AcuerdoCompromiso() {
             </Button>
           )}
         </div>
+
+        {error && (
+          <div className="rounded-xl bg-red-50 border border-red-200 p-4 mb-4 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
         {editando && borrador ? (
           /* ── Modo edición ───────────────────────────────────────────────── */

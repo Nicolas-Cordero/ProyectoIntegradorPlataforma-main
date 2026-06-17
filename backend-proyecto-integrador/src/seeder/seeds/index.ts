@@ -3,3 +3,4 @@ export * from './liceos.seeder';
 export * from './semestres.seeder';
 export * from './universidades.seeder';
 export * from './users.seeder';
+export * from './compromiso.seed'

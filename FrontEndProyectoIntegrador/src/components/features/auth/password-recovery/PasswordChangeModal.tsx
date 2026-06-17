@@ -11,6 +11,8 @@ interface PasswordChangeModalProps {
   onSuccess?: () => void;
   requireCurrentPassword?: boolean;
   userId: string;
+  // Modo cambio obligatorio (primer ingreso): no se puede cerrar ni cancelar.
+  forzado?: boolean;
 }
 
 export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
@@ -18,7 +20,8 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
   onCerrar,
   onSuccess,
   requireCurrentPassword = true,
-  userId
+  userId,
+  forzado = false,
 }) => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -52,7 +55,7 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
     if (requireCurrentPassword && !currentPassword) return 'Por favor, ingresa tu contraseña actual';
     if (!newPassword || !confirmPassword)            return 'Por favor, completa todos los campos';
     if (newPassword !== confirmPassword)             return 'Las contraseñas no coinciden';
-    if (newPassword.length < 6)                     return 'La nueva contraseña debe tener al menos 6 caracteres';
+    if (newPassword.length < 8)                     return 'La nueva contraseña debe tener al menos 8 caracteres';
     if (requireCurrentPassword && currentPassword === newPassword) return 'La nueva contraseña debe ser diferente a la actual';
     return null;
   };
@@ -95,10 +98,11 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
 
   return (
     <Modal
-      titulo="Cambiar Contraseña"
+      titulo={forzado ? 'Cambia tu contraseña' : 'Cambiar Contraseña'}
       abierto={abierto}
-      onCerrar={handleClose}
+      onCerrar={forzado ? () => {} : handleClose}
       tamanio="md"
+      mostrarBotonCerrar={!forzado}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
         <LockIcon sx={{ fontSize: 32, color: '#667eea' }} />
@@ -106,9 +110,11 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
 
       <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
         <Typography variant="body2" sx={{ textAlign: 'center', color: '#666', mb: 1 }}>
-          {requireCurrentPassword 
-            ? 'Ingresa tu contraseña actual y la nueva contraseña'
-            : 'Ingresa la nueva contraseña para el usuario'
+          {forzado
+            ? 'Por seguridad, debes cambiar tu contraseña inicial antes de continuar.'
+            : requireCurrentPassword
+              ? 'Ingresa tu contraseña actual y la nueva contraseña'
+              : 'Ingresa la nueva contraseña para el usuario'
           }
         </Typography>
 
@@ -235,16 +241,18 @@ export const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
         )}
 
         <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-          <Button
-            fullWidth
-            type="button"
-            variant="outlined"
-            onClick={handleClose}
-            disabled={loading}
-            sx={{ py: 1.5 }}
-          >
-            Cancelar
-          </Button>
+          {!forzado && (
+            <Button
+              fullWidth
+              type="button"
+              variant="outlined"
+              onClick={handleClose}
+              disabled={loading}
+              sx={{ py: 1.5 }}
+            >
+              Cancelar
+            </Button>
+          )}
 
           <Button
             fullWidth

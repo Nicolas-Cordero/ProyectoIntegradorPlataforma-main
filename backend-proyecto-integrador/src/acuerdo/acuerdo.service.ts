@@ -58,4 +58,48 @@ export class AcuerdoService {
   remove(id: number): Promise<void> {
     return this.acuerdoRepo.remove(id);
   }
+
+  /**
+   * Firma, en nombre del estudiante, la versión vigente del acuerdo. La versión
+   * se resuelve en el servidor para impedir que se firme una versión antigua.
+   * Es idempotente: volver a firmar la misma versión no genera una firma nueva.
+   */
+  async firmarVigente(rut_estudiante: string): Promise<EstadoFirmaAcuerdo> {
+    const vigente = await this.acuerdoRepo.findVigente();
+    if (!vigente) {
+      throw new NotFoundException('No hay un acuerdo vigente para firmar');
+    }
+    const firma = await this.acuerdoRepo.firmar(vigente.id, rut_estudiante);
+    return {
+      hayAcuerdoVigente: true,
+      acuerdoId: vigente.id,
+      firmado: true,
+      firmadoAt: firma.firmado_at,
+    };
+  }
+
+  /**
+   * Estado de firma del estudiante respecto de la versión vigente del acuerdo.
+   * Si no existe ningún acuerdo, `hayAcuerdoVigente` es false y no hay nada que firmar.
+   */
+  async getEstadoFirmaVigente(rut_estudiante: string): Promise<EstadoFirmaAcuerdo> {
+    const vigente = await this.acuerdoRepo.findVigente();
+    if (!vigente) {
+      return { hayAcuerdoVigente: false, acuerdoId: null, firmado: false, firmadoAt: null };
+    }
+    const firma = await this.acuerdoRepo.findFirma(vigente.id, rut_estudiante);
+    return {
+      hayAcuerdoVigente: true,
+      acuerdoId: vigente.id,
+      firmado: firma != null,
+      firmadoAt: firma?.firmado_at ?? null,
+    };
+  }
+}
+
+export interface EstadoFirmaAcuerdo {
+  hayAcuerdoVigente: boolean;
+  acuerdoId: number | null;
+  firmado: boolean;
+  firmadoAt: Date | null;
 }

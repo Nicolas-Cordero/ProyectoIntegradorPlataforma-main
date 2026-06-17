@@ -193,7 +193,10 @@ export class RecoveryService{
         const hashedPassword = await bcrypt.hash(newPassword, 10);
     
         // Actualizar contraseña y limpiar código de reset
-        await this.userRepo.updatePassword(user.rut_usuario, hashedPassword);
+        await this.userRepo.update(user.rut_usuario, {
+          password: hashedPassword,
+          must_change_password: false,
+        });
         
         // Invalidar refresh tokens existentes por seguridad
         await this.userRepo.updateResetToken(user.rut_usuario, null, null);

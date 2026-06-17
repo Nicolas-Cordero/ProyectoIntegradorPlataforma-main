@@ -32,5 +32,14 @@ export type { Alerta } from './alertas.service';
 export { paesService } from './paes.service';
 export type { CreatePaesDto, UpdatePaesDto } from './paes.service';
 
+// Acuerdo de compromiso
+export { acuerdoService } from './acuerdo.service';
+export type {
+  AcuerdoResponse,
+  DocumentoCompromiso,
+  TopicoCompromiso,
+  UpdateAcuerdoDto,
+} from './acuerdo.service';
+
 // Storage
 export { storageService } from './storage.service';

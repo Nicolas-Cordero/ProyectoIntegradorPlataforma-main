@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
 import { AcuerdoService } from './acuerdo.service';
 import { AcuerdoRepository } from './acuerdo.repository';
 import { UpdateAcuerdoDto } from './dto/update-acuerdo.dto';
@@ -7,6 +8,9 @@ import { DocumentoCompromiso } from './interfaces';
 const mockRepository = {
   findAll: jest.fn(),
   create: jest.fn(),
+  findVigente: jest.fn(),
+  firmar: jest.fn(),
+  findFirma: jest.fn(),
 };
 
 const mockAcuerdo = {
@@ -146,5 +150,83 @@ describe('AcuerdoService', () => {
     expect(response.createdAt).not.toEqual(fechaOriginal);
     const documento = response.documento as unknown as DocumentoCompromiso;
     expect(documento.titulo).toBe('Título actualizado');
+  });
+
+
+  // ── Firma del acuerdo ────────────────────────────────────────────────────
+
+  it('Debe firmar la versión vigente del acuerdo en nombre del estudiante', async () => {
+    mockRepository.findVigente.mockResolvedValue(mockAcuerdo);
+    mockRepository.firmar.mockResolvedValue({
+      id: 10,
+      acuerdo_id: mockAcuerdo.id,
+      rut_estudiante: '12345678-9',
+      firmado_at: new Date('2026-06-16'),
+    });
+
+    const estado = await service.firmarVigente('12345678-9');
+
+    // Se firma la versión vigente resuelta en el servidor, no una arbitraria.
+    expect(mockRepository.firmar).toHaveBeenCalledWith(mockAcuerdo.id, '12345678-9');
+    expect(estado).toEqual({
+      hayAcuerdoVigente: true,
+      acuerdoId: mockAcuerdo.id,
+      firmado: true,
+      firmadoAt: new Date('2026-06-16'),
+    });
+  });
+
+  it('Debe lanzar NotFoundException al firmar si no hay acuerdo vigente', async () => {
+    mockRepository.findVigente.mockResolvedValue(null);
+
+    await expect(service.firmarVigente('12345678-9')).rejects.toThrow(NotFoundException);
+    expect(mockRepository.firmar).not.toHaveBeenCalled();
+  });
+
+  it('Debe reportar firmado=true si el estudiante ya firmó la versión vigente', async () => {
+    mockRepository.findVigente.mockResolvedValue(mockAcuerdo);
+    mockRepository.findFirma.mockResolvedValue({
+      id: 10,
+      acuerdo_id: mockAcuerdo.id,
+      rut_estudiante: '12345678-9',
+      firmado_at: new Date('2026-06-16'),
+    });
+
+    const estado = await service.getEstadoFirmaVigente('12345678-9');
+
+    expect(estado).toEqual({
+      hayAcuerdoVigente: true,
+      acuerdoId: mockAcuerdo.id,
+      firmado: true,
+      firmadoAt: new Date('2026-06-16'),
+    });
+  });
+
+  it('Debe reportar firmado=false si el estudiante no ha firmado la versión vigente', async () => {
+    mockRepository.findVigente.mockResolvedValue(mockAcuerdo);
+    mockRepository.findFirma.mockResolvedValue(null);
+
+    const estado = await service.getEstadoFirmaVigente('12345678-9');
+
+    expect(estado).toEqual({
+      hayAcuerdoVigente: true,
+      acuerdoId: mockAcuerdo.id,
+      firmado: false,
+      firmadoAt: null,
+    });
+  });
+
+  it('Debe reportar que no hay acuerdo vigente cuando no existe ninguno', async () => {
+    mockRepository.findVigente.mockResolvedValue(null);
+
+    const estado = await service.getEstadoFirmaVigente('12345678-9');
+
+    expect(estado).toEqual({
+      hayAcuerdoVigente: false,
+      acuerdoId: null,
+      firmado: false,
+      firmadoAt: null,
+    });
+    expect(mockRepository.findFirma).not.toHaveBeenCalled();
   });
 });

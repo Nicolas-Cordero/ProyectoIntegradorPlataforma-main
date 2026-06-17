@@ -39,7 +39,14 @@ describe('CloudinaryAdapter', () => {
 
   beforeEach(async () => {
 
+    // El provider real (CloudinaryProvider) agrega `folders` sobre la instancia
+    // de cloudinary; el adapter lo usa para prefijar la carpeta destino, así que
+    // el mock debe incluirlo o uploadImage/uploadPDF fallan al leer folders.*.
     mockCloudinary = {
+      folders: {
+        images: 'imagenes',
+        files:  'archivos',
+      },
       uploader: {
         upload_stream: jest.fn(),
         destroy: jest.fn(),
@@ -92,8 +99,9 @@ describe('CloudinaryAdapter', () => {
     });
 
 
+    // La carpeta destino se prefija con folders.images.
     expect(mockCloudinary.uploader.upload_stream).toHaveBeenCalledWith(
-      expect.objectContaining({ resource_type: 'image' }),
+      expect.objectContaining({ resource_type: 'image', folder: 'imagenes/usuarios' }),
       expect.any(Function),
     );
   });
@@ -159,8 +167,9 @@ describe('CloudinaryAdapter', () => {
       publicId: 'usuarios/calculo',
     });
 
+    // La carpeta destino se prefija con folders.files.
     expect(mockCloudinary.uploader.upload_stream).toHaveBeenCalledWith(
-      expect.objectContaining({ resource_type: 'raw' }),
+      expect.objectContaining({ resource_type: 'raw', folder: 'archivos/notas' }),
       expect.any(Function),
     );
   });

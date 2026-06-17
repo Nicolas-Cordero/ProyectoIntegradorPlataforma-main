@@ -1,8 +1,9 @@
 import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { estudiante } from "@prisma/client";
+import { estudiante, Prisma } from "@prisma/client";
 import { CreateEstudianteDto } from "./dto/create-estudiante.dto";
 import { UpdateEstudianteDto } from "./dto/update-estudiante.dto";
+import { estadoPermiteLogin } from "./estudiante.utils";
 
 
 @Injectable()
@@ -84,6 +85,22 @@ export class EstudianteRepository{
   }
 
 
+  /**
+   * Crea el estudiante y, en la misma transacción, su usuario de login.
+   * `usuarioData` ya viene con la contraseña hasheada y el rol ESTUDIANTE.
+   */
+  async createWithUser(
+    estudianteData: CreateEstudianteDto,
+    usuarioData: Prisma.usuarioUncheckedCreateInput,
+  ): Promise<estudiante> {
+    return this.prisma.$transaction(async (tx) => {
+      const estudiante = await tx.estudiante.create({ data: estudianteData });
+      await tx.usuario.create({ data: usuarioData });
+      return estudiante;
+    });
+  }
+
+
   async update(rut_estudiante: string, updateEstudianteDto: UpdateEstudianteDto){
     try {
       return this.prisma.estudiante.update({
@@ -97,13 +114,67 @@ export class EstudianteRepository{
     }
   }
 
-  
+
+  /**
+   * Actualiza el estudiante y refleja en su usuario (si existe) los campos
+   * compartidos. El `estado` del estudiante determina `usuario.activo`.
+   */
+  async updateWithUserSync(rut_estudiante: string, updateEstudianteDto: UpdateEstudianteDto): Promise<estudiante> {
+    const userData: Prisma.usuarioUncheckedUpdateInput = {};
+    if (updateEstudianteDto.nombre !== undefined) userData.nombre = updateEstudianteDto.nombre;
+    if (updateEstudianteDto.apellido !== undefined) userData.apellido = updateEstudianteDto.apellido;
+    if (updateEstudianteDto.email !== undefined) userData.email = updateEstudianteDto.email;
+    if (updateEstudianteDto.telefono !== undefined) userData.telefono = updateEstudianteDto.telefono;
+    if (updateEstudianteDto.estado !== undefined) userData.activo = estadoPermiteLogin(updateEstudianteDto.estado);
+
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const estudiante = await tx.estudiante.update({
+          where: { rut_estudiante },
+          data: updateEstudianteDto,
+        });
+
+        if (Object.keys(userData).length > 0) {
+          const usuario = await tx.usuario.findUnique({ where: { rut_usuario: rut_estudiante } });
+          if (usuario) {
+            await tx.usuario.update({ where: { rut_usuario: rut_estudiante }, data: userData });
+          }
+        }
+
+        return estudiante;
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(`No se pudo actualizar el estudiante con rut: ${rut_estudiante}`)
+    }
+  }
+
+
   async remove(rut_estudiante: string){
     try {
       return this.prisma.estudiante.delete({
         where: {
           rut_estudiante: rut_estudiante,
         },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(`No se ha podido eliminar el estudiante: ${rut_estudiante}`)
+    }
+  }
+
+
+  /**
+   * Elimina el estudiante e inhabilita su usuario de login (activo = false),
+   * conservando la cuenta para auditoría.
+   */
+  async removeWithUserDisable(rut_estudiante: string): Promise<estudiante> {
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const estudiante = await tx.estudiante.delete({ where: { rut_estudiante } });
+        const usuario = await tx.usuario.findUnique({ where: { rut_usuario: rut_estudiante } });
+        if (usuario) {
+          await tx.usuario.update({ where: { rut_usuario: rut_estudiante }, data: { activo: false } });
+        }
+        return estudiante;
       });
     } catch (error) {
       throw new InternalServerErrorException(`No se ha podido eliminar el estudiante: ${rut_estudiante}`)

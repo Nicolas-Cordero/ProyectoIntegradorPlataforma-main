@@ -3,7 +3,6 @@ import {
   IsString,
   IsEmail,
   IsNotEmpty,
-  MinLength,
   IsEnum,
   Matches
 } from 'class-validator';
@@ -40,8 +39,6 @@ export class CreateUserDto {
   @IsEnum(UserRol)
   rol!: UserRol;
 
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(8)
-  password!: string;
+  // La contraseña ya no se recibe en la creación: se asigna automáticamente el RUT
+  // sin dígito verificador, con cambio forzado en el primer ingreso.
 }

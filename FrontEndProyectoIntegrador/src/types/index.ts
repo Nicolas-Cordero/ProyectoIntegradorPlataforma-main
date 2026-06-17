@@ -36,6 +36,8 @@ export interface Usuario {
   email: string;
   telefono: string;
   rol: UserRolType;
+  activo?: boolean;
+  must_change_password?: boolean;
   ultimo_login?: string;
   created_at?: string;
   updated_at?: string;

@@ -10,6 +10,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import emailConfig from '../config/email.config';
 import { RecoveryService } from './services/recovery.service';
+import { RefreshTokenRepository } from './services/refresh-token.repository';
 import { UsersRepository } from '../users';
 
 @Module({
@@ -38,6 +39,7 @@ import { UsersRepository } from '../users';
     TokenService,
     EmailService,
     RecoveryService,
+    RefreshTokenRepository,
     JwtStrategy,
     JwtRefreshStrategy,
     UsersRepository

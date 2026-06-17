@@ -19,4 +19,6 @@ export interface AuthenticatedUser {
   email: string;
   telefono: string
   rol: string;
+  activo: boolean;
+  must_change_password: boolean;
 }

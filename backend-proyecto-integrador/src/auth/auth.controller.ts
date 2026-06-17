@@ -21,6 +21,7 @@ import {
   LogoutResponseDto,
   ValidateTokenResponseDto,
   UserResponseDto,
+  AuthBodyResponseDto,
 } from './dto/auth-response.dto';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -96,10 +97,11 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<UserResponseDto> {
+  ): Promise<AuthBodyResponseDto> {
     const { accessToken, refreshToken, user } = await this.authService.login(loginDto);
     this.setAuthCookies(res, accessToken, refreshToken);
-    return user;
+    // La web usa la cookie; el móvil usa estos tokens del body.
+    return { ...user, accessToken, refreshToken };
   }
 
 
@@ -117,12 +119,13 @@ export class AuthController {
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<{ message: string }> {
-    const refreshToken = req.cookies?.refresh_token;
+  ): Promise<{ message: string; accessToken: string; refreshToken: string }> {
+    // Web: refresh desde cookie. Móvil: refresh desde el body.
+    const refreshToken = req.cookies?.refresh_token ?? req.body?.refreshToken;
     const { accessToken, refreshToken: newRefreshToken } =
       await this.authService.refreshAccessToken(refreshToken);
     this.setAuthCookies(res, accessToken, newRefreshToken);
-    return { message: 'Token renovado' };
+    return { message: 'Token renovado', accessToken, refreshToken: newRefreshToken };
   }
 
 
@@ -140,7 +143,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<LogoutResponseDto> {
-    const refreshToken = req.cookies?.refresh_token;
+    const refreshToken = req.cookies?.refresh_token ?? req.body?.refreshToken;
     const result = await this.authService.logout(refreshToken);
     res.clearCookie('access_token', this.cookieOptions);
     res.clearCookie('refresh_token', this.cookieOptions);
@@ -161,6 +164,8 @@ export class AuthController {
       nombre: user.nombre,
       apellido: user.apellido,
       rol: user.rol,
+      activo: user.activo,
+      must_change_password: user.must_change_password,
     };
   }
 
@@ -174,6 +179,8 @@ export class AuthController {
       nombre: user.nombre,
       apellido: user.apellido,
       rol: user.rol,
+      activo: user.activo,
+      must_change_password: user.must_change_password,
     };
   }
 
@@ -191,6 +198,8 @@ export class AuthController {
         email: user.email,
         telefono: user.telefono,
         rol: user.rol,
+        activo: user.activo,
+        must_change_password: user.must_change_password,
       },
     };
   }

@@ -9,6 +9,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 import { UsersRepository } from './users.repository';
 import { usuario } from '@prisma/client';
+import { rutSinDV } from '../common/rut.util';
 
 @Injectable()
 export class UsersService {
@@ -26,12 +27,15 @@ export class UsersService {
     if (existingUser) {
       throw new ConflictException('El email ya está en uso');
     }
-    // Hash de la contraseña
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
-    createUserDto.password = hashedPassword;
+    // Contraseña inicial unificada: el RUT sin dígito verificador, con cambio
+    // forzado en el primer ingreso (must_change_password).
+    const hashedPassword = await bcrypt.hash(rutSinDV(createUserDto.rut_usuario), 10);
 
-    return this.usersRepo.registerNewUser(createUserDto);
+    return this.usersRepo.registerNewUser({
+      ...createUserDto,
+      password: hashedPassword,
+      must_change_password: true,
+    });
   }
 
 
@@ -77,7 +81,8 @@ export class UsersService {
       }
     }
 
-    return this.usersRepo.update(rut, updateUserDto);
+    // Sincroniza los campos compartidos hacia el estudiante (si existe).
+    return this.usersRepo.updateWithEstudianteSync(rut, updateUserDto);
   }
 
 
@@ -121,8 +126,10 @@ export class UsersService {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
+    // El admin asigna una contraseña concreta: el usuario decide si la cambia o no.
     await this.usersRepo.update(rut, {
       password: hashedPassword,
+      must_change_password: false,
     });
   }
 
@@ -144,8 +151,10 @@ export class UsersService {
     const saltRounds = 10;
     const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
 
+    // El usuario ya cambió su contraseña: se desactiva el cambio forzado.
     await this.usersRepo.update(rut, {
       password: hashedNewPassword,
+      must_change_password: false,
     });
   }
 }

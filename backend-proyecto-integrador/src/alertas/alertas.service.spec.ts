@@ -1,5 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AlertasService } from './alertas.service';
+import { AlertaEntrevistaService } from './alerta-entrevista.service';
+import { AlertaNotasService } from './alerta-notas.service';
+import { AlertaAcuerdoService } from './alerta-acuerdo.service';
 import { AlertasRepository } from './alertas.repository';
 import { EstadoRamo, TipoSemestre } from '@prisma/client';
 
@@ -13,6 +16,9 @@ const mockRepository = {
   getCarreraByCodigo: jest.fn(),
   getSemestreById: jest.fn(),
   getRamoById: jest.fn(),
+  getAcuerdoVigente: jest.fn(),
+  getRutsConFirma: jest.fn(),
+  getFirmaAcuerdo: jest.fn(),
 };
 
 const mockAlertasType = {
@@ -101,6 +107,9 @@ describe('AlertasService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AlertasService,
+        AlertaEntrevistaService,
+        AlertaNotasService,
+        AlertaAcuerdoService,
         { provide: AlertasRepository, useValue: mockRepository }
       ],
     }).compile();
@@ -409,5 +418,93 @@ describe('AlertasService', () => {
     ]);
   });
 
-  //TODO: it('Debe manejar diferentes tipos de alertas a la vez (entrevista, notas y compromiso)')
+  // ── Alerta de firma del acuerdo de compromiso ──────────────────────────────
+
+  it('Debe generar una alerta si el estudiante no ha firmado el acuerdo vigente', async () => {
+    mockRepository.getAcuerdoVigente.mockResolvedValue({ id: 1, createdAt: new Date('2026-01-01') });
+    mockRepository.getFirmaAcuerdo.mockResolvedValue(null);
+
+    const alertas = await service.getAlertasByEstudiante('12345678-9');
+
+    expect(alertas).toHaveLength(1);
+    expect(alertas[0]).toEqual({
+      tipo: mockAlertasType.FIRMAR_ACUERDO,
+      message: 'Estudiante no ha firmado el acuerdo de compromiso vigente',
+      created_at: expect.any(Date),
+    });
+    expect(mockRepository.getFirmaAcuerdo).toHaveBeenCalledWith(1, '12345678-9');
+  });
+
+  it('No debe generar la alerta de acuerdo si el estudiante ya firmó la versión vigente', async () => {
+    mockRepository.getAcuerdoVigente.mockResolvedValue({ id: 1, createdAt: new Date('2026-01-01') });
+    mockRepository.getFirmaAcuerdo.mockResolvedValue({ id: 99 });
+
+    const alertas = await service.getAlertasByEstudiante('12345678-9');
+
+    expect(alertas).toHaveLength(0);
+    expect(alertas).toEqual([]);
+  });
+
+  it('No debe generar la alerta de acuerdo si no existe ningún acuerdo vigente', async () => {
+    mockRepository.getAcuerdoVigente.mockResolvedValue(null);
+
+    const alertas = await service.getAlertasByEstudiante('12345678-9');
+
+    expect(alertas).toHaveLength(0);
+    // Sin acuerdo vigente no tiene sentido consultar la firma.
+    expect(mockRepository.getFirmaAcuerdo).not.toHaveBeenCalled();
+  });
+
+  it('Debe generar la alerta de acuerdo solo para los estudiantes que no firmaron la versión vigente', async () => {
+    mockRepository.findAllEstudiantes.mockResolvedValue([
+      makeEstudiante('12345678-9'), // firmó
+      makeEstudiante('98765432-1'), // no firmó
+    ]);
+    mockRepository.getAcuerdoVigente.mockResolvedValue({ id: 1, createdAt: new Date('2026-01-01') });
+    mockRepository.getRutsConFirma.mockResolvedValue(['12345678-9']);
+
+    const alertas = await service.getAllAlertas();
+
+    expect(alertas).toHaveLength(1);
+    expect(alertas).toEqual([
+      {
+        rut_estudiante: '98765432-1',
+        tipo: mockAlertasType.FIRMAR_ACUERDO,
+        message: 'Estudiante no ha firmado el acuerdo de compromiso vigente',
+        created_at: expect.any(Date),
+      },
+    ]);
+    // El acuerdo vigente se resuelve una sola vez y las firmas se traen en bloque.
+    expect(mockRepository.getAcuerdoVigente).toHaveBeenCalledTimes(1);
+    expect(mockRepository.getRutsConFirma).toHaveBeenCalledTimes(1);
+  });
+
+  // ── Varios tipos de alerta a la vez ────────────────────────────────────────
+
+  it('Debe manejar diferentes tipos de alertas a la vez (entrevista, notas y acuerdo)', async () => {
+    // 29 de agosto = 30 días después del fin del primer semestre (dispara notas)
+    const fechaActual = new Date(2026, 7, 29);
+    jest.useFakeTimers();
+    jest.setSystemTime(fechaActual);
+
+    mockRepository.findAllEstudiantes.mockResolvedValue([makeEstudiante('12345678-9')]);
+    mockRepository.getAllEntrevistas.mockResolvedValue([
+      makeEntrevista('12345678-9', DiasAtras(40)), // entrevista vencida
+    ]);
+    mockRepository.getAllRamosbyEstudiante.mockResolvedValue([
+      makeRamo(123, 'calculo', EstadoRamo.CURSANDO, 123, '12345678-9', undefined, 1),
+    ]);
+    mockRepository.getSemestreById.mockResolvedValue({ id: 1, year: 2026, semestre: Semestre.PRIMER_SEMESTRE, tipo: TipoSemestre.REGULAR });
+    mockRepository.getAcuerdoVigente.mockResolvedValue({ id: 1, createdAt: new Date(2026, 0, 1) });
+    mockRepository.getRutsConFirma.mockResolvedValue([]); // no firmó
+
+    const alertas = await service.getAllAlertas();
+
+    expect(alertas).toHaveLength(3);
+    expect(alertas).toEqual([
+      { rut_estudiante: '12345678-9', tipo: mockAlertasType.ENTREVISTA_VENCIDA, message: 'Estudiante sin entrevista hace más de 40 días', created_at: expect.any(Date) },
+      { rut_estudiante: '12345678-9', tipo: mockAlertasType.AUSENCIA_NOTAS, message: 'Alumno sin nota final para calculo', created_at: expect.any(Date) },
+      { rut_estudiante: '12345678-9', tipo: mockAlertasType.FIRMAR_ACUERDO, message: 'Estudiante no ha firmado el acuerdo de compromiso vigente', created_at: expect.any(Date) },
+    ]);
+  });
 });

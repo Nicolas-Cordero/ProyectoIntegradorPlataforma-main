@@ -46,11 +46,8 @@ export class RegisterDto {
   telefono!: string;
 
 
-  @IsNotEmpty({ message: 'La contraseña es requerida' })
-  @IsString()
-  @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
-  password!: string;
-
+  // La contraseña ya no se recibe: se asigna automáticamente el RUT sin dígito
+  // verificador, con cambio forzado en el primer ingreso.
 
   @IsNotEmpty({ message: 'El rol es requerido' })
   @IsEnum(UserRol, { message: 'El rol debe ser Admin, Tutor o Visita' })

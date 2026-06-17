@@ -1,8 +1,11 @@
-import { Injectable, NotFoundException, Inject, forwardRef, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { CreateEstudianteDto } from './dto/create-estudiante.dto';
 import { UpdateEstudianteDto } from './dto/update-estudiante.dto';
 import { EstudianteRepository } from './estudiante.repository';
-import { estudiante } from '@prisma/client';
+import { estudiante, Prisma, UserRol } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+import { rutSinDV } from '../common/rut.util';
+import { estadoPermiteLogin } from './estudiante.utils';
 
 
 @Injectable()
@@ -19,7 +22,30 @@ export class EstudianteService {
     if (existing) {
       throw new ConflictException(`Ya existe un estudiante con RUT ${createEstudianteDto.rut_estudiante}`);
     }
-    return this.estudianteRepo.create(createEstudianteDto);
+
+    // Usuario de login en paralelo (rol ESTUDIANTE): contraseña = RUT sin dígito
+    // verificador, con cambio forzado; `activo` derivado del estado del estudiante.
+    const hashedPassword = await bcrypt.hash(rutSinDV(createEstudianteDto.rut_estudiante), 10);
+    const usuarioData: Prisma.usuarioUncheckedCreateInput = {
+      rut_usuario: createEstudianteDto.rut_estudiante,
+      nombre: createEstudianteDto.nombre,
+      apellido: createEstudianteDto.apellido,
+      email: createEstudianteDto.email,
+      telefono: createEstudianteDto.telefono,
+      rol: UserRol.ESTUDIANTE,
+      password: hashedPassword,
+      must_change_password: true,
+      activo: estadoPermiteLogin(createEstudianteDto.estado),
+    };
+
+    try {
+      return await this.estudianteRepo.createWithUser(createEstudianteDto, usuarioData);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException('Ya existe un usuario con ese RUT o email');
+      }
+      throw error;
+    }
   }
 
 
@@ -69,7 +95,8 @@ export class EstudianteService {
 
 
   update(rut_estudiante: string, updateEstudianteDto: UpdateEstudianteDto): Promise<estudiante> {
-    return this.estudianteRepo.update(rut_estudiante, updateEstudianteDto);
+    // Sincroniza campos compartidos y el estado (activo) hacia el usuario.
+    return this.estudianteRepo.updateWithUserSync(rut_estudiante, updateEstudianteDto);
   }
 
 
@@ -78,7 +105,8 @@ export class EstudianteService {
     //hay que hacer un borrado seguro.
     //con todas las cosas que apuntan a estudiante
     //familiares, asociacion de beneficios, carreras, ramos, entrevistas, contactos de emergencia.
-    return this.estudianteRepo.remove(rut_estudiante);
+    // Inhabilita además el login del usuario asociado (activo = false).
+    return this.estudianteRepo.removeWithUserDisable(rut_estudiante);
   }
 
   //la revisaremos

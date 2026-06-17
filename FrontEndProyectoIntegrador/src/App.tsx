@@ -5,6 +5,7 @@ import { LoginAdminForm } from './components/features/auth/login/LoginAdminForm'
 import { Spinner } from './components/ui';
 import { MainLayout } from './components/common/MainLayout';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
+import { PasswordChangeModal } from './components/features/auth/password-recovery';
 
 const EstudiantesSection = lazy(() => import('./pages/EstudiantesSection').then(m => ({ default: m.EstudiantesSection })));
 const GeneracionView = lazy(() => import('./pages/GeneracionSection/GeneracionView'));
@@ -83,7 +84,7 @@ function AppRoutes() {
 }
 
 function AppShell() {
-  const { isAuthenticated, loading, setAuthenticated } = useAuthContext();
+  const { isAuthenticated, loading, setAuthenticated, usuario } = useAuthContext();
 
   // Bloquear render hasta que se resuelva la verificación de sesión.
   // Esto corrige el flash de rutas protegidas antes de que el estado de auth se resuelva.
@@ -92,26 +93,41 @@ function AppShell() {
   }
 
   return (
-    <Suspense fallback={<Spinner fullScreen message="Cargando página..." />}>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            isAuthenticated
-              ? <Navigate to="/estudiantes" replace />
-              : <LoginAdminForm onAuthChange={(v) => setAuthenticated(v)} />
-          }
+    <>
+      <Suspense fallback={<Spinner fullScreen message="Cargando página..." />}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              isAuthenticated
+                ? <Navigate to="/estudiantes" replace />
+                : <LoginAdminForm onAuthChange={(v) => setAuthenticated(v)} />
+            }
+          />
+          <Route
+            path="/*"
+            element={
+              isAuthenticated
+                ? <AppRoutes />
+                : <Navigate to="/" replace />
+            }
+          />
+        </Routes>
+      </Suspense>
+
+      {/* Cambio de contraseña obligatorio en el primer ingreso: bloquea la app
+          hasta que el usuario cambie su contraseña inicial (RUT sin dígito verificador). */}
+      {isAuthenticated && usuario?.must_change_password && (
+        <PasswordChangeModal
+          abierto
+          forzado
+          requireCurrentPassword
+          userId={usuario.rut_usuario}
+          onCerrar={() => {}}
+          onSuccess={() => setAuthenticated(true, { ...usuario, must_change_password: false })}
         />
-        <Route
-          path="/*"
-          element={
-            isAuthenticated
-              ? <AppRoutes />
-              : <Navigate to="/" replace />
-          }
-        />
-      </Routes>
-    </Suspense>
+      )}
+    </>
   );
 }
 

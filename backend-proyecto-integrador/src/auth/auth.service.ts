@@ -12,9 +12,10 @@ import { AUTH_MESSAGES } from './constants/auth.constants';
 import * as bcrypt from 'bcrypt';
 
 
-import { UsersRepository } from '../users'; 
+import { UsersRepository } from '../users';
 import {usuario} from '@prisma/client'
 import { RecoveryService } from './services/recovery.service';
+import { rutSinDV } from '../common/rut.util';
 
 
 @Injectable()
@@ -42,6 +43,8 @@ export class AuthService {
         email: user.email,
         telefono: user.telefono,
         rol: user.rol,
+        activo: user.activo,
+        must_change_password: user.must_change_password,
       },
     };
   }
@@ -57,7 +60,6 @@ export class AuthService {
       apellido,
       email,
       telefono,
-      password,
       rol,
     } = registerDto;
 
@@ -75,7 +77,9 @@ export class AuthService {
 
 
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Contraseña inicial unificada: el RUT sin dígito verificador, con cambio
+    // forzado en el primer ingreso (must_change_password).
+    const hashedPassword = await bcrypt.hash(rutSinDV(rut), 10);
 
     const savedUser = await this.userRepo.registerNewUser({
       rut_usuario: rut,
@@ -84,7 +88,8 @@ export class AuthService {
       password: hashedPassword,
       nombre: nombre,
       apellido: apellido,
-      rol: rol
+      rol: rol,
+      must_change_password: true,
     })
 
 
@@ -99,6 +104,8 @@ export class AuthService {
         email: savedUser.email,
         telefono: savedUser.telefono,
         rol: savedUser.rol,
+        activo: savedUser.activo,
+        must_change_password: savedUser.must_change_password,
       },
     };
   }
@@ -116,7 +123,12 @@ export class AuthService {
   async refreshAccessToken(refreshToken: string): Promise<TokensResponseDto> {
     try {
       const payload = this.tokenService.verifyRefreshToken(refreshToken);
-      const storedToken = this.tokenService.getStoredRefreshToken(refreshToken);
+      const storedToken = await this.tokenService.getStoredRefreshToken(refreshToken);
+
+      if (!storedToken) {
+        // Token revocado, ya rotado o desconocido en la BD.
+        throw new UnauthorizedException(AUTH_MESSAGES.INVALID_REFRESH_TOKEN);
+      }
 
       this.validateStoredToken(storedToken, payload);
 
@@ -126,8 +138,8 @@ export class AuthService {
         throw new Error("No existe ningun usuario asociado a dicho token")
       }
 
-      this.tokenService.invalidateRefreshToken(refreshToken);
-      
+      await this.tokenService.invalidateRefreshToken(refreshToken);
+
       return this.tokenService.generateTokens(user);
     } catch (error) {
       if (error instanceof UnauthorizedException) {
@@ -141,7 +153,9 @@ export class AuthService {
 
 
   async logout(refreshToken: string): Promise<LogoutResponseDto> {
-    this.tokenService.invalidateRefreshToken(refreshToken);
+    if (refreshToken) {
+      await this.tokenService.invalidateRefreshToken(refreshToken);
+    }
     return { message: AUTH_MESSAGES.LOGOUT_SUCCESS };
   }
 
@@ -165,11 +179,9 @@ export class AuthService {
       throw new UnauthorizedException(AUTH_MESSAGES.INVALID_CREDENTIALS);
     }
 
-    /**
     if (!user.activo) {
       throw new UnauthorizedException(AUTH_MESSAGES.USER_INACTIVE);
     }
-     */
 
 
     const isPasswordValid = await bcrypt.compare(password, user.password);

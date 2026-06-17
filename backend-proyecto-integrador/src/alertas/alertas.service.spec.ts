@@ -152,14 +152,14 @@ describe('AlertasService', () => {
     ]);
   });
 
-  it('Debe generar alerta para cada estudiante que no haya tenido entrevista o no haya tenido una entrevista en los últimos 30 días', async () => {
+  it('Debe generar alerta para cada estudiante que no haya tenido entrevista o no haya tenido una entrevista en los últimos 2 meses', async () => {
     mockRepository.findAllEstudiantes.mockResolvedValue([
       makeEstudiante('12345678-9'),
       makeEstudiante('98765432-1'),
       makeEstudiante('11111111-1'),
     ]);
     mockRepository.getAllEntrevistas.mockResolvedValue([
-      makeEntrevista('12345678-9', DiasAtras(31)), 
+      makeEntrevista('12345678-9', DiasAtras(65)),
       makeEntrevista('98765432-1', DiasAtras(15))
     ]);
 
@@ -167,17 +167,17 @@ describe('AlertasService', () => {
 
     expect(alertas).toHaveLength(2);
     expect(alertas).toEqual([
-      {rut_estudiante: '12345678-9', tipo: mockAlertasType.ENTREVISTA_VENCIDA, message: 'Estudiante sin entrevista hace más de 31 días', created_at: expect.any(Date)},
+      {rut_estudiante: '12345678-9', tipo: mockAlertasType.ENTREVISTA_VENCIDA, message: 'Estudiante sin entrevista hace más de 65 días', created_at: expect.any(Date)},
       {rut_estudiante: '11111111-1', tipo: mockAlertasType.ENTREVISTA_VENCIDA, message: 'Estudiante sin entrevista', created_at: expect.any(Date)}
     ]);
   });
 
-  it('No debe generar una alerta si el estudiante ha tenido una entrevista en los últimos 30 días', async () => {
+  it('No debe generar una alerta si el estudiante ha tenido una entrevista en los últimos 2 meses', async () => {
     mockRepository.findAllEstudiantes.mockResolvedValue([
       makeEstudiante('12345678-9'),
     ]);
     mockRepository.getAllEntrevistas.mockResolvedValue([
-      makeEntrevista('12345678-9', DiasAtras(29)), 
+      makeEntrevista('12345678-9', DiasAtras(55)),
     ]);
 
     const alertas = await service.getAllAlertas();
@@ -194,16 +194,16 @@ describe('AlertasService', () => {
     mockRepository.getAllEntrevistas.mockResolvedValue([
       makeEntrevista('12345678-9', DiasAtras(100)),
       makeEntrevista('12345678-9', DiasAtras(29)),
-      makeEntrevista('12345678-9', DiasAtras(15)), 
+      makeEntrevista('12345678-9', DiasAtras(15)),
       makeEntrevista('98765432-1', DiasAtras(100)),
-      makeEntrevista('98765432-1', DiasAtras(35)),
+      makeEntrevista('98765432-1', DiasAtras(70)),
     ]);
 
     const alertas = await service.getAllAlertas();
 
     expect(alertas).toHaveLength(1);
     expect(alertas).toEqual([
-      {rut_estudiante: '98765432-1', tipo: mockAlertasType.ENTREVISTA_VENCIDA, message: 'Estudiante sin entrevista hace más de 35 días', created_at: expect.any(Date)},
+      {rut_estudiante: '98765432-1', tipo: mockAlertasType.ENTREVISTA_VENCIDA, message: 'Estudiante sin entrevista hace más de 70 días', created_at: expect.any(Date)},
     ]);
   });
 
@@ -489,7 +489,7 @@ describe('AlertasService', () => {
 
     mockRepository.findAllEstudiantes.mockResolvedValue([makeEstudiante('12345678-9')]);
     mockRepository.getAllEntrevistas.mockResolvedValue([
-      makeEntrevista('12345678-9', DiasAtras(40)), // entrevista vencida
+      makeEntrevista('12345678-9', DiasAtras(70)), // entrevista vencida (> 2 meses)
     ]);
     mockRepository.getAllRamosbyEstudiante.mockResolvedValue([
       makeRamo(123, 'calculo', EstadoRamo.CURSANDO, 123, '12345678-9', undefined, 1),
@@ -502,7 +502,7 @@ describe('AlertasService', () => {
 
     expect(alertas).toHaveLength(3);
     expect(alertas).toEqual([
-      { rut_estudiante: '12345678-9', tipo: mockAlertasType.ENTREVISTA_VENCIDA, message: 'Estudiante sin entrevista hace más de 40 días', created_at: expect.any(Date) },
+      { rut_estudiante: '12345678-9', tipo: mockAlertasType.ENTREVISTA_VENCIDA, message: 'Estudiante sin entrevista hace más de 70 días', created_at: expect.any(Date) },
       { rut_estudiante: '12345678-9', tipo: mockAlertasType.AUSENCIA_NOTAS, message: 'Alumno sin nota final para calculo', created_at: expect.any(Date) },
       { rut_estudiante: '12345678-9', tipo: mockAlertasType.FIRMAR_ACUERDO, message: 'Estudiante no ha firmado el acuerdo de compromiso vigente', created_at: expect.any(Date) },
     ]);

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Alerta, AlertaTipo } from './entities/alerta.entity';
 
 const MS_POR_DIA = 1000 * 60 * 60 * 24;
-const DIAS_LIMITE = 30;
+const DIAS_LIMITE = 60; // 2 meses sin entrevista
 
 /**
  * Regla de negocio de la alerta de entrevistas.

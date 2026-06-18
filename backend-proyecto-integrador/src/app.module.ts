@@ -27,6 +27,7 @@ import { AlertasModule } from './alertas/alertas.module';
 import { StorageModule } from './storage/storage.module';
 import { PaesModule } from './paes/paes.module';
 import { AcuerdoModule } from './acuerdo/acuerdo.module';
+import { PdfGeneratorModule } from './pdf-generator/pdf-generator.module';
 
 
 
@@ -66,6 +67,7 @@ import { AcuerdoModule } from './acuerdo/acuerdo.module';
     StorageModule,
     PaesModule,
     AcuerdoModule,
+    PdfGeneratorModule,
   ],
   providers: [
     PrismaService,

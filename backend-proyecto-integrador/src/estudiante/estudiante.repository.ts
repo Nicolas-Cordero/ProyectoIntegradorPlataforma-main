@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { estudiante, Prisma } from "@prisma/client";
+import { estudiante, EstadoEstudiante, Prisma } from "@prisma/client";
 import { CreateEstudianteDto } from "./dto/create-estudiante.dto";
 import { UpdateEstudianteDto } from "./dto/update-estudiante.dto";
 import { estadoPermiteLogin } from "./estudiante.utils";
@@ -18,18 +18,36 @@ export class EstudianteRepository{
     });
   }
 
-  async findEstudianteByRutComplete(rut_estudiante: string): Promise<estudiante | null>{
+  /**
+   * Devuelve el estudiante con los datos mínimos que necesita la vista de perfil
+   * simple: generación, nombre del liceo y nombre de la carrera, todo en una
+   * sola query sin N+1.
+   */
+  async findEstudianteByRutSimple(rut_estudiante: string) {
     return this.prisma.estudiante.findUnique({
-      where: {
-        rut_estudiante: rut_estudiante,
-      },
+      where: { rut_estudiante },
       include: {
-        carreras: {
-          include: {
-            universidad: true,
-          },
-        },
-        familiares: true,
+        generacion_rel: { select: { id: true, año: true, descripcion: true } },
+        liceo: { select: { nombre: true } },
+        carreras: { select: { nombre: true } },
+      },
+    });
+  }
+
+  /**
+   * Devuelve el estudiante con toda la información necesaria para la vista de
+   * detalle completo: generación, liceo, PAES, carreras con universidad, y
+   * familiares de emergencia. Todo en una sola query sin N+1.
+   */
+  async findEstudianteByRutComplete(rut_estudiante: string) {
+    return this.prisma.estudiante.findUnique({
+      where: { rut_estudiante },
+      include: {
+        generacion_rel: true,
+        liceo: true,
+        paes: true,
+        carreras: { include: { universidad: true } },
+        familiares: { where: { es_contacto_emergencia: true } },
         beneficios: true,
         ramos: true,
         contactos_emergencia: true,
@@ -45,8 +63,29 @@ export class EstudianteRepository{
   }
 
 
-  async findAllEstudiantes(): Promise<estudiante[]>{
+  async findAllEstudiantes(): Promise<estudiante[]> {
     return this.prisma.estudiante.findMany();
+  }
+
+  /**
+   * Lista solo los estudiantes ACTIVOS con los datos mínimos necesarios para
+   * la vista de becarios: generación, liceo y carrera con universidad, todo en
+   * una sola query sin N+1.
+   */
+  async findBecariosActivos() {
+    return this.prisma.estudiante.findMany({
+      where: { estado: EstadoEstudiante.ACTIVO },
+      include: {
+        generacion_rel: { select: { id: true, año: true } },
+        liceo:          { select: { nombre: true } },
+        carreras: {
+          select: {
+            nombre:      true,
+            universidad: { select: { nombre: true } },
+          },
+        },
+      },
+    });
   }
 
 

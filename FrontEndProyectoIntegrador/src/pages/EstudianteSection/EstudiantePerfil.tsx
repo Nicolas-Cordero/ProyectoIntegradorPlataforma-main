@@ -241,9 +241,8 @@ export default function EstudiantePerfil() {
             valor={editForm.estado ?? ''}
             onChange={(v) => setEditForm(f => ({ ...f, estado: v as EstadoEstudiante }))}
             opciones={[
-              { valor: 'ACTIVO',      etiqueta: 'Activo'      },
-              { valor: 'CONDICIONAL', etiqueta: 'Condicional' },
-              { valor: 'SUSPENDIDO',  etiqueta: 'Suspendido'  },
+              { valor: 'ACTIVO',     etiqueta: 'Activo'     },
+              { valor: 'SUSPENDIDO', etiqueta: 'Suspendido' },
               { valor: 'ELIMINADO',   etiqueta: 'Eliminado'   },
               { valor: 'RETIRADO',    etiqueta: 'Retirado'    },
               { valor: 'EGRESADO',    etiqueta: 'Egresado'    },

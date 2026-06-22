@@ -13,7 +13,6 @@ export type Genero = 'MASCULINO' | 'FEMENINO' | 'NO_BINARIO';
 
 export type EstadoEstudiante =
   | 'ACTIVO'
-  | 'CONDICIONAL'
   | 'ELIMINADO'
   | 'SUSPENDIDO'
   | 'RETIRADO'
@@ -59,8 +58,13 @@ export interface Estudiante {
   puntaje_paes?: number;
   foto_url?: string;
 
-  // Relaciones — solo se populan si el endpoint las incluye explícitamente
+  // Relaciones — solo se populan si el endpoint las incluye explícitamente.
+  // /simple incluye: generacion_rel (parcial), liceo (solo nombre), carreras (solo nombre).
+  // /complete incluye: generacion_rel (completo), liceo, paes, carreras con universidad,
+  //   familiares (solo contactos de emergencia), beneficios, ramos.
+  generacion_rel?: Generacion;
   liceo?: Liceo;
+  paes?: Paes;
   familiares?: Familiar[];
   beneficios?: BeneficioEstudiante[];
   carreras?: Carrera[];
@@ -160,7 +164,7 @@ export interface LoginCredentials {
 export interface Generacion {
   id: number;
   año: number;
-  descripcion?: string;
+  descripcion?: string | null;
   estudiantes?: Estudiante[];
 }
 

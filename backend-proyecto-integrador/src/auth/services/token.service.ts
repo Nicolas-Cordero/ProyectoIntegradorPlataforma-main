@@ -37,7 +37,7 @@ export class TokenService implements OnModuleInit, OnModuleDestroy {
 
 
 
-  async generateTokens(user: usuario): Promise<TokensResponseDto> {
+  async generateTokens(user: usuario, client: 'web' | 'mobile' = 'web'): Promise<TokensResponseDto> {
     const tokenId = randomUUID();
 
     const accessPayload: JwtPayload = {
@@ -55,9 +55,13 @@ export class TokenService implements OnModuleInit, OnModuleDestroy {
       expiresIn: this.configService.get<string>('jwt.access.expiresIn') as unknown as JwtSignOptions['expiresIn'],
     });
 
+    const refreshExpiresIn = client === 'mobile'
+      ? this.configService.get<string>('jwt.refresh.expiresInMobile')!
+      : this.configService.get<string>('jwt.refresh.expiresIn')!;
+
     const refreshToken = this.jwtService.sign(refreshPayload, {
       secret: this.configService.get<string>('jwt.refresh.secret')!,
-      expiresIn: this.configService.get<string>('jwt.refresh.expiresIn') as unknown as JwtSignOptions['expiresIn'],
+      expiresIn: refreshExpiresIn as unknown as JwtSignOptions['expiresIn'],
     });
 
     // Persistir el refresh token (su hash) en la BD

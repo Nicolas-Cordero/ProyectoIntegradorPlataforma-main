@@ -12,9 +12,8 @@ const dtoValido: CreatePdfEstadisticasDto = {
     retirados: 15, tasaDesercion: 12.5, nuevos: 25, nuevosAño: 2024,
   },
   estadoData: [
-    { label: 'Estudiando',   count: 75, pct: 62.5 },
-    { label: 'Condicional',  count:  5, pct:  4.2 },
-    { label: 'Retirado/a',   count: 15, pct: 12.5 },
+    { label: 'Estudiando',  count: 80, pct: 66.7 },
+    { label: 'Retirado/a',  count: 15, pct: 12.5 },
   ],
   generoData: [
     { label: 'Femenino',  count: 65, pct: 54.2 },

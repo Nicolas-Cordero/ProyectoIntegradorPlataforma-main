@@ -355,8 +355,7 @@ export const CreateEstudianteModal: React.FC<Props> = ({
           <Select
             etiqueta="Estado *"
             opciones={[
-              { valor: 'ACTIVO', etiqueta: 'Activo' },
-              { valor: 'CONDICIONAL', etiqueta: 'Condicional' },
+              { valor: 'ACTIVO',     etiqueta: 'Activo'     },
               { valor: 'SUSPENDIDO', etiqueta: 'Suspendido' },
               { valor: 'RETIRADO', etiqueta: 'Retirado' },
               { valor: 'EGRESADO', etiqueta: 'Egresado' },

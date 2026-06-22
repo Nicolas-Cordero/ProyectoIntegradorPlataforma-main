@@ -237,7 +237,6 @@ export class AuthController {
 
 
 
-
   /**REVISAR FRONT, EN UNA DE ESAS ES INNECESARIA   <------------------------------------------
    * Verifica si un código de recuperación es válido
    * @param dto Email y código del usuario

@@ -15,6 +15,7 @@ export default registerAs('jwt', () => {
     refresh: {
       secret: refreshSecret,
       expiresIn: process.env.JWT_REFRESH_EXPIRATION || '7d',
+      expiresInMobile: process.env.JWT_REFRESH_EXPIRATION_MOBILE || '90d',
     },
   };
 });

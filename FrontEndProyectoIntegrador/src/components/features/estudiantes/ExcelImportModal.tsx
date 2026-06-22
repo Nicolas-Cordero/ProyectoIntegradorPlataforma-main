@@ -26,7 +26,7 @@ const COLUMNS = [
   'genero',           // MASCULINO / FEMENINO / NO_BINARIO
   'rbd_liceo',
   'promedios_media',  // 1.0 – 7.0
-  'estado',           // ACTIVO / CONDICIONAL / SUSPENDIDO / RETIRADO / EGRESADO / TITULADO / ELIMINADO
+  'estado',           // ACTIVO / SUSPENDIDO / RETIRADO / EGRESADO / TITULADO / ELIMINADO
   'puntaje_paes',     // opcional
   'foto_url',         // opcional
 ] as const;

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { EstudianteService } from './estudiante.service';
@@ -24,9 +24,9 @@ export class EstudianteController {
   }
 
   @Get()
-  @Roles(UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA)
-  findAll() {
-    return this.estudianteService.findAll();
+  @Roles(UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA, UserRol.ESTUDIANTE)
+  findAll(@Query('soloActivos') soloActivos?: string) {
+    return this.estudianteService.findAll(soloActivos === 'true');
   }
 
 
@@ -45,6 +45,10 @@ export class EstudianteController {
     return this.estudianteService.findByGeneracion(generacion_id);
   }
 
+
+
+
+//TODO: SIMPLE DEBERIA DEVOLVER LA INFO JUSTA Y NECESARIA PARA EL PERFIL
 // Revisar las de abajo
   @Get(':rut_estudiante/simple')
   @Roles(UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA)
@@ -52,6 +56,8 @@ export class EstudianteController {
     return this.estudianteService.findOneSimple(rut_estudiante);
   }
 
+
+//COMPLETE DEBERIA DEVOLVER LA INFO PARA "DATOS PERSONALES."
   @Get(':rut_estudiante/complete')
   @Roles(UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA)
   findOneComplete(@Param('rut_estudiante') rut_estudiante: string) {

@@ -49,7 +49,8 @@ export class EstudianteService {
   }
 
 
-  findAll() {
+  findAll(soloActivos = false) {
+    if (soloActivos) return this.estudianteRepo.findBecariosActivos();
     return this.estudianteRepo.findAllEstudiantes();
   }
 
@@ -60,24 +61,23 @@ export class EstudianteService {
 
   
 
-  async findOneSimple(rut_estudiante: string): Promise<estudiante> {
-    const estudiante = await this.estudianteRepo.findEstudianteByRut(rut_estudiante);
-    if (!estudiante) {
+  async findOneSimple(rut_estudiante: string) {
+    const est = await this.estudianteRepo.findEstudianteByRutSimple(rut_estudiante);
+    if (!est) {
       throw new NotFoundException(`Estudiante con RUT ${rut_estudiante} no encontrado`);
     }
-    return estudiante
+    return est;
   }
 
-
-
-  async findOneComplete(rut_estudiante: string): Promise<estudiante> {
-    const estudiante = await this.estudianteRepo.findEstudianteByRutComplete(rut_estudiante);
-    if (!estudiante) {
+  async findOneComplete(rut_estudiante: string) {
+    const est = await this.estudianteRepo.findEstudianteByRutComplete(rut_estudiante);
+    if (!est) {
       throw new NotFoundException(`Estudiante con RUT ${rut_estudiante} no encontrado`);
     }
-    return estudiante;
+    return est;
   }
 
+  
   async findSortedByGeneracion(): Promise<Record<number, estudiante[]>> {
     const estudiantes = await this.estudianteRepo.findAllEstudiantes();
     const resultado: Record<number, estudiante[]> = {};

@@ -37,7 +37,6 @@ enum Topico {
 
 enum EstadoEstudiante {
   ACTIVO
-  CONDICIONAL
   ELIMINADO
   SUSPENDIDO
   RETIRADO

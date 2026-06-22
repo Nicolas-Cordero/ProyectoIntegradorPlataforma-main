@@ -19,27 +19,25 @@ import type { Generacion, EstadoEstudiante, Genero } from '../types';
 // ── Etiquetas y colores ───────────────────────────────────────────────────────
 
 const ESTADO_LABELS: Record<EstadoEstudiante, string> = {
-  ACTIVO:      'Estudiando',
-  CONDICIONAL: 'Condicional',
-  TITULADO:    'Titulado/a',
-  EGRESADO:    'Egresado/a',
-  SUSPENDIDO:  'Suspendido/a',
-  RETIRADO:    'Retirado/a',
-  ELIMINADO:   'Eliminado/a',
+  ACTIVO:     'Estudiando',
+  TITULADO:   'Titulado/a',
+  EGRESADO:   'Egresado/a',
+  SUSPENDIDO: 'Suspendido/a',
+  RETIRADO:   'Retirado/a',
+  ELIMINADO:  'Eliminado/a',
 };
 
 const ESTADO_COLORS: Record<EstadoEstudiante, string> = {
-  ACTIVO:      '#65B39B',
-  CONDICIONAL: '#EEB35D',
-  TITULADO:    '#4CAF50',
-  EGRESADO:    '#7B8FD4',
-  SUSPENDIDO:  '#C7654F',
-  RETIRADO:    '#9E9E9E',
-  ELIMINADO:   '#BF360C',
+  ACTIVO:     '#65B39B',
+  TITULADO:   '#4CAF50',
+  EGRESADO:   '#7B8FD4',
+  SUSPENDIDO: '#C7654F',
+  RETIRADO:   '#9E9E9E',
+  ELIMINADO:  '#BF360C',
 };
 
 const ESTADO_ORDER: EstadoEstudiante[] = [
-  'ACTIVO', 'CONDICIONAL', 'TITULADO', 'EGRESADO', 'SUSPENDIDO', 'RETIRADO', 'ELIMINADO',
+  'ACTIVO', 'TITULADO', 'EGRESADO', 'SUSPENDIDO', 'RETIRADO', 'ELIMINADO',
 ];
 
 const GENERO_LABELS: Record<Genero, string> = {
@@ -289,7 +287,7 @@ export function EstadisticasPage() {
   const kpis = useMemo(() => {
     const total = estudiantes.length;
     const byEstado = (est: EstadoEstudiante) => estudiantes.filter(e => e.estado === est).length;
-    const activos   = byEstado('ACTIVO') + byEstado('CONDICIONAL');
+    const activos   = byEstado('ACTIVO');
     const titulados = byEstado('TITULADO');
     const egresados = byEstado('EGRESADO');
     const retirados = byEstado('RETIRADO');
@@ -430,7 +428,7 @@ export function EstadisticasPage() {
               <KpiCard
                 label="En el programa"
                 value={kpis.activos}
-                subtitle="Activos + condicionales"
+                subtitle="Activos"
                 icon={SchoolIcon}
                 color="#7B8FD4"
                 bg="rgba(123,143,212,0.12)"

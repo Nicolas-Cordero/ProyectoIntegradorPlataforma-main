@@ -442,9 +442,8 @@ export default function EstudianteDatosPersonales() {
         <InlineField label="Estado"        value={estudiante.estado} fieldKey="estado" editable={e}
           type="select"
           options={[
-            { value: 'ACTIVO',      label: 'Activo'      },
-            { value: 'CONDICIONAL', label: 'Condicional' },
-            { value: 'SUSPENDIDO',  label: 'Suspendido'  },
+            { value: 'ACTIVO',     label: 'Activo'     },
+            { value: 'SUSPENDIDO', label: 'Suspendido' },
             { value: 'ELIMINADO',   label: 'Eliminado'   },
             { value: 'RETIRADO',    label: 'Retirado'    },
             { value: 'EGRESADO',    label: 'Egresado'    },

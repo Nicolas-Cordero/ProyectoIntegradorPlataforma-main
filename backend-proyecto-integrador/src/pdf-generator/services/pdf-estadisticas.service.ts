@@ -23,7 +23,7 @@ export class PdfEstadisticasGenerator implements IPdfGenerator<CreatePdfEstadist
           ['Indicador', 'Valor'],
           [
             ['Total histórico',        String(kpis.total)],
-            ['En el programa',         `${kpis.activos} (activos + condicionales)`],
+            ['En el programa',         String(kpis.activos)],
             ['Titulados',              String(kpis.titulados)],
             ['Egresados',              String(kpis.egresados)],
             ['Retirados',              String(kpis.retirados)],

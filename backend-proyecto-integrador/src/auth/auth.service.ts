@@ -32,7 +32,7 @@ export class AuthService {
 
     const user = await this.validateCredentials(loginDto);
     await this.updateLastLogin(user.rut_usuario);
-    const tokens = await this.tokenService.generateTokens(user);
+    const tokens = await this.tokenService.generateTokens(user, loginDto.client ?? 'web');
 
     return {
       ...tokens,

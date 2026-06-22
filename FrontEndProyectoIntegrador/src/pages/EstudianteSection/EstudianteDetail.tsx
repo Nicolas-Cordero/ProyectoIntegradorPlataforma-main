@@ -1,6 +1,6 @@
 import { useParams, Outlet, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import { estudianteService, liceoService } from '../../services';
+import { estudianteService } from '../../services';
 import PermissionService from '../../services/permissionService';
 import { Spinner } from '../../components/ui';
 import { Navbar } from '../../components/common/Navbar';
@@ -21,20 +21,17 @@ export interface EstudianteOutletContext {
 }
 
 const ESTADO_CHIP: Record<string, string> = {
-  ACTIVO: 'bg-green-100 text-green-700',
-  EGRESADO: 'bg-blue-100 text-blue-700',
-  TITULADO: 'bg-blue-100 text-blue-700',
-  RETIRADO: 'bg-red-100 text-red-700',
+  ACTIVO:    'bg-green-100 text-green-700',
+  EGRESADO:  'bg-blue-100 text-blue-700',
+  TITULADO:  'bg-blue-100 text-blue-700',
+  RETIRADO:  'bg-red-100 text-red-700',
   ELIMINADO: 'bg-red-100 text-red-700',
-  CONDICIONAL: 'bg-orange-100 text-orange-700',
   SUSPENDIDO: 'bg-yellow-100 text-yellow-700',
 };
 
 export default function EstudianteDetail() {
   const { id } = useParams<{ id: string }>();
   const [estudiante, setEstudiante] = useState<Estudiante | null>(null);
-  const [liceo, setLiceo] = useState<Liceo | null>(null);
-  const [generacion, setGeneracion] = useState<Generacion | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshCount, setRefreshCount] = useState(0);
@@ -51,25 +48,8 @@ export default function EstudianteDetail() {
 
     estudianteService
       .getByIdComplete(id)
-      .then(async (est) => {
+      .then((est) => {
         setEstudiante(est);
-
-        // Cargar liceo y generacion por separado ya que el endpoint /complete no los incluye
-        const generacionId = est.generacion_id;
-        const rbdLiceo = est.rbd_liceo;
-
-        await Promise.allSettled([
-          generacionId
-            ? estudianteService.getGeneracionById(Number(generacionId))
-                .then(setGeneracion)
-                .catch(() => setGeneracion(null))
-            : Promise.resolve(),
-          rbdLiceo
-            ? liceoService.getById(rbdLiceo)
-                .then(setLiceo)
-                .catch(() => setLiceo(null))
-            : Promise.resolve(),
-        ]);
       })
       .catch((err) => {
         logger.error('Error cargando estudiante:', err);
@@ -115,8 +95,13 @@ export default function EstudianteDetail() {
     );
   }
 
+  // generacion y liceo ahora vienen incluidos en findOneComplete — sin fetches adicionales.
+  const generacion = estudiante.generacion_rel ?? null;
+  const liceo = estudiante.liceo ?? null;
+
   const chipClass = ESTADO_CHIP[estudiante.estado] ?? 'bg-gray-100 text-gray-700';
-  const contactoEmergencia = estudiante.familiares?.find(f => f.es_contacto_emergencia) ?? null;
+  // familiares ya viene filtrado a es_contacto_emergencia: true desde el backend.
+  const contactoEmergencia = estudiante.familiares?.[0] ?? null;
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-[#FFFBF0]">

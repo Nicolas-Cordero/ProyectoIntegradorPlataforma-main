@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 import { Box, Divider, Typography } from '@mui/material';
 import { Modal, Alert, Button } from '../../ui';
 import { estudianteService } from '../../../services';
+import { normalizarRut, normalizarTelefono } from '../../../utils/validators';
 import type { CreateEstudianteDto } from '../../../services/estudiante.service';
 import type { Genero, EstadoEstudiante } from '../../../types';
 
@@ -14,7 +15,8 @@ interface Props {
   generacionAño: number;
 }
 
-// Columnas esperadas (en orden de la plantilla)
+// Columnas esperadas (en orden de la plantilla).
+// Coinciden exactamente con los campos obligatorios del formulario de creación.
 const COLUMNS = [
   'rut_estudiante',
   'nombre',
@@ -27,8 +29,6 @@ const COLUMNS = [
   'rbd_liceo',
   'promedios_media',  // 1.0 – 7.0
   'estado',           // ACTIVO / SUSPENDIDO / RETIRADO / EGRESADO / TITULADO / ELIMINADO
-  'puntaje_paes',     // opcional
-  'foto_url',         // opcional
 ] as const;
 
 type RawRow = Record<string, string>;
@@ -59,8 +59,6 @@ function downloadTemplate() {
     '12345',
     '6.0',
     'ACTIVO',
-    '',
-    '',
   ].join(',');
   const blob = new Blob([`${header}\n${example}\n`], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -97,11 +95,11 @@ function parseFileToRows(file: File): Promise<PreviewRow[]> {
 
 function rowToDto(row: RawRow, generacion_id: number): CreateEstudianteDto {
   return {
-    rut_estudiante: String(row.rut_estudiante ?? '').trim(),
+    rut_estudiante: normalizarRut(String(row.rut_estudiante ?? '')),
     nombre: String(row.nombre ?? '').trim(),
     apellido: String(row.apellido ?? '').trim(),
     email: String(row.email ?? '').trim(),
-    telefono: String(row.telefono ?? '').trim(),
+    telefono: normalizarTelefono(String(row.telefono ?? '')),
     fecha_nacimiento: new Date(String(row.fecha_nacimiento ?? '')).toISOString(),
     direccion: String(row.direccion ?? '').trim(),
     genero: (String(row.genero ?? '').trim().toUpperCase() as Genero) || 'MASCULINO',

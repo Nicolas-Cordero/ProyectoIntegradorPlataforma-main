@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Divider, Typography } from '@mui/material';
 import { Modal, Input, Select, Alert, Button } from '../../../ui';
 import { estudianteService, liceoService } from '../../../../services';
+import { normalizarRut, normalizarTelefono, esTelefonoValido } from '../../../../utils/validators';
 import type { Generacion, Genero, EstadoEstudiante, Liceo } from '../../../../types';
 
 interface Props {
@@ -42,15 +43,6 @@ const EMPTY: FormState = {
   generacion_id: '',
 };
 
-const PHONE_RE = /^\+569\s?\d{4}\s?\d{4}$/;
-
-function normalizarRut(rut: string): string {
-  let clean = rut.replace(/\./g, '').replace(/\s/g, '').toUpperCase();
-  if (!clean.includes('-') && clean.length >= 2) {
-    clean = `${clean.slice(0, -1)}-${clean.slice(-1)}`;
-  }
-  return clean;
-}
 
 const INPUT_CLASS =
   'w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] bg-white transition-colors';
@@ -97,7 +89,7 @@ export const CreateEstudianteModal: React.FC<Props> = ({
     if (!form.nombre.trim() || form.nombre.trim().length < 2) return 'El nombre debe tener al menos 2 caracteres.';
     if (!form.apellido.trim() || form.apellido.trim().length < 2) return 'El apellido debe tener al menos 2 caracteres.';
     if (!form.email.includes('@')) return 'Ingresa un email válido.';
-    if (!PHONE_RE.test(form.telefono.trim())) return 'Teléfono inválido. Formato: +569 XXXX XXXX';
+    if (!esTelefonoValido(form.telefono)) return 'Teléfono inválido. Ej: 912345678 · 56912345678 · +569 1234 5678';
     if (!form.fecha_nacimiento) return 'La fecha de nacimiento es obligatoria.';
     if (!form.direccion.trim()) return 'La dirección es obligatoria.';
     if (!form.genero) return 'El género es obligatorio.';
@@ -121,11 +113,11 @@ export const CreateEstudianteModal: React.FC<Props> = ({
       const promRedondeado = Math.round(prom * 10) / 10;
 
       await estudianteService.create({
-        rut_estudiante: normalizarRut(form.rut_estudiante.trim()),
+        rut_estudiante: normalizarRut(form.rut_estudiante),
         nombre: form.nombre.trim(),
         apellido: form.apellido.trim(),
         email: form.email.trim(),
-        telefono: form.telefono.trim(),
+        telefono: normalizarTelefono(form.telefono),
         generacion_id: generacionId ?? parseInt(form.generacion_id),
         fecha_nacimiento: new Date(form.fecha_nacimiento).toISOString(),
         direccion: form.direccion.trim(),
@@ -184,7 +176,7 @@ export const CreateEstudianteModal: React.FC<Props> = ({
             etiqueta="RUT *"
             valor={form.rut_estudiante}
             onChange={set('rut_estudiante')}
-            placeholder="12.345.678-9"
+            placeholder="12.345.678-9 · 12345678-9 · 123456789"
             deshabilitado={loading}
           />
           <Input
@@ -244,8 +236,8 @@ export const CreateEstudianteModal: React.FC<Props> = ({
           tipo="tel"
           valor={form.telefono}
           onChange={set('telefono')}
-          placeholder="+569 1234 5678"
-          ayuda="Formato: +569 XXXX XXXX"
+          placeholder="912345678"
+          ayuda="Acepta: 912345678 · 56912345678 · +56 9 1234 5678"
           deshabilitado={loading}
         />
 

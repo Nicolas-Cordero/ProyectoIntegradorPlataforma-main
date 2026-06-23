@@ -1,13 +1,16 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateRamoDto } from './dto/create-ramo.dto';
+import { CreateRamoMeDto } from './dto/create-ramo-me.dto';
 import { UpdateRamoDto } from './dto/update-ramo.dto';
 import { RamoRepository, RamoConDetalle } from './ramo.repository';
 import { ramo } from '@prisma/client';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class RamoService {
   constructor(
     private readonly ramoRepository: RamoRepository,
+    private readonly storageService: StorageService,
   ){}
 
 
@@ -44,8 +47,8 @@ export class RamoService {
     return this.ramoRepository.findAllByEstudiante(rut_estudiante);
   }
 
-  // Fuerza el rut del estudiante autenticado: ignora cualquier rut del body.
-  createForEstudiante(rut_estudiante: string, createRamoDto: CreateRamoDto): Promise<ramo> {
+  // Fuerza el rut del estudiante autenticado: el body no incluye rut_estudiante.
+  createForEstudiante(rut_estudiante: string, createRamoDto: CreateRamoMeDto): Promise<ramo> {
     return this.ramoRepository.create({ ...createRamoDto, rut_estudiante });
   }
 
@@ -59,5 +62,22 @@ export class RamoService {
       throw new ForbiddenException('No puedes modificar un ramo que no te pertenece');
     }
     return this.ramoRepository.update(id_ramo, updateRamoDto);
+  }
+
+  // Solo el estudiante propietario puede subir el certificado de su propio ramo.
+  async uploadCertificado(
+    id_ramo: number,
+    rut_estudiante: string,
+    file: Express.Multer.File,
+  ): Promise<ramo> {
+    const ramo = await this.ramoRepository.findOne(id_ramo);
+    if (!ramo) {
+      throw new NotFoundException(`Ramo con id ${id_ramo} no encontrado`);
+    }
+    if (ramo.rut_estudiante !== rut_estudiante) {
+      throw new ForbiddenException('No puedes subir un certificado a un ramo que no te pertenece');
+    }
+    const { url } = await this.storageService.uploadPDF(file, 'certificados');
+    return this.ramoRepository.updateCertificado(id_ramo, url);
   }
 }

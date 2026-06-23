@@ -31,6 +31,24 @@ class SemestreAvanceService extends BaseHttpClient {
   remove(semestre_id: number): Promise<void> {
     return this.request<void>(`/semestre/${semestre_id}`, { method: 'DELETE' });
   }
+
+  getByCarrera(codigo_carrera: number): Promise<SemestreDto[]> {
+    return this.request<SemestreDto[]>(`/semestre/by-carrera/${codigo_carrera}`);
+  }
+
+  linkCarrera(semestre_id: number, codigo_carrera: number): Promise<void> {
+    return this.request<void>('/semestre/link-carrera', {
+      method: 'POST',
+      body: JSON.stringify({ semestre_id, codigo_carrera }),
+    });
+  }
+
+  unlinkCarrera(semestre_id: number, codigo_carrera: number): Promise<void> {
+    return this.request<void>('/semestre/unlink-carrera', {
+      method: 'DELETE',
+      body: JSON.stringify({ semestre_id, codigo_carrera }),
+    });
+  }
 }
 
 export const semestreAvanceService = new SemestreAvanceService();

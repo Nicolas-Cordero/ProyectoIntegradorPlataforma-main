@@ -173,10 +173,21 @@ model semestre {
   semestre    String
   tipo        TipoSemestre
 
-  ramos       ramo[]
-  entrevistas entrevista[]
+  ramos              ramo[]
+  entrevistas        entrevista[]
+  semestre_carreras  semestre_carrera[]
 
   @@unique([year, semestre])
+}
+
+model semestre_carrera {
+  semestre_id    Int
+  codigo_carrera Int
+
+  semestre semestre @relation(fields: [semestre_id],    references: [semestre_id])
+  carrera  carrera  @relation(fields: [codigo_carrera], references: [codigo_carrera])
+
+  @@id([semestre_id, codigo_carrera])
 }
 
 
@@ -279,7 +290,8 @@ model carrera {
   estudiante  estudiante  @relation(fields: [rut_estudiante], references: [rut_estudiante])
   universidad universidad @relation(fields: [codigo_universidad], references: [codigo_universidad])
 
-  ramos ramo[]
+  ramos             ramo[]
+  semestre_carreras semestre_carrera[]
 }
 
 
@@ -296,6 +308,7 @@ model ramo {
   comentario      String
   intento         Int
   nota_final      Decimal?
+  url_certificado String?
 
   estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
   semestre   semestre   @relation(fields: [semestre_id], references: [semestre_id])

@@ -42,4 +42,32 @@ export class SemestreRepository {
       throw new InternalServerErrorException(`No se pudo eliminar el semestre ${id}.`);
     }
   }
+
+  async linkCarrera(semestre_id: number, codigo_carrera: number): Promise<void> {
+    await this.prisma.semestre_carrera.upsert({
+      where: { semestre_id_codigo_carrera: { semestre_id, codigo_carrera } },
+      create: { semestre_id, codigo_carrera },
+      update: {},
+    });
+  }
+
+  async getByCarrera(codigo_carrera: number): Promise<semestre[]> {
+    const links = await this.prisma.semestre_carrera.findMany({
+      where: { codigo_carrera },
+      include: { semestre: true },
+    });
+    return links.map(l => l.semestre);
+  }
+
+  async unlinkCarrera(semestre_id: number, codigo_carrera: number): Promise<void> {
+    try {
+      await this.prisma.semestre_carrera.delete({
+        where: { semestre_id_codigo_carrera: { semestre_id, codigo_carrera } },
+      });
+    } catch (error) {
+      // Ignorar si el registro no existe (datos anteriores sin pivot)
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') return;
+      throw new InternalServerErrorException(`No se pudo desvincular el semestre ${semestre_id}.`);
+    }
+  }
 }

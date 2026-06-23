@@ -68,4 +68,18 @@ export class RamoRepository {
   findOne(id_ramo: number): Promise<ramo | null> {
     return this.prisma.ramo.findUnique({ where: { id: id_ramo } });
   }
+
+  async updateCertificado(id_ramo: number, url_certificado: string): Promise<ramo> {
+    try {
+      return await this.prisma.ramo.update({
+        where: { id: id_ramo },
+        data: { url_certificado },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new ConflictException(`Ramo ${id_ramo} no encontrado.`);
+      }
+      throw new InternalServerErrorException(`No se pudo actualizar el certificado del ramo ${id_ramo}.`);
+    }
+  }
 }

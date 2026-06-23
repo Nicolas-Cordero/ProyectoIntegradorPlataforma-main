@@ -14,6 +14,7 @@ export interface RamoAvanceDto {
   intento: number;
   // Decimal de Prisma: el backend puede serializarlo como string
   nota_final: number | string | null;
+  url_certificado: string | null;
   semestre: {
     semestre_id: number;
     year: number;

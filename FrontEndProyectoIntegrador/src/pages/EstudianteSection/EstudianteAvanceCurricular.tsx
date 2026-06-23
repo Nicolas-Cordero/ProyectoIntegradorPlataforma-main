@@ -7,6 +7,7 @@ import {
   ExpandLess as ExpandLessIcon,
   School as SchoolIcon,
   Lock as LockIcon,
+  FileDownload as FileDownloadIcon,
 } from '@mui/icons-material';
 import { Modal, Input, Select, Alert } from '../../components/ui';
 import { useConfirmDialog } from '../../components/ui';
@@ -76,6 +77,7 @@ interface RamoUI {
   comentario: string;
   intento: number;
   nota_final: number | null;
+  url_certificado: string | null;
 }
 
 interface SemestreUI {
@@ -84,7 +86,7 @@ interface SemestreUI {
   codigo: CodigoSemUI;
   tipo: TipoSemestre;
   ramos: RamoUI[];
-  soloLocal: boolean; // creado en esta sesión pero sin ramos (no persiste si se recarga)
+  soloLocal: boolean;
 }
 
 interface CarreraUI extends CarreraAvanceDto {
@@ -172,9 +174,26 @@ export default function EstudianteAvanceCurricular() {
       : c
     ));
     try {
-      const ramos = await ramoAvanceService.getByCarrera(codigo_carrera);
+      const [ramos, linkedSemestres] = await Promise.all([
+        ramoAvanceService.getByCarrera(codigo_carrera),
+        semestreAvanceService.getByCarrera(codigo_carrera),
+      ]);
+
       const semestresMap = new Map<number, SemestreUI>();
 
+      // Primero los semestres del pivot (incluye los vacíos persistidos)
+      for (const s of linkedSemestres) {
+        semestresMap.set(s.semestre_id, {
+          semestre_id: s.semestre_id,
+          year:        s.year,
+          codigo:      BACKEND_TO_UI[s.semestre as keyof typeof BACKEND_TO_UI],
+          tipo:        s.tipo as TipoSemestre,
+          ramos:       [],
+          soloLocal:   false,
+        });
+      }
+
+      // Luego los ramos (también agrega semestres de datos anteriores sin pivot)
       for (const r of ramos) {
         const { semestre_id, year, semestre, tipo } = r.semestre;
         if (!semestresMap.has(semestre_id)) {
@@ -188,12 +207,13 @@ export default function EstudianteAvanceCurricular() {
           });
         }
         semestresMap.get(semestre_id)!.ramos.push({
-          id:         r.id,
-          nombre:     r.nombre,
-          estado:     r.estado,
-          comentario: r.comentario,
-          intento:    r.intento,
-          nota_final: normalizarNota(r.nota_final),
+          id:              r.id,
+          nombre:          r.nombre,
+          estado:          r.estado,
+          comentario:      r.comentario,
+          intento:         r.intento,
+          nota_final:      normalizarNota(r.nota_final),
+          url_certificado: r.url_certificado ?? null,
         });
       }
 
@@ -353,13 +373,16 @@ export default function EstudianteAvanceCurricular() {
         setTodosLosSemestres(prev => [...prev, semestre!]);
       }
 
+      // Persiste la asociación semestre ↔ carrera (permite semestres vacíos)
+      await semestreAvanceService.linkCarrera(semestre.semestre_id, modalSemestre);
+
       const nuevoSem: SemestreUI = {
         semestre_id: semestre.semestre_id,
         year:        formSem.year,
         codigo:      formSem.codigo,
         tipo:        formSem.tipo,
         ramos:       [],
-        soloLocal:   true,
+        soloLocal:   false,
       };
 
       setCarreras(cs => cs.map(c => c.codigo_carrera === modalSemestre
@@ -387,9 +410,10 @@ export default function EstudianteAvanceCurricular() {
         if (!sem) return;
 
         try {
-          // Eliminar ramos del backend primero
-          await Promise.all(sem.ramos.map(r => ramoAvanceService.remove(r.id)));
-          // Quitar de UI
+          await Promise.all([
+            ...sem.ramos.map(r => ramoAvanceService.remove(r.id)),
+            semestreAvanceService.unlinkCarrera(semestre_id, codigo_carrera),
+          ]);
           setCarreras(cs => cs.map(c => c.codigo_carrera === codigo_carrera
             ? { ...c, semestres: c.semestres.filter(s => s.semestre_id !== semestre_id) }
             : c
@@ -502,7 +526,7 @@ export default function EstudianteAvanceCurricular() {
           semestres: c.semestres.map(s => s.semestre_id === modalRamo.semestreId ? {
             ...s,
             ramos: s.ramos.map(r => r.id === modalRamo.editRamo!.id
-              ? { ...r, nombre: updated.nombre, estado: updated.estado, comentario: updated.comentario, intento: updated.intento, nota_final: normalizarNota(updated.nota_final) }
+              ? { ...r, nombre: updated.nombre, estado: updated.estado, comentario: updated.comentario, intento: updated.intento, nota_final: normalizarNota(updated.nota_final), url_certificado: r.url_certificado }
               : r
             ),
           } : s),
@@ -519,12 +543,13 @@ export default function EstudianteAvanceCurricular() {
           nota_final:     notaFinal,
         });
         const nuevoRamo: RamoUI = {
-          id:         created.id,
-          nombre:     created.nombre,
-          estado:     created.estado,
-          comentario: created.comentario,
-          intento:    created.intento,
-          nota_final: normalizarNota(created.nota_final),
+          id:              created.id,
+          nombre:          created.nombre,
+          estado:          created.estado,
+          comentario:      created.comentario,
+          intento:         created.intento,
+          nota_final:      normalizarNota(created.nota_final),
+          url_certificado: created.url_certificado ?? null,
         };
         setCarreras(cs => cs.map(c => c.codigo_carrera === modalRamo.carreraId ? {
           ...c,
@@ -927,7 +952,7 @@ function CarreraAcordeon({
 
   const ultimoSem = carrera.semestres.at(-1) ?? null;
   // Bloquear si está cargando O si el último semestre no está cerrado
-  const puedeAgregarSem = !carrera.cargando && (!ultimoSem || esCerrado(ultimoSem.ramos) || ultimoSem.soloLocal);
+  const puedeAgregarSem = !carrera.cargando && (!ultimoSem || esCerrado(ultimoSem.ramos));
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -1180,6 +1205,20 @@ function RamoCard({ ramo, semAbierto, onEditar, onEliminar }: RamoCardProps) {
           <span className="text-sm text-gray-400">· {ramo.intento}° intento</span>
         )}
       </div>
+
+      {ramo.url_certificado && (
+        <a
+          href={ramo.url_certificado}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={e => e.stopPropagation()}
+          className="inline-flex items-center gap-1 mt-2 text-xs text-[#65B39B] hover:text-[#4a9e87] hover:underline transition-colors"
+          title="Descargar certificado del estudiante"
+        >
+          <FileDownloadIcon sx={{ fontSize: 14 }} />
+          Certificado
+        </a>
+      )}
 
       {semAbierto && (
         <p className="text-xs text-[#65B39B] mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">

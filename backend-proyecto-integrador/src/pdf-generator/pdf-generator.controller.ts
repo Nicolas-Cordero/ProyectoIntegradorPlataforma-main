@@ -2,7 +2,7 @@ import { Controller, Post, Body, UseGuards, UsePipes, ValidationPipe, Streamable
 import { UserRol } from '@prisma/client';
 import { PdfGeneratorService } from './pdf-generator.service';
 import { Generators } from './interfaces';
-import { CreatePdfAcademicoDto, CreatePdfSemestreDto, CreatePdfEstadisticasDto, CreatePdfAcuerdoDto } from './dto';
+import { CreatePdfAcademicoDto, CreatePdfSemestreDto, CreatePdfEstadisticasDto, CreatePdfAcuerdoDto, CreatePdfEntrevistaDto, CreatePdfEntrevistaResumenDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -47,6 +47,24 @@ export class PdfGeneratorController {
     return new StreamableFile(buffer, {
       type: 'application/pdf',
       disposition: 'attachment; filename="acuerdo-compromiso.pdf"',
+    });
+  }
+
+  @Post('entrevista')
+  async generarEntrevista(@Body() dto: CreatePdfEntrevistaDto): Promise<StreamableFile> {
+    const buffer = await this.pdfGeneratorService.pdfGenerate(dto, Generators.ENTREVISTA);
+    return new StreamableFile(buffer, {
+      type: 'application/pdf',
+      disposition: 'attachment; filename="informe-entrevista.pdf"',
+    });
+  }
+
+  @Post('entrevista-resumen')
+  async generarEntrevistaResumen(@Body() dto: CreatePdfEntrevistaResumenDto): Promise<StreamableFile> {
+    const buffer = await this.pdfGeneratorService.pdfGenerate(dto, Generators.ENTREVISTA_RESUMEN);
+    return new StreamableFile(buffer, {
+      type: 'application/pdf',
+      disposition: 'attachment; filename="resumen-entrevistas.pdf"',
     });
   }
 }

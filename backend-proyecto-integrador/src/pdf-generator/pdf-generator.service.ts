@@ -1,16 +1,17 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { Generators, IPdfGenerator } from './interfaces';
-import { CreatePdfAcademicoDto, CreatePdfSemestreDto, CreatePdfEntrevistaDto, CreatePdfEstadisticasDto, CreatePdfAcuerdoDto } from './dto';
-import { PdfAcademicoGenerator, PdfEntrevistaGenerator, PdfSemestreGenerator, PdfEstadisticasGenerator, PdfAcuerdoGenerator } from './services'
+import { CreatePdfAcademicoDto, CreatePdfSemestreDto, CreatePdfEntrevistaDto, CreatePdfEntrevistaResumenDto, CreatePdfEstadisticasDto, CreatePdfAcuerdoDto } from './dto';
+import { PdfAcademicoGenerator, PdfEntrevistaGenerator, PdfEntrevistaResumenGenerator, PdfSemestreGenerator, PdfEstadisticasGenerator, PdfAcuerdoGenerator } from './services'
 
 
 //Se construte un typemap que indica a que dto apuntar.
 type DtoMap = {
-  [Generators.ACADEMICO]:    CreatePdfAcademicoDto;
-  [Generators.ENTREVISTA]:   CreatePdfEntrevistaDto;
-  [Generators.SEMESTRE]:     CreatePdfSemestreDto;
-  [Generators.ESTADISTICAS]: CreatePdfEstadisticasDto;
-  [Generators.ACUERDO]:      CreatePdfAcuerdoDto;
+  [Generators.ACADEMICO]:          CreatePdfAcademicoDto;
+  [Generators.ENTREVISTA]:         CreatePdfEntrevistaDto;
+  [Generators.ENTREVISTA_RESUMEN]: CreatePdfEntrevistaResumenDto;
+  [Generators.SEMESTRE]:           CreatePdfSemestreDto;
+  [Generators.ESTADISTICAS]:       CreatePdfEstadisticasDto;
+  [Generators.ACUERDO]:            CreatePdfAcuerdoDto;
 };
 
 @Injectable()
@@ -22,18 +23,20 @@ export class PdfGeneratorService {
 
   //En el constructor vive el mapa. Apuntando segun cada generator a una clase concreta.
   constructor(
-    private readonly academico:    PdfAcademicoGenerator,
-    private readonly entrevista:   PdfEntrevistaGenerator,
-    private readonly semestre:     PdfSemestreGenerator,
-    private readonly estadisticas: PdfEstadisticasGenerator,
-    private readonly acuerdo:      PdfAcuerdoGenerator,
+    private readonly academico:           PdfAcademicoGenerator,
+    private readonly entrevista:          PdfEntrevistaGenerator,
+    private readonly entrevistaResumen:   PdfEntrevistaResumenGenerator,
+    private readonly semestre:            PdfSemestreGenerator,
+    private readonly estadisticas:        PdfEstadisticasGenerator,
+    private readonly acuerdo:             PdfAcuerdoGenerator,
   ) {
     this.strategies = {
-      [Generators.ACADEMICO]:    this.academico,
-      [Generators.ENTREVISTA]:   this.entrevista,
-      [Generators.SEMESTRE]:     this.semestre,
-      [Generators.ESTADISTICAS]: this.estadisticas,
-      [Generators.ACUERDO]:      this.acuerdo,
+      [Generators.ACADEMICO]:          this.academico,
+      [Generators.ENTREVISTA]:         this.entrevista,
+      [Generators.ENTREVISTA_RESUMEN]: this.entrevistaResumen,
+      [Generators.SEMESTRE]:           this.semestre,
+      [Generators.ESTADISTICAS]:       this.estadisticas,
+      [Generators.ACUERDO]:            this.acuerdo,
     };
   }
 

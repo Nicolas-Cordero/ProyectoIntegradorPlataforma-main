@@ -140,6 +140,13 @@ export interface ContactoEmergencia {
 
 // ============================================
 
+export interface EntrevistaSemestre {
+  semestre_id: number;
+  year: number;
+  semestre: string; // 'PRIMER_SEMESTRE' | 'SEGUNDO_SEMESTRE'
+  tipo: string;
+}
+
 export interface Entrevista {
   id: number;
   fecha_hora: Date | string;
@@ -150,6 +157,10 @@ export interface Entrevista {
   resumen?: string;
   created_at: Date | string;
   updated_at: Date | string;
+  // relaciones (incluidas por el backend en listado y detalle)
+  entrevistador?: { nombre: string; apellido: string };
+  semestre?: EntrevistaSemestre;
+  comentarios?: ComentarioEntrevista[];
 }
 
 // ============================================
@@ -211,6 +222,34 @@ export interface Paes {
   historia?: number;
 }
 
+// ============================================
+// ENTREVISTAS
+// ============================================
+
+export type Topico = 'GENERAL' | 'ACADEMICO' | 'REL_INTER' | 'SALUD' | 'ACTS_EXTRA';
+
+export const TOPICO_LABELS: Record<Topico, string> = {
+  GENERAL:    'General',
+  ACADEMICO:  'Académico',
+  REL_INTER:  'Relaciones interpersonales',
+  SALUD:      'Salud',
+  ACTS_EXTRA: 'Actividades extracurriculares',
+};
+
+export const TODOS_LOS_TOPICOS: Topico[] = [
+  'GENERAL', 'ACADEMICO', 'REL_INTER', 'SALUD', 'ACTS_EXTRA',
+];
+
+export interface ComentarioEntrevista {
+  id: number;
+  entrevista_id: number;
+  topico: Topico;
+  texto: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
 // ARCHIVOS LEGACY CON ERRORES TRAS LIMPIEZA (pendientes de corrección/eliminación):
 // - src/components/features/estudiante-detalles/interview-workspace/DataTable.tsx
 // - src/components/features/estudiante-detalles/interview-workspace/NoteEditor.tsx

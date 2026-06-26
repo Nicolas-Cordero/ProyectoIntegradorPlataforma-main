@@ -6,10 +6,7 @@ import {
   Delete,
   Body,
   Param,
-  UsePipes,
-  ValidationPipe,
   UseGuards,
-  Req,
   ParseIntPipe,
 } from '@nestjs/common';
 import { EntrevistasService } from './entrevistas.service';
@@ -17,9 +14,10 @@ import { CreateEntrevistaDto } from './dto/create-entrevista.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRol } from '@prisma/client';
+import type { AuthenticatedUser } from '../auth/interfaces/auth.interfaces';
 import { UpdateEntrevistaDto } from './dto';
-
 
 
 @Controller('entrevistas')
@@ -29,18 +27,17 @@ export class EntrevistasController {
   constructor(private readonly entrevistasService: EntrevistasService) {}
 
 
-  //Creación de una entrevista
   @Post()
   create(
     @Body() createEntrevistaDto: CreateEntrevistaDto,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.entrevistasService.create(createEntrevistaDto);
+    return this.entrevistasService.create(createEntrevistaDto, user.rut_usuario);
   }
 
 
-
-  //Elimina una entrevista
   @Delete(':id_entrevista')
+  @Roles(UserRol.ADMIN)
   delete(@Param('id_entrevista', ParseIntPipe) id_entrevista: number) {
     return this.entrevistasService.deleteEntrevista(id_entrevista);
   }

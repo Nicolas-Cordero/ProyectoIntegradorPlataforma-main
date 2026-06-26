@@ -5,6 +5,7 @@ export { estudianteService } from './estudiante.service';
 export { userService } from './user.service';
 export { historialAcademicoService } from './historial-academico.service';
 export { entrevistaService } from './entrevista.service';
+export { comentarioService } from './comentario.service';
 export { ramosCursadosService } from './ramos-cursados.service';
 export { default as PermissionService } from './permissionService';
 

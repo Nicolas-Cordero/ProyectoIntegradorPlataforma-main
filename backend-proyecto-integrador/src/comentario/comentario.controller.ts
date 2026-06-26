@@ -1,25 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Delete, ParseIntPipe, Query, Body, UseGuards } from '@nestjs/common';
 import { ComentarioService } from './comentario.service';
-import { CreateComentarioDto } from './dto/create-comentario.dto';
 import { UpdateComentarioDto } from './dto/update-comentario.dto';
 import { Topico, UserRol } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
+// POST /comentario deshabilitado intencionalmente: los comentarios se crean
+// siempre junto con la entrevista (nested create en POST /entrevistas).
 @Controller('comentario')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRol.ADMIN, UserRol.TUTOR)
 export class ComentarioController {
   constructor(private readonly comentarioService: ComentarioService) {}
-
-  @Post()
-  create(@Body() createComentarioDto: CreateComentarioDto) {
-    return this.comentarioService.create(createComentarioDto);
-  }
 
   @Get('entrevista/:id_entrevista')
   findAllByEntrevista(@Param('id_entrevista', ParseIntPipe) id_entrevista: number) {
     return this.comentarioService.findAllByEntrevista(id_entrevista);
   }
-
 
   @Get()
   findAllByTopico(
@@ -45,7 +43,8 @@ export class ComentarioController {
   }
 
   @Delete(':comentario')
-  remove(@Param('comentario',ParseIntPipe) id_comentario: number) {
+  @Roles(UserRol.ADMIN)
+  remove(@Param('comentario', ParseIntPipe) id_comentario: number) {
     return this.comentarioService.remove(id_comentario);
   }
 }

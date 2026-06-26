@@ -8,7 +8,7 @@ import {
   Button,
 } from '@mui/material';
 
-interface ConfirmDialogOptions {
+export interface ConfirmDialogOptions {
   title?: string;
   message: string;
   confirmText?: string;

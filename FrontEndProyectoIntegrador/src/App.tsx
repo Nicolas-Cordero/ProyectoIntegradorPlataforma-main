@@ -6,6 +6,8 @@ import { Spinner } from './components/ui';
 import { MainLayout } from './components/common/MainLayout';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { PasswordChangeModal } from './components/features/auth/password-recovery';
+import { EntrevistaEnCursoProvider } from './context/EntrevistaEnCursoContext';
+import { PanelEntrevistaFlotante } from './components/entrevistas/PanelEntrevistaFlotante';
 
 const EstudiantesSection = lazy(() => import('./pages/EstudiantesSection').then(m => ({ default: m.EstudiantesSection })));
 const GeneracionView = lazy(() => import('./pages/GeneracionSection/GeneracionView'));
@@ -59,27 +61,30 @@ function AppRoutes() {
   );
 
   return (
-    <Routes>
-      <Route path="/estudiantes" element={withLayout(<EstudiantesSection />)} />
-      <Route path="/perfil" element={withLayout(<UserProfile />)} />
-      <Route path="/generaciones" element={withLayout(<GeneracionesPanel />)} />
-      <Route path="/generacion/:id" element={withLayout(<GeneracionView />)} />
-      <Route path="/estudiante/:id" element={<EstudianteDetail />}>
-        <Route index element={<Navigate to="perfil" replace />} />
-        <Route path="perfil" element={<EstudiantePerfil />} />
-        <Route path="datos-personales" element={<EstudianteDatosPersonales />} />
-        <Route path="informacion-familiar" element={<EstudianteInfoFamiliar />} />
-        <Route path="desempeno-academico" element={<EstudianteDesempenoAcademico />} />
-        <Route path="desempeno-semestral" element={<EstudianteDesempenoSemestral />} />
-        <Route path="avance-curricular" element={<EstudianteAvanceCurricular />} />
-        <Route path="entrevistas" element={<EstudianteEntrevistas />} />
-      </Route>
-      <Route path="/entrevista/:id" element={<EntrevistaWorkspace />} />
-      <Route path="/estadisticas"   element={withLayout(<EstadisticasPage />)} />
-      <Route path="/admin/usuarios" element={withLayout(<UserManagement />)} />
-      <Route path="/admin/acuerdo-compromiso" element={withLayout(<AcuerdoCompromiso />)} />
-      <Route path="/debug-permissions" element={<DebugPermissions />} />
-    </Routes>
+    <EntrevistaEnCursoProvider>
+      <Routes>
+        <Route path="/estudiantes" element={withLayout(<EstudiantesSection />)} />
+        <Route path="/perfil" element={withLayout(<UserProfile />)} />
+        <Route path="/generaciones" element={withLayout(<GeneracionesPanel />)} />
+        <Route path="/generacion/:id" element={withLayout(<GeneracionView />)} />
+        <Route path="/estudiante/:id" element={<EstudianteDetail />}>
+          <Route index element={<Navigate to="perfil" replace />} />
+          <Route path="perfil" element={<EstudiantePerfil />} />
+          <Route path="datos-personales" element={<EstudianteDatosPersonales />} />
+          <Route path="informacion-familiar" element={<EstudianteInfoFamiliar />} />
+          <Route path="desempeno-academico" element={<EstudianteDesempenoAcademico />} />
+          <Route path="desempeno-semestral" element={<EstudianteDesempenoSemestral />} />
+          <Route path="avance-curricular" element={<EstudianteAvanceCurricular />} />
+          <Route path="entrevistas" element={<EstudianteEntrevistas />} />
+        </Route>
+        <Route path="/entrevista/:id" element={<EntrevistaWorkspace />} />
+        <Route path="/estadisticas"   element={withLayout(<EstadisticasPage />)} />
+        <Route path="/admin/usuarios" element={withLayout(<UserManagement />)} />
+        <Route path="/admin/acuerdo-compromiso" element={withLayout(<AcuerdoCompromiso />)} />
+        <Route path="/debug-permissions" element={<DebugPermissions />} />
+      </Routes>
+      <PanelEntrevistaFlotante />
+    </EntrevistaEnCursoProvider>
   );
 }
 

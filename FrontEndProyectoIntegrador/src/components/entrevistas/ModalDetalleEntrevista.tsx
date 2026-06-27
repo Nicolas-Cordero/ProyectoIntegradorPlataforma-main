@@ -33,7 +33,8 @@ export function ModalDetalleEntrevista({
   onActualizada,
 }: ModalDetalleEntrevistaProps) {
   const { usuario } = useAuthContext();
-  const esAdmin = PermissionService.isAdmin(usuario);
+  const esAdmin    = PermissionService.isAdmin(usuario);
+  const puedeEditar = PermissionService.canEditStudent(usuario); // Admin + Tutor
 
   const [entrevista, setEntrevista] = useState<Entrevista | null>(null);
   const [comentarios, setComentarios] = useState<ComentarioEntrevista[]>([]);
@@ -171,49 +172,51 @@ export function ModalDetalleEntrevista({
 
             <hr className="border-gray-100" />
 
-            {/* Formulario de edición */}
-            <div>
-              <h3 className="text-base font-semibold text-gray-700 mb-3">Editar datos</h3>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-sm text-gray-500 block mb-1">Fecha y hora de celebración</label>
-                  <input
-                    type="datetime-local"
-                    value={fechaHoraInput}
-                    onChange={(e) => setFechaHoraInput(e.target.value)}
-                    className="w-full text-base border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B]/30"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-gray-500 block mb-1">Duración (segundos)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={duracionInput}
-                    onChange={(e) => setDuracionInput(e.target.value)}
-                    className="w-full text-base border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B]/30"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-gray-500 block mb-1">Resumen</label>
-                  <textarea
-                    value={resumenInput}
-                    onChange={(e) => setResumenInput(e.target.value)}
-                    rows={3}
-                    className="w-full text-base border border-gray-200 rounded-lg px-3 py-2 resize-y focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B]/30"
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleGuardarCambios}
-                    disabled={guardando}
-                    className="px-4 py-2 text-base bg-[#65B39B] text-white rounded-lg hover:bg-[#4A9B7D] disabled:opacity-50 transition-colors font-medium"
-                  >
-                    {guardando ? 'Guardando…' : 'Guardar cambios'}
-                  </button>
+            {/* Formulario de edición — solo Admin/Tutor */}
+            {puedeEditar && (
+              <div>
+                <h3 className="text-base font-semibold text-gray-700 mb-3">Editar datos</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm text-gray-500 block mb-1">Fecha y hora de celebración</label>
+                    <input
+                      type="datetime-local"
+                      value={fechaHoraInput}
+                      onChange={(e) => setFechaHoraInput(e.target.value)}
+                      className="w-full text-base border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B]/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-500 block mb-1">Duración (segundos)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={duracionInput}
+                      onChange={(e) => setDuracionInput(e.target.value)}
+                      className="w-full text-base border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B]/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-500 block mb-1">Resumen</label>
+                    <textarea
+                      value={resumenInput}
+                      onChange={(e) => setResumenInput(e.target.value)}
+                      rows={3}
+                      className="w-full text-base border border-gray-200 rounded-lg px-3 py-2 resize-y focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B]/30"
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleGuardarCambios}
+                      disabled={guardando}
+                      className="px-4 py-2 text-base bg-[#65B39B] text-white rounded-lg hover:bg-[#4A9B7D] disabled:opacity-50 transition-colors font-medium"
+                    >
+                      {guardando ? 'Guardando…' : 'Guardar cambios'}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Comentarios */}
             {comentarios.length > 0 && (

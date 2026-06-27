@@ -17,7 +17,7 @@ import { ChangePasswordDto, ChangeOwnPasswordDto } from '../auth/dto/change-pass
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRol, usuario } from '@prisma/client';
+import { UserRol } from '@prisma/client';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -28,7 +28,7 @@ export class UsersController {
   @Post()
   @Roles(UserRol.ADMIN)
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createUserDto: CreateUserDto): Promise<usuario> {
+  async create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
@@ -36,23 +36,25 @@ export class UsersController {
 
   @Get()
   @Roles(UserRol.ADMIN)
-  findAll(): Promise<usuario[]> {
+  findAll() {
     return this.usersService.findAll();
   }
 
 
   @Get(':rut')
-  async findOne(@Param('rut') rut: string): Promise<usuario> {
+  @Roles(UserRol.ADMIN)
+  async findOne(@Param('rut') rut: string) {
     return this.usersService.findOne(rut);
   }
 
 
   @Patch(':rut')
+  @Roles(UserRol.ADMIN)
   @HttpCode(HttpStatus.OK)
   async update(
     @Param('rut') rut: string,
     @Body() updateUserDto: UpdateUserDto,
-  ): Promise<usuario> {
+  ) {
     return this.usersService.update(rut, updateUserDto);
   }
 

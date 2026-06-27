@@ -44,9 +44,9 @@ function AgregarComentarioForm({ topicosUsados, onAgregar, onCancelar }: Agregar
   return (
     <div className="border border-[#65B39B]/40 rounded-lg p-3 bg-[#65B39B]/5 mt-2">
       <div className="mb-2">
-        <label className="block text-xs font-semibold text-gray-600 mb-1">Tópico</label>
+        <label className="block text-sm font-semibold text-gray-600 mb-1">Tópico</label>
         <select
-          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#65B39B] bg-white"
+          className="w-full border border-gray-300 rounded px-2 py-2 text-base focus:outline-none focus:ring-1 focus:ring-[#65B39B] bg-white"
           value={topico}
           onChange={(e) => setTopico(e.target.value as Topico)}
         >
@@ -56,9 +56,9 @@ function AgregarComentarioForm({ topicosUsados, onAgregar, onCancelar }: Agregar
         </select>
       </div>
       <div className="mb-2">
-        <label className="block text-xs font-semibold text-gray-600 mb-1">Texto</label>
+        <label className="block text-sm font-semibold text-gray-600 mb-1">Texto</label>
         <textarea
-          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-[#65B39B]"
+          className="w-full border border-gray-300 rounded px-2 py-2 text-base resize-none focus:outline-none focus:ring-1 focus:ring-[#65B39B]"
           rows={3}
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
@@ -69,14 +69,14 @@ function AgregarComentarioForm({ topicosUsados, onAgregar, onCancelar }: Agregar
       <div className="flex justify-end gap-2">
         <button
           onClick={onCancelar}
-          className="text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-100 transition-colors"
+          className="text-sm px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-100 transition-colors"
         >
           Cancelar
         </button>
         <button
           onClick={() => { if (texto.trim()) onAgregar(topico, texto.trim()); }}
           disabled={!texto.trim()}
-          className="text-xs px-2 py-1 rounded bg-[#65B39B] text-white hover:bg-[#4A9B7D] disabled:opacity-50 transition-colors"
+          className="text-sm px-3 py-1.5 rounded bg-[#65B39B] text-white hover:bg-[#4A9B7D] disabled:opacity-50 transition-colors"
         >
           Agregar
         </button>
@@ -285,13 +285,13 @@ export function PanelEntrevistaFlotante() {
 
 function MinimizedTimer({ horaInicio }: { horaInicio: Date }) {
   const tiempo = useTimer(horaInicio);
-  return <span className="text-xs font-mono text-white/80">{tiempo}</span>;
+  return <span className="text-sm font-mono text-white/80">{tiempo}</span>;
 }
 
 function ExpandedTimer({ horaInicio }: { horaInicio: Date }) {
   const tiempo = useTimer(horaInicio);
   return (
-    <span className="text-sm font-mono text-white/90 bg-white/10 px-2 py-0.5 rounded">
+    <span className="text-base font-mono text-white/90 bg-white/10 px-2 py-0.5 rounded">
       {tiempo}
     </span>
   );

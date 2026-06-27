@@ -5,7 +5,7 @@ interface GenerationHeaderProps {
   generationYear: number;
   totalStudents: number;
   onBack: () => void;
-  onAddStudent: () => void;
+  onAddStudent?: () => void;
   onUploadExcel?: () => void;
 }
 
@@ -50,55 +50,59 @@ export function GenerationHeader({
             </Box>
           </Box>
           
-          {/* Botones de acción */}
-          <Box sx={{ display: 'flex', gap: 1.5 }}>
-            {onUploadExcel && (
-              <Button
-                variant="outlined"
-                startIcon={<UploadIcon />}
-                onClick={onUploadExcel}
-                sx={{
-                  borderColor: 'rgba(255,255,255,0.7)',
-                  color: 'white',
-                  px: 2,
-                  py: 1.5,
-                  fontWeight: 600,
-                  textTransform: 'none',
-                  fontSize: '0.9rem',
-                  '&:hover': {
-                    borderColor: 'white',
-                    backgroundColor: 'rgba(255,255,255,0.15)',
-                  },
-                }}
-              >
-                Subir Excel
-              </Button>
-            )}
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={onAddStudent}
-              sx={{
-                backgroundColor: '#FFFEF5',
-                color: '#EEB35D',
-                px: 3,
-                py: 1.5,
-                fontWeight: 600,
-                textTransform: 'none',
-                fontSize: '1rem',
-                boxShadow: 2,
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  backgroundColor: '#f5f5f5',
-                  transform: 'translateY(-2px)',
-                  boxShadow: 4,
-                  color: '#d99f2f',
-                },
-              }}
-            >
-              Agregar Estudiante
-            </Button>
-          </Box>
+          {/* Botones de acción — solo Admin/Tutor */}
+          {(onAddStudent || onUploadExcel) && (
+            <Box sx={{ display: 'flex', gap: 1.5 }}>
+              {onUploadExcel && (
+                <Button
+                  variant="outlined"
+                  startIcon={<UploadIcon />}
+                  onClick={onUploadExcel}
+                  sx={{
+                    borderColor: 'rgba(255,255,255,0.7)',
+                    color: 'white',
+                    px: 2,
+                    py: 1.5,
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    fontSize: '0.9rem',
+                    '&:hover': {
+                      borderColor: 'white',
+                      backgroundColor: 'rgba(255,255,255,0.15)',
+                    },
+                  }}
+                >
+                  Subir Excel
+                </Button>
+              )}
+              {onAddStudent && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={onAddStudent}
+                  sx={{
+                    backgroundColor: '#FFFEF5',
+                    color: '#EEB35D',
+                    px: 3,
+                    py: 1.5,
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                    boxShadow: 2,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: '#f5f5f5',
+                      transform: 'translateY(-2px)',
+                      boxShadow: 4,
+                      color: '#d99f2f',
+                    },
+                  }}
+                >
+                  Agregar Estudiante
+                </Button>
+              )}
+            </Box>
+          )}
         </Box>
       </Paper>
     </Box>

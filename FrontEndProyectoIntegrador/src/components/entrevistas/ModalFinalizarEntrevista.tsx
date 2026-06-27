@@ -64,20 +64,20 @@ export function ModalFinalizarEntrevista({
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
+          <label className="block text-base font-medium text-gray-600 mb-1">
             Fecha y hora de inicio <span className="text-gray-400 font-normal">(opcional — si se deja vacío se usa la hora en que se abrió el panel)</span>
           </label>
           <input
             type="datetime-local"
             value={fechaHoraRaw}
             onChange={(e) => setFechaHoraRaw(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#65B39B]"
+            className="w-full border border-gray-300 rounded px-3 py-2 text-base focus:outline-none focus:ring-1 focus:ring-[#65B39B]"
             disabled={enviando}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
+          <label className="block text-base font-medium text-gray-600 mb-1">
             Duración (segundos) <span className="text-gray-400 font-normal">(opcional — si se deja vacío se calcula automáticamente)</span>
           </label>
           <input
@@ -86,7 +86,7 @@ export function ModalFinalizarEntrevista({
             value={duracionRaw}
             onChange={(e) => setDuracionRaw(e.target.value)}
             placeholder={`${calcularDuracion()} s (calculado)`}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#65B39B]"
+            className="w-full border border-gray-300 rounded px-3 py-2 text-base focus:outline-none focus:ring-1 focus:ring-[#65B39B]"
             disabled={enviando}
           />
         </div>

@@ -11,6 +11,8 @@ import { GenerationHeader, StudentsTable } from '../../components/features/gener
 import { CreateEstudianteModal } from '../../components/features/estudiantes';
 import { ExcelImportModal } from '../../components/features/estudiantes/ExcelImportModal';
 import { Spinner, ErrorMessage, useConfirmDialog } from '../../components/ui';
+import { useAuthContext } from '../../context/AuthContext';
+import PermissionService from '../../services/permissionService';
 import type { Estudiante } from '../../types';
 
 const SELECT_CLASS =
@@ -42,6 +44,9 @@ export default function GeneracionViewSimple() {
   const [openCreateEstudiante, setOpenCreateEstudiante] = useState(false);
   const [openExcelImport, setOpenExcelImport] = useState(false);
   const { showConfirm, ConfirmDialog } = useConfirmDialog();
+  const { usuario } = useAuthContext();
+  const canEdit   = PermissionService.canEditStudent(usuario);   // Admin + Tutor
+  const canDelete = PermissionService.canDeleteStudent(usuario); // Admin only
 
   // 1. Cargar el año desde el id para mostrarlo en el header
   useEffect(() => {
@@ -233,8 +238,8 @@ export default function GeneracionViewSimple() {
         generationYear={año}
         totalStudents={filteredAndSortedStudents.length}
         onBack={() => navigate(-1)}
-        onAddStudent={() => setOpenCreateEstudiante(true)}
-        onUploadExcel={() => setOpenExcelImport(true)}
+        onAddStudent={canEdit ? () => setOpenCreateEstudiante(true) : undefined}
+        onUploadExcel={canEdit ? () => setOpenExcelImport(true) : undefined}
       />
 
       <div
@@ -282,6 +287,7 @@ export default function GeneracionViewSimple() {
             onSort={handleSort}
             onViewDetails={handleVerDetalles}
             onDelete={handleDeleteStudent}
+            canDelete={canDelete}
             alertasRuts={alertasRuts}
           />
         )}

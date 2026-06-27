@@ -8,6 +8,21 @@ import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { PasswordChangeModal } from './components/features/auth/password-recovery';
 import { EntrevistaEnCursoProvider } from './context/EntrevistaEnCursoContext';
 import { PanelEntrevistaFlotante } from './components/entrevistas/PanelEntrevistaFlotante';
+import PermissionService from './services/permissionService';
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { usuario } = useAuthContext();
+  if (!PermissionService.isAdmin(usuario)) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center m-8">
+        <p className="text-4xl mb-3">🔒</p>
+        <h2 className="text-lg font-bold text-gray-700">Acceso restringido</h2>
+        <p className="text-gray-400 mt-2">Esta sección es exclusiva para administradores.</p>
+      </div>
+    );
+  }
+  return <>{children}</>;
+}
 
 const EstudiantesSection = lazy(() => import('./pages/EstudiantesSection').then(m => ({ default: m.EstudiantesSection })));
 const GeneracionView = lazy(() => import('./pages/GeneracionSection/GeneracionView'));
@@ -79,8 +94,8 @@ function AppRoutes() {
         </Route>
         <Route path="/entrevista/:id" element={<EntrevistaWorkspace />} />
         <Route path="/estadisticas"   element={withLayout(<EstadisticasPage />)} />
-        <Route path="/admin/usuarios" element={withLayout(<UserManagement />)} />
-        <Route path="/admin/acuerdo-compromiso" element={withLayout(<AcuerdoCompromiso />)} />
+        <Route path="/admin/usuarios" element={withLayout(<AdminRoute><UserManagement /></AdminRoute>)} />
+        <Route path="/admin/acuerdo-compromiso" element={withLayout(<AdminRoute><AcuerdoCompromiso /></AdminRoute>)} />
         <Route path="/debug-permissions" element={<DebugPermissions />} />
       </Routes>
       <PanelEntrevistaFlotante />

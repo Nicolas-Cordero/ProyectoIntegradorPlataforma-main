@@ -1,7 +1,7 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
-import { usuario } from '@prisma/client';
+import { UserRol } from '@prisma/client';
 import { randomUUID, createHash } from 'crypto';
 import { JwtPayload, JwtRefreshPayload, StoredRefreshToken } from '../interfaces/auth.interfaces';
 import { TokensResponseDto } from '../dto/auth-response.dto';
@@ -37,7 +37,7 @@ export class TokenService implements OnModuleInit, OnModuleDestroy {
 
 
 
-  async generateTokens(user: usuario, client: 'web' | 'mobile' = 'web'): Promise<TokensResponseDto> {
+  async generateTokens(user: { rut_usuario: string; rol: UserRol }, client: 'web' | 'mobile' = 'web'): Promise<TokensResponseDto> {
     const tokenId = randomUUID();
 
     const accessPayload: JwtPayload = {

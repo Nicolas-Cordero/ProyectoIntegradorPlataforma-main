@@ -75,9 +75,10 @@ export default function EstudianteDetail() {
     { label: 'Información Familiar', path: `/estudiante/${id}/informacion-familiar` },
     { label: 'Desempeño Académico',  path: `/estudiante/${id}/desempeno-academico` },
     { label: 'Desempeño Semestral',  path: `/estudiante/${id}/desempeno-semestral` },
-    { label: 'Avance Curricular',    path: `/estudiante/${id}/avance-curricular` },
-    // Bug 1 fix: solo admin y tutor pueden ver entrevistas
-    ...(canViewInterviews ? [{ label: 'Entrevistas', path: `/estudiante/${id}/entrevistas` }] : []),
+    ...(canViewInterviews ? [
+      { label: 'Avance Curricular', path: `/estudiante/${id}/avance-curricular` },
+      { label: 'Entrevistas',       path: `/estudiante/${id}/entrevistas` },
+    ] : []),
   ];
 
   if (loading) {

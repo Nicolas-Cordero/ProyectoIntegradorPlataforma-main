@@ -6,12 +6,16 @@ import { logger } from '../config';
 import { Spinner, ErrorMessage, Alert } from '../components/ui';
 import { GradientButton } from '../components/common/GradientButton';
 import { CreateGeneracionModal } from '../components/features/generaciones';
+import { useAuthContext } from '../context/AuthContext';
+import PermissionService from '../services/permissionService';
 import type { Generacion } from '../types';
 
 const ICON_COLORS = ['#65B39B', '#C7654F', '#ECB876', '#D3C483', '#8FD4BB', '#E89080'];
 
 export const GeneracionesPanel: React.FC = () => {
   const navigate = useNavigate();
+  const { usuario } = useAuthContext();
+  const canEdit = PermissionService.canEditStudent(usuario); // Admin + Tutor
 
   const [generaciones, setGeneraciones] = useState<Generacion[]>([]);
   const [orden, setOrden] = useState<'desc' | 'asc'>('desc');
@@ -80,13 +84,15 @@ export const GeneracionesPanel: React.FC = () => {
               </div>
             </div>
 
-            <button
-              onClick={() => setOpenModal(true)}
-              className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 border border-white/30 hover:border-white/50"
-            >
-              <AddIcon fontSize="small" />
-              Agregar Generación
-            </button>
+            {canEdit && (
+              <button
+                onClick={() => setOpenModal(true)}
+                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 border border-white/30 hover:border-white/50"
+              >
+                <AddIcon fontSize="small" />
+                Agregar Generación
+              </button>
+            )}
           </div>
         </div>
 
@@ -121,14 +127,16 @@ export const GeneracionesPanel: React.FC = () => {
           <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
             <div className="text-6xl mb-4">🎓</div>
             <h3 className="text-xl font-bold text-gray-700 mb-2">No hay generaciones registradas</h3>
-            <p className="text-gray-500 mb-6">Crea la primera generación para comenzar.</p>
-            <button
-              onClick={() => setOpenModal(true)}
-              className="inline-flex items-center gap-2 bg-[#65B39B] hover:bg-[#4a9e87] text-white font-semibold px-6 py-2.5 rounded-xl transition-colors"
-            >
-              <AddIcon fontSize="small" />
-              Agregar Generación
-            </button>
+            <p className="text-gray-500 mb-6">{canEdit ? 'Crea la primera generación para comenzar.' : 'Aún no hay generaciones disponibles.'}</p>
+            {canEdit && (
+              <button
+                onClick={() => setOpenModal(true)}
+                className="inline-flex items-center gap-2 bg-[#65B39B] hover:bg-[#4a9e87] text-white font-semibold px-6 py-2.5 rounded-xl transition-colors"
+              >
+                <AddIcon fontSize="small" />
+                Agregar Generación
+              </button>
+            )}
           </div>
         )}
 

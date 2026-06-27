@@ -32,7 +32,7 @@ export default function EstudianteEntrevistas() {
       .then(setEntrevistas)
       .catch(() => setError('No se pudieron cargar las entrevistas'))
       .finally(() => setCargando(false));
-  }, [rutEstudiante, canEdit, borrador]); // refetch cuando se finaliza una entrevista (borrador pasa a null)
+  }, [rutEstudiante, canEdit, borrador]);
 
   async function handleDescargarResumen() {
     setDescargandoResumen(true);
@@ -54,7 +54,6 @@ export default function EstudianteEntrevistas() {
       iniciar(rutEstudiante, nombreEstudiante);
       return;
     }
-    // Ya hay un borrador en curso: solo restaurarlo/expandirlo
     restaurar();
   }
 
@@ -95,7 +94,7 @@ export default function EstudianteEntrevistas() {
       </div>
 
       {borrador && borrador.rutEstudiante !== rutEstudiante && (
-        <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-700">
+        <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-base text-amber-700">
           Hay una entrevista en curso para <strong>{borrador.nombreEstudiante}</strong>.
           Finalízala o descártala antes de iniciar una nueva.
         </div>
@@ -107,11 +106,11 @@ export default function EstudianteEntrevistas() {
           <Spinner message="Cargando entrevistas..." />
         </div>
       ) : error ? (
-        <div className="text-center py-10 text-red-500">{error}</div>
+        <div className="text-center py-10 text-base text-red-500">{error}</div>
       ) : entrevistas.length === 0 ? (
         <div className="text-center py-10 text-gray-400">
           <p className="text-3xl mb-2">📋</p>
-          <p>No hay entrevistas registradas para este estudiante.</p>
+          <p className="text-base">No hay entrevistas registradas para este estudiante.</p>
         </div>
       ) : (
         <div className="space-y-3">

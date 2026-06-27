@@ -92,8 +92,8 @@ export default class PermissionService {
 
   
   /**
-   * Verifica si un usuario puede ver entrevistas
-   * Administradores y tutores pueden ver entrevistas
+   * Verifica si un usuario puede ver entrevistas y avance curricular
+   * Solo administradores y tutores
    */
   static canViewInterviews(user: Usuario | null): boolean {
     return this.isAdmin(user) || this.isTutor(user);
@@ -172,18 +172,50 @@ export default class PermissionService {
 
   /**
    * Verifica si un usuario puede ver datos del estudiante
-   * Administradores y tutores pueden ver datos
+   * Todos los roles autenticados pueden ver datos
    */
   static canViewStudent(user: Usuario | null): boolean {
-    return this.isAdmin(user) || this.isTutor(user);
+    return this.isAdmin(user) || this.isTutor(user) || this.isInvitado(user);
   }
 
   /**
-   * Verifica si un usuario tiene acceso de solo lectura
-   * Los tutores tienen acceso de solo lectura
+   * Verifica si un usuario es de solo lectura (rol Visita)
+   */
+  static esSoloLectura(user: Usuario | null): boolean {
+    return this.isInvitado(user);
+  }
+
+  /**
+   * @deprecated usa esSoloLectura — antes retornaba isTutor incorrectamente
    */
   static isReadOnly(user: Usuario | null): boolean {
-    return this.isTutor(user);
+    return this.esSoloLectura(user);
+  }
+
+  // ── Eliminaciones — solo Admin ────────────────────────────────────────────
+
+  static puedeEliminarFamiliar(user: Usuario | null): boolean {
+    return this.isAdmin(user);
+  }
+
+  static puedeEliminarCarrera(user: Usuario | null): boolean {
+    return this.isAdmin(user);
+  }
+
+  static puedeEliminarRamoOSemestre(user: Usuario | null): boolean {
+    return this.isAdmin(user);
+  }
+
+  static puedeEliminarEntrevista(user: Usuario | null): boolean {
+    return this.isAdmin(user);
+  }
+
+  static puedeEliminarComentario(user: Usuario | null): boolean {
+    return this.isAdmin(user);
+  }
+
+  static puedeGestionarUsuarios(user: Usuario | null): boolean {
+    return this.canManageUsers(user);
   }
 
   /**

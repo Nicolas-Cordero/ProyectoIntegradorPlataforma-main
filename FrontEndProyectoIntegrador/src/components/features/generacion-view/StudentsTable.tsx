@@ -15,6 +15,8 @@ interface StudentsTableProps {
   onSort: (field: keyof UIStudent) => void;
   onViewDetails: (studentId: string | number) => void;
   onDelete: (studentId: string | number) => void;
+  canDelete?: boolean;
+  canAdd?: boolean;
   alertasRuts?: string[];
 }
 
@@ -25,6 +27,7 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
   onSort,
   onViewDetails,
   onDelete,
+  canDelete = false,
   alertasRuts = [],
 }) => {
   const alertasSet = new Set(alertasRuts);
@@ -155,14 +158,16 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
                     >
                       Ver Detalles
                     </Button>
-                    <Button
-                      variante="danger"
-                      tamano="sm"
-                      onClick={() => onDelete(student.rut_estudiante)}
-                      sx={{ alignSelf: 'center', flexShrink: 0 }}
-                    >
-                      Eliminar
-                    </Button>
+                    {canDelete && (
+                      <Button
+                        variante="danger"
+                        tamano="sm"
+                        onClick={() => onDelete(student.rut_estudiante)}
+                        sx={{ alignSelf: 'center', flexShrink: 0 }}
+                      >
+                        Eliminar
+                      </Button>
+                    )}
                   </div>
                 </td>
               </tr>

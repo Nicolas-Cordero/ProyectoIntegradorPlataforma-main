@@ -92,6 +92,10 @@ async function bootstrap() {
     }),
   );
 
+  // Permite que SIGTERM/SIGINT lleguen a NestJS y disparen onModuleDestroy
+  // (cierre limpio de conexión Prisma al detener el proceso).
+  app.enableShutdownHooks();
+
   const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
 

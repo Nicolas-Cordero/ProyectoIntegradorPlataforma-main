@@ -12,6 +12,8 @@ import {
 import { Modal, Input, Select, Alert } from '../../components/ui';
 import { useConfirmDialog } from '../../components/ui';
 import { Spinner } from '../../components/ui';
+import { useAuthContext } from '../../context/AuthContext';
+import PermissionService from '../../services/permissionService';
 import type { EstudianteOutletContext } from './EstudianteDetail';
 import {
   universidadService,
@@ -120,7 +122,9 @@ const VIA_ACCESO_OPTS = [
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export default function EstudianteAvanceCurricular() {
-  const { estudiante } = useOutletContext<EstudianteOutletContext>();
+  const { estudiante, canEdit } = useOutletContext<EstudianteOutletContext>();
+  const { usuario } = useAuthContext();
+  const canAdmin = PermissionService.isAdmin(usuario); // eliminar carrera/semestre/ramo
   const rut = estudiante.rut_estudiante;
 
   const { showConfirm, ConfirmDialog } = useConfirmDialog();
@@ -608,6 +612,16 @@ export default function EstudianteAvanceCurricular() {
 
   // ─────────────────────────────────────────────────────────────────────────
 
+  if (!canEdit && !canAdmin) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+        <p className="text-4xl mb-3">🔒</p>
+        <h2 className="text-lg font-bold text-gray-700">Acceso restringido</h2>
+        <p className="text-gray-400 mt-2">Solo administradores y tutores pueden ver el avance curricular.</p>
+      </div>
+    );
+  }
+
   if (cargandoCarreras) {
     return <div className="flex justify-center py-20"><Spinner message="Cargando carreras..." /></div>;
   }
@@ -638,13 +652,15 @@ export default function EstudianteAvanceCurricular() {
             )}
           </p>
         </div>
-        <button
-          onClick={abrirModalCarrera}
-          className="flex items-center gap-2 px-5 py-2.5 bg-[#65B39B] text-white text-sm font-semibold rounded-xl hover:bg-[#4a9e87] transition-colors"
-        >
-          <AddIcon fontSize="small" />
-          Agregar carrera
-        </button>
+        {canEdit && (
+          <button
+            onClick={abrirModalCarrera}
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#65B39B] text-white text-sm font-semibold rounded-xl hover:bg-[#4a9e87] transition-colors"
+          >
+            <AddIcon fontSize="small" />
+            Agregar carrera
+          </button>
+        )}
       </div>
 
       {/* Estado vacío */}
@@ -653,15 +669,19 @@ export default function EstudianteAvanceCurricular() {
           <p className="text-5xl mb-4">🎓</p>
           <h3 className="text-lg font-bold text-gray-700 mb-2">Sin carrera asociada</h3>
           <p className="text-base text-gray-400 mb-6">
-            Agrega una carrera para comenzar a registrar el avance curricular.
+            {canEdit
+              ? 'Agrega una carrera para comenzar a registrar el avance curricular.'
+              : 'No hay carreras registradas para este estudiante.'}
           </p>
-          <button
-            onClick={abrirModalCarrera}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#65B39B] text-white text-sm font-semibold rounded-xl hover:bg-[#4a9e87] transition-colors"
-          >
-            <AddIcon fontSize="small" />
-            Agregar primera carrera
-          </button>
+          {canEdit && (
+            <button
+              onClick={abrirModalCarrera}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#65B39B] text-white text-sm font-semibold rounded-xl hover:bg-[#4a9e87] transition-colors"
+            >
+              <AddIcon fontSize="small" />
+              Agregar primera carrera
+            </button>
+          )}
         </div>
       )}
 
@@ -671,6 +691,8 @@ export default function EstudianteAvanceCurricular() {
           <CarreraAcordeon
             key={carrera.codigo_carrera}
             carrera={carrera}
+            canEdit={canEdit}
+            canAdmin={canAdmin}
             onEliminarCarrera={() => eliminarCarrera(carrera.codigo_carrera, carrera.nombre)}
             onAgregarSemestre={() => abrirModalSemestre(carrera.codigo_carrera)}
             onCerrarSemestre={semId => cerrarSemestre(carrera.codigo_carrera, semId)}
@@ -927,6 +949,8 @@ export default function EstudianteAvanceCurricular() {
 
 interface CarreraAcordeonProps {
   carrera: CarreraUI;
+  canEdit: boolean;
+  canAdmin: boolean;
   onEliminarCarrera: () => void;
   onAgregarSemestre: () => void;
   onCerrarSemestre: (semId: number) => void;
@@ -937,7 +961,7 @@ interface CarreraAcordeonProps {
 }
 
 function CarreraAcordeon({
-  carrera, onEliminarCarrera, onAgregarSemestre,
+  carrera, canEdit, canAdmin, onEliminarCarrera, onAgregarSemestre,
   onCerrarSemestre, onEliminarSemestre, onAgregarRamo, onEditarRamo, onEliminarRamo,
 }: CarreraAcordeonProps) {
   const [expandido, setExpandido] = useState(false);
@@ -975,28 +999,32 @@ function CarreraAcordeon({
         </div>
 
         <div className="flex items-center gap-2 shrink-0 ml-4" onClick={e => e.stopPropagation()}>
-          <button
-            onClick={onAgregarSemestre}
-            disabled={!puedeAgregarSem}
-            title={
-              carrera.cargando
-                ? 'Espera mientras se cargan los datos'
-                : !puedeAgregarSem
-                  ? 'Cierra el semestre actual antes de agregar uno nuevo'
-                  : undefined
-            }
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg bg-[#65B39B] text-white hover:bg-[#4a9e87] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            <AddIcon sx={{ fontSize: 16 }} />
-            {carrera.cargando ? 'Cargando…' : 'Nuevo semestre'}
-          </button>
-          <button
-            onClick={onEliminarCarrera}
-            title="Eliminar carrera"
-            className="p-2 rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 transition-colors"
-          >
-            <DeleteIcon sx={{ fontSize: 18 }} />
-          </button>
+          {canEdit && (
+            <button
+              onClick={onAgregarSemestre}
+              disabled={!puedeAgregarSem}
+              title={
+                carrera.cargando
+                  ? 'Espera mientras se cargan los datos'
+                  : !puedeAgregarSem
+                    ? 'Cierra el semestre actual antes de agregar uno nuevo'
+                    : undefined
+              }
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg bg-[#65B39B] text-white hover:bg-[#4a9e87] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <AddIcon sx={{ fontSize: 16 }} />
+              {carrera.cargando ? 'Cargando…' : 'Nuevo semestre'}
+            </button>
+          )}
+          {canAdmin && (
+            <button
+              onClick={onEliminarCarrera}
+              title="Eliminar carrera"
+              className="p-2 rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 transition-colors"
+            >
+              <DeleteIcon sx={{ fontSize: 18 }} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -1027,13 +1055,15 @@ function CarreraAcordeon({
               {carrera.semestres.length === 0 ? (
                 <div className="border-2 border-dashed border-gray-200 rounded-xl p-10 text-center">
                   <p className="text-base text-gray-400 mb-4">Esta carrera no tiene semestres registrados aún.</p>
-                  <button
-                    onClick={onAgregarSemestre}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-[#65B39B] border border-[#65B39B]/40 rounded-lg hover:bg-[#65B39B]/5 transition-colors"
-                  >
-                    <AddIcon sx={{ fontSize: 16 }} />
-                    Agregar primer semestre
-                  </button>
+                  {canEdit && (
+                    <button
+                      onClick={onAgregarSemestre}
+                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-[#65B39B] border border-[#65B39B]/40 rounded-lg hover:bg-[#65B39B]/5 transition-colors"
+                    >
+                      <AddIcon sx={{ fontSize: 16 }} />
+                      Agregar primer semestre
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div ref={scrollRef} className="overflow-x-auto pb-2">
@@ -1042,6 +1072,8 @@ function CarreraAcordeon({
                       <SemestreColumna
                         key={sem.semestre_id}
                         semestre={sem}
+                        canEdit={canEdit}
+                        canAdmin={canAdmin}
                         onCerrar={() => onCerrarSemestre(sem.semestre_id)}
                         onEliminar={() => onEliminarSemestre(sem.semestre_id)}
                         onAgregarRamo={() => onAgregarRamo(sem.semestre_id)}
@@ -1062,6 +1094,8 @@ function CarreraAcordeon({
 
 interface SemestreColumnaProps {
   semestre: SemestreUI;
+  canEdit: boolean;
+  canAdmin: boolean;
   onCerrar: () => void;
   onEliminar: () => void;
   onAgregarRamo: () => void;
@@ -1069,7 +1103,7 @@ interface SemestreColumnaProps {
   onEliminarRamo: (ramo: RamoUI) => void;
 }
 
-function SemestreColumna({ semestre, onCerrar, onEliminar, onAgregarRamo, onEditarRamo, onEliminarRamo }: SemestreColumnaProps) {
+function SemestreColumna({ semestre, canEdit, canAdmin, onCerrar, onEliminar, onAgregarRamo, onEditarRamo, onEliminarRamo }: SemestreColumnaProps) {
   const cerrado = esCerrado(semestre.ramos);
   const ramoLimitAlcanzado = semestre.tipo === 'RECUPERATIVO' && semestre.ramos.length >= 1;
   const todosConNota = semestre.ramos.length > 0
@@ -1100,11 +1134,13 @@ function SemestreColumna({ semestre, onCerrar, onEliminar, onAgregarRamo, onEdit
             </span>
           </div>
         </div>
-        <button onClick={onEliminar} title="Eliminar semestre"
-          className="p-1 text-gray-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors"
-        >
-          <DeleteIcon sx={{ fontSize: 16 }} />
-        </button>
+        {canAdmin && (
+          <button onClick={onEliminar} title="Eliminar semestre"
+            className="p-1 text-gray-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            <DeleteIcon sx={{ fontSize: 16 }} />
+          </button>
+        )}
       </div>
 
       {/* Ramos */}
@@ -1116,6 +1152,8 @@ function SemestreColumna({ semestre, onCerrar, onEliminar, onAgregarRamo, onEdit
                 key={ramo.id}
                 ramo={ramo}
                 semAbierto={!cerrado}
+                canEdit={canEdit}
+                canAdmin={canAdmin}
                 onEditar={() => onEditarRamo(ramo)}
                 onEliminar={() => onEliminarRamo(ramo)}
               />
@@ -1123,8 +1161,8 @@ function SemestreColumna({ semestre, onCerrar, onEliminar, onAgregarRamo, onEdit
         }
       </div>
 
-      {/* Acciones (solo semestre abierto) */}
-      {!cerrado && (
+      {/* Acciones (solo semestre abierto y con permisos) */}
+      {!cerrado && canEdit && (
         <div className="px-3 pb-3 pt-2 border-t border-gray-100 space-y-2">
           {!ramoLimitAlcanzado ? (
             <button
@@ -1158,23 +1196,27 @@ function SemestreColumna({ semestre, onCerrar, onEliminar, onAgregarRamo, onEdit
 interface RamoCardProps {
   ramo: RamoUI;
   semAbierto: boolean;
+  canEdit: boolean;
+  canAdmin: boolean;
   onEditar: () => void;
   onEliminar: () => void;
 }
 
-function RamoCard({ ramo, semAbierto, onEditar, onEliminar }: RamoCardProps) {
+function RamoCard({ ramo, semAbierto, canEdit, canAdmin, onEditar, onEliminar }: RamoCardProps) {
   const chip = ESTADO_CHIP[ramo.estado];
   const notaColor = ramo.nota_final === null
     ? 'text-gray-300'
     : ramo.nota_final >= 4 ? 'text-green-600' : 'text-red-500';
 
+  const puedeEditarRamo = semAbierto && canEdit;
+
   return (
     <div
-      onDoubleClick={semAbierto ? onEditar : undefined}
-      title={semAbierto ? 'Doble clic para editar' : undefined}
+      onDoubleClick={puedeEditarRamo ? onEditar : undefined}
+      title={puedeEditarRamo ? 'Doble clic para editar' : undefined}
       className={`
         rounded-xl border bg-white px-3 py-2.5 group transition-all
-        ${semAbierto
+        ${puedeEditarRamo
           ? 'border-gray-200 cursor-pointer hover:border-[#65B39B] hover:shadow-sm hover:bg-[#65B39B]/5'
           : 'border-gray-100 cursor-default'}
       `}
@@ -1183,7 +1225,7 @@ function RamoCard({ ramo, semAbierto, onEditar, onEliminar }: RamoCardProps) {
         <span className="text-base font-semibold text-gray-800 leading-snug break-words flex-1">
           {ramo.nombre}
         </span>
-        {semAbierto && (
+        {semAbierto && canAdmin && (
           <button
             onClick={e => { e.stopPropagation(); onEliminar(); }}
             title="Eliminar ramo"
@@ -1220,7 +1262,7 @@ function RamoCard({ ramo, semAbierto, onEditar, onEliminar }: RamoCardProps) {
         </a>
       )}
 
-      {semAbierto && (
+      {puedeEditarRamo && (
         <p className="text-xs text-[#65B39B] mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
           Doble clic para editar
         </p>

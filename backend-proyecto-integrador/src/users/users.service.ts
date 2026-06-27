@@ -7,7 +7,7 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
-import { UsersRepository } from './users.repository';
+import { UsersRepository, SafeUsuario } from './users.repository';
 import { usuario } from '@prisma/client';
 import { rutSinDV } from '../common/rut.util';
 
@@ -17,8 +17,7 @@ export class UsersService {
     private readonly usersRepo: UsersRepository,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<usuario> {
-    // Verificar si el email ya existe
+  async create(createUserDto: CreateUserDto): Promise<SafeUsuario> {
     const existingUser = await this.usersRepo.findByEmail(createUserDto.email);
     const existingRut = await this.usersRepo.findByRut(createUserDto.rut_usuario);
     if (existingRut) {
@@ -40,20 +39,19 @@ export class UsersService {
 
 
 
-  async findAll(): Promise<usuario[]> {
+  async findAll(): Promise<SafeUsuario[]> {
     return this.usersRepo.findAll();
   }
 
 
 
-  async findOne(rut: string): Promise<usuario> {
-    const user = await this.usersRepo.findByRut(rut);
+  async findOne(rut: string): Promise<SafeUsuario> {
+    const user = await this.usersRepo.findByRutSafe(rut);
     if (!user) {
       throw new NotFoundException(`Usuario con RUT ${rut} no encontrado`);
     }
     return user;
   }
-  
 
 
 
@@ -61,21 +59,19 @@ export class UsersService {
     const user = await this.usersRepo.findByEmail(email);
     if (!user) {
       throw new NotFoundException(`Usuario con email ${email} no encontrado`);
-    } 
+    }
     return user;
   }
 
 
-  async update(rut: string, updateUserDto: UpdateUserDto): Promise<usuario> {
+  async update(rut: string, updateUserDto: UpdateUserDto): Promise<SafeUsuario> {
     const user = await this.usersRepo.findByRut(rut);
 
     if (!user) {
       throw new NotFoundException(`Usuario con RUT ${rut} no encontrado`);
     }
-    // Verificar si el nuevo email o username ya existe (si se está actualizando)
     if (updateUserDto.email) {
       const existingUser = await this.usersRepo.findByEmail(updateUserDto.email);
-
       if (existingUser) {
         throw new ConflictException('El email o username ya está en uso');
       }
@@ -86,7 +82,7 @@ export class UsersService {
   }
 
 
-  async remove(rut: string): Promise<usuario> {
+  async remove(rut: string): Promise<SafeUsuario> {
     const result = await this.usersRepo.delete(rut);
     if (!result) {
       throw new NotFoundException(`Usuario con RUT ${rut} no encontrado`);
@@ -100,7 +96,7 @@ export class UsersService {
 
 
   async updateResetToken(rut: string, refreshToken: string): Promise<void> {
-    const expireDate =  new Date(Date.now() + 15* 60 * 1000); // Expira en 15 minutos
+    const expireDate = new Date(Date.now() + 15 * 60 * 1000);
     await this.usersRepo.updateResetToken(rut, refreshToken, expireDate);
   }
 
@@ -118,13 +114,12 @@ export class UsersService {
 
   async changePassword(rut: string, newPassword: string): Promise<void> {
     const user = await this.usersRepo.findByRut(rut);
-    
+
     if (!user) {
       throw new NotFoundException(`Usuario con RUT ${rut} no encontrado`);
     }
 
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     // El admin asigna una contraseña concreta: el usuario decide si la cambia o no.
     await this.usersRepo.update(rut, {
@@ -136,20 +131,17 @@ export class UsersService {
 
   async changeOwnPassword(rut: string, currentPassword: string, newPassword: string): Promise<void> {
     const user = await this.usersRepo.findByRut(rut);
-    
+
     if (!user) {
       throw new NotFoundException(`Usuario con RUT ${rut} no encontrado`);
     }
 
-    // Verificar contraseña actual
     const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
     if (!isCurrentPasswordValid) {
       throw new BadRequestException('La contraseña actual es incorrecta');
     }
 
-    // Hashear nueva contraseña
-    const saltRounds = 10;
-    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
     // El usuario ya cambió su contraseña: se desactiva el cambio forzado.
     await this.usersRepo.update(rut, {

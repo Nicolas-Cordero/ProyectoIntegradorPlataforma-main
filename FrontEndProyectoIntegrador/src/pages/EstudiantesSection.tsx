@@ -5,6 +5,8 @@ import { logger } from '../config';
 import { Spinner, ErrorMessage, useConfirmDialog } from '../components/ui';
 import { StudentsTable } from '../components/features/generacion-view';
 import { CreateEstudianteModal } from '../components/features/estudiantes';
+import { useAuthContext } from '../context/AuthContext';
+import PermissionService from '../services/permissionService';
 import type { Estudiante } from '../types';
 import type { UIStudent } from './GeneracionSection/GeneracionView';
 
@@ -25,6 +27,9 @@ const SELECT_CLASS =
 export const EstudiantesSection: React.FC = () => {
   const navigate = useNavigate();
   const { showConfirm, ConfirmDialog } = useConfirmDialog();
+  const { usuario } = useAuthContext();
+  const canEdit = PermissionService.canEditStudent(usuario);
+  const canDelete = PermissionService.canDeleteStudent(usuario);
 
   const [students, setStudents] = useState<StudentWithStats[]>([]);
   const [alertasRuts, setAlertasRuts] = useState<string[]>([]);
@@ -256,12 +261,14 @@ export const EstudiantesSection: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => setOpenCrear(true)}
-                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 border border-white/30 hover:border-white/50 whitespace-nowrap"
-              >
-                + Nuevo estudiante
-              </button>
+              {canEdit && (
+                <button
+                  onClick={() => setOpenCrear(true)}
+                  className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 border border-white/30 hover:border-white/50 whitespace-nowrap"
+                >
+                  + Nuevo estudiante
+                </button>
+              )}
             </div>
           </div>
 
@@ -373,6 +380,7 @@ export const EstudiantesSection: React.FC = () => {
               onViewDetails={handleVerDetalles}
               onDelete={handleDeleteStudent}
               alertasRuts={alertasRuts}
+              canDelete={canDelete}
             />
           )}
 

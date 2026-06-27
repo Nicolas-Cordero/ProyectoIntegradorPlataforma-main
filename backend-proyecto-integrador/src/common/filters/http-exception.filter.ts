@@ -97,17 +97,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
       });
     }
 
-    const message = exception instanceof Error ? exception.message : 'Error interno del servidor';
     this.logger.error(
       `${request.method} ${request.url}`,
       exception instanceof Error ? exception.stack : JSON.stringify(exception),
     );
+    // No exponer mensajes internos al cliente — solo en logs.
     response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       timestamp: new Date().toISOString(),
       path: request.url,
       method: request.method,
-      message,
+      message: 'Error interno del servidor',
     });
   }
 }

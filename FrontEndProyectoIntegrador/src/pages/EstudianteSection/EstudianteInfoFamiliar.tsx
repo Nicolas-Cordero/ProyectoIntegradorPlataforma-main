@@ -5,6 +5,8 @@ import { familiarService } from '../../services';
 import type { CreateFamiliarDto, UpdateFamiliarDto } from '../../services/familiar.service';
 import { Modal, Input, Select, Alert } from '../../components/ui';
 import { useConfirmDialog } from '../../components/ui';
+import { useAuthContext } from '../../context/AuthContext';
+import PermissionService from '../../services/permissionService';
 import type { EstudianteOutletContext } from './EstudianteDetail';
 import type { Familiar, Parentesco } from '../../types';
 
@@ -49,13 +51,12 @@ const EMPTY_FORM: FormState = {
 interface FamiliarCardProps {
   familiar: Familiar;
   canEdit: boolean;
+  canDelete: boolean;
   onEdit: (f: Familiar) => void;
   onDelete: (id: number) => void;
 }
 
-
-
-function FamiliarCard({ familiar, canEdit, onEdit, onDelete }: FamiliarCardProps) {
+function FamiliarCard({ familiar, canEdit, canDelete, onEdit, onDelete }: FamiliarCardProps) {
   return (
     <div className={`bg-white rounded-xl shadow-sm border p-5 ${familiar.es_contacto_emergencia ? 'border-[#65B39B] ring-1 ring-[#65B39B]/30' : 'border-gray-100'}`}>
       <div className="flex items-start justify-between mb-2">
@@ -74,22 +75,26 @@ function FamiliarCard({ familiar, canEdit, onEdit, onDelete }: FamiliarCardProps
             {familiar.nombre}
           </span>
         </div>
-        {canEdit && (
+        {(canEdit || canDelete) && (
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => onEdit(familiar)}
-              title="Editar"
-              className="p-1.5 rounded-md text-blue-600 hover:bg-blue-50 transition-colors"
-            >
-              <EditIcon fontSize="small" />
-            </button>
-            <button
-              onClick={() => onDelete(familiar.id)}
-              title="Eliminar"
-              className="p-1.5 rounded-md text-red-500 hover:bg-red-50 transition-colors"
-            >
-              <DeleteIcon fontSize="small" />
-            </button>
+            {canEdit && (
+              <button
+                onClick={() => onEdit(familiar)}
+                title="Editar"
+                className="p-1.5 rounded-md text-blue-600 hover:bg-blue-50 transition-colors"
+              >
+                <EditIcon fontSize="small" />
+              </button>
+            )}
+            {canDelete && (
+              <button
+                onClick={() => onDelete(familiar.id)}
+                title="Eliminar"
+                className="p-1.5 rounded-md text-red-500 hover:bg-red-50 transition-colors"
+              >
+                <DeleteIcon fontSize="small" />
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -116,6 +121,8 @@ function FamiliarCard({ familiar, canEdit, onEdit, onDelete }: FamiliarCardProps
 
 export default function EstudianteInfoFamiliar() {
   const { estudiante, canEdit, refresh } = useOutletContext<EstudianteOutletContext>();
+  const { usuario } = useAuthContext();
+  const canDeleteFamiliar = PermissionService.puedeEliminarFamiliar(usuario);
   // Bug 7 fix: distinguir explícitamente undefined (no cargado) de [] (cargado y vacío)
   const familiaresRaw = estudiante.familiares;
   const familiares: Familiar[] = familiaresRaw ?? [];
@@ -251,6 +258,7 @@ export default function EstudianteInfoFamiliar() {
               key={familiar.id}
               familiar={familiar}
               canEdit={canEdit}
+              canDelete={canDeleteFamiliar}
               onEdit={openEdit}
               onDelete={handleDelete}
             />

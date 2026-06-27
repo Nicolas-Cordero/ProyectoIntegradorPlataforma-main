@@ -13,66 +13,52 @@ export class EmailService {
     this.initializeTransporter();
   }
 
-  /**
-   * Inicializa el transporter de nodemailer con la configuración
-   */
   private initializeTransporter(): void {
+    const host = this.configService.get<string>('email.host');
+    const port = Number(this.configService.get<number>('email.port'));
+    const user = this.configService.get<string>('email.auth.user');
+    const pass = this.configService.get<string>('email.auth.pass');
+
+    if (!host || !port || !user || !pass) {
+      throw new Error('Email configuration missing in env');
+    }
+
     const emailConfig = {
-      host: this.configService.get('email.host'),
-      port: this.configService.get('email.port'),
-      secure: this.configService.get('email.secure'),
+      host,
+      port,
+      secure: port === 465, // importante
       auth: {
-        user: this.configService.get('email.auth.user'),
-        pass: this.configService.get('email.auth.pass'),
+        user,
+        pass,
       },
     };
 
-    // Validar que las credenciales estén configuradas
-    if (!emailConfig.auth.user || !emailConfig.auth.pass) {
-      this.logger.warn(
-        'Las credenciales de email no están configuradas. '
-      );
-    }
-
     this.transporter = nodemailer.createTransport(emailConfig);
 
-    // Verificar la conexión
     this.verifyConnection();
   }
 
-
-
-
-
-  /**
-   * Verifica que la conexión con el servidor de email funcione
-   */
   private async verifyConnection(): Promise<void> {
     try {
       await this.transporter.verify();
-      this.logger.log('Conexión con servidor de email verificada exitosamente');
+      this.logger.log('Email server OK');
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error desconocido';
-      this.logger.error(`Error al verificar conexión con servidor de email: ${message}`);
-      this.logger.warn('El envío de emails puede fallar. Verifica tu configuración.');
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Email connection error: ${message}`);
     }
   }
 
+  private get senderHeader(): string {
+    const fromEmail = this.configService.getOrThrow<string>('email.from');
+    const fromName = this.configService.getOrThrow<string>('email.fromName');
+    return `"${fromName}" <${fromEmail}>`;
+  }
 
-
-
-
-  /**
-   * Envía un email con el código de recuperación de contraseña
-   * @param email Email del destinatario
-   * @param code Código de verificación de 6 dígitos
-   */
   async sendPasswordResetEmail(email: string, code: string): Promise<void> {
-    const from = this.configService.get('email.from');
-    const expirationMinutes = this.configService.get('email.resetCodeExpiration');
+    const expirationMinutes = this.configService.get<number>('email.resetCodeExpiration') || 15;
 
     const mailOptions = {
-      from,
+      from: this.senderHeader,
       to: email,
       subject: 'Código de Recuperación de Contraseña',
       html: Recuperation_Mail.PASSWORD_RESET_EMAIL(code, expirationMinutes),
@@ -80,44 +66,28 @@ export class EmailService {
 
     try {
       const info = await this.transporter.sendMail(mailOptions);
-      this.logger.log(`Email de recuperación enviado a: ${email} - ID: ${info.messageId}`);
+      this.logger.log(`Email enviado a ${email} - ${info.messageId}`);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error desconocido';
-      this.logger.error(`Error al enviar email a ${email}: ${message}`);
-      throw new Error('No se pudo enviar el email de recuperación');
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Error sending email: ${message}`);
+      throw new Error('Email send failed');
     }
   }
 
-
-
-  
-
-//ya esta en el enum
-  /**
-   * Envía un email de notificación cuando la contraseña ha sido cambiada
-   * @param email Email del destinatario
-   */
   async sendPasswordChangedNotification(email: string): Promise<void> {
-    const from = this.configService.get('email.from');
-
     const mailOptions = {
-      from,
+      from: this.senderHeader,
       to: email,
       subject: 'Contraseña Actualizada Exitosamente',
-      html: Recuperation_Mail.PASSWORD_CHANGE_EMAIL()
+      html: Recuperation_Mail.PASSWORD_CHANGE_EMAIL(),
     };
-
-
-
-
 
     try {
       await this.transporter.sendMail(mailOptions);
-      this.logger.log(`Notificación de cambio de contraseña enviada a: ${email}`);
+      this.logger.log(`Notificación enviada a ${email}`);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error desconocido';
-      this.logger.error(`Error al enviar notificación a ${email}: ${message}`);
-      // No lanzar error aquí, es solo una notificación
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Error sending notification: ${message}`);
     }
   }
 }

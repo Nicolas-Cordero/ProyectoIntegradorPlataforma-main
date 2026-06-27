@@ -27,6 +27,38 @@ class EntrevistaService extends BaseHttpClient {
   /**
    * Obtiene todos los textos (comentarios/notas) de todas las entrevistas de un estudiante
    */
+  async getTextos(entrevistaId: string | number): Promise<TextoEntrevista[]> {
+    const entrevista = await this.getById(String(entrevistaId));
+    return (entrevista.comentarios ?? []).map(c => ({
+      id: c.id,
+      nombre_etiqueta: c.topico,
+      contenido: c.texto,
+      fecha: c.created_at as string,
+    }));
+  }
+
+  async addTexto(entrevistaId: string | number, data: Omit<TextoEntrevista, 'id'>): Promise<TextoEntrevista> {
+    return this.request<TextoEntrevista>('/comentario', {
+      method: 'POST',
+      body: JSON.stringify({
+        entrevista_id: Number(entrevistaId),
+        topico: data.nombre_etiqueta,
+        texto: data.contenido,
+      }),
+    });
+  }
+
+  async updateTexto(_entrevistaId: string | number, textId: string | number, data: Partial<TextoEntrevista>): Promise<TextoEntrevista> {
+    return this.request<TextoEntrevista>(`/comentario/${textId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ texto: data.contenido }),
+    });
+  }
+
+  async deleteTexto(_entrevistaId: string | number, textId: string | number): Promise<void> {
+    return this.request<void>(`/comentario/${textId}`, { method: 'DELETE' });
+  }
+
   async getAllTextosByEstudiante(estudianteId: string): Promise<TextoEntrevista[]> {
     const entrevistas = await this.getByEstudiante(estudianteId);
     if (!entrevistas || entrevistas.length === 0) return [];

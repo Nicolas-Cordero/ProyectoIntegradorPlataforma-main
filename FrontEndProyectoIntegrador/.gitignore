@@ -47,3 +47,4 @@ coverage
 # Debug
 .vscode/launch.json
 debug.log
+.vercel

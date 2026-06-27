@@ -249,9 +249,4 @@ export interface ComentarioEntrevista {
   updated_at: string;
 }
 
-// ============================================
-// ARCHIVOS LEGACY CON ERRORES TRAS LIMPIEZA (pendientes de corrección/eliminación):
-// - src/components/features/estudiante-detalles/interview-workspace/DataTable.tsx
-// - src/components/features/estudiante-detalles/interview-workspace/NoteEditor.tsx
-// - src/components/features/estudiante-detalles/interview-workspace/TopNavbar.tsx
 

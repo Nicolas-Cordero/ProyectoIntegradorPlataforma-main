@@ -11,9 +11,9 @@ interface TopNavbarProps {
 export function TopNavbar({ estudiante, onNavigateBack }: TopNavbarProps) {
   // DATOS: nombre completo y carrera activa (si la relación viene poblada)
   const nombreCompleto = `${estudiante.nombre || ''} ${estudiante.apellido || ''}`.trim() || 'Estudiante';
-  const carreraActual = estudiante.carreras?.find((c) => c.activa) ?? estudiante.carreras?.[0];
-  const carrera = carreraActual?.nombre_carrera || 'Sin especificar';
-  const universidad = carreraActual?.institucion || 'Sin especificar';
+  const carreraActual = (estudiante.carreras as any[])?.find((c) => c.activa) ?? estudiante.carreras?.[0];
+  const carrera = (carreraActual as any)?.nombre_carrera || carreraActual?.nombre || 'Sin especificar';
+  const universidad = (carreraActual as any)?.institucion || 'Sin especificar';
   const { showConfirm, ConfirmDialog } = useConfirmDialog();
 
   return (

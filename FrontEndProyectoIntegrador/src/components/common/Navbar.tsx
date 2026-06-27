@@ -24,7 +24,7 @@ export function Navbar({ usuario, onLogout, links = [] }: NavbarProps) {
   const location = useLocation();
   const theme = useTheme();
   const showAdminChip = useMediaQuery(theme.breakpoints.up('lg'));
-  const userRole = usuario?.role || usuario?.tipo || usuario?.rol;
+  const userRole = usuario?.rol;
 
   return (
     <>

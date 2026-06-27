@@ -43,7 +43,7 @@ export class AuthController {
     return {
       httpOnly: true,
       secure: isProd,
-      sameSite: 'strict' as const,
+      sameSite: 'none' as const,
     };
   }
 

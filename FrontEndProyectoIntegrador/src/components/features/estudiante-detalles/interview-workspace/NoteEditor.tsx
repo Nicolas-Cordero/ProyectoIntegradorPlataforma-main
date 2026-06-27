@@ -75,14 +75,14 @@ export function NoteEditor({
       if (!entrevistaId && !estudiante?.rut_estudiante) return;
       try {
         setIsLoading(true);
-        let textos = [];
+        let textos: any[] = [];
         let fechaEntrevista: Date | null = entrevistaFecha;
 
         if (entrevistaId) {
           try {
             const entrevistaDetalle = await entrevistaService.getById(entrevistaId);
-            if (entrevistaDetalle?.fecha) {
-              const base = new Date(entrevistaDetalle.fecha);
+            if (entrevistaDetalle?.fecha_hora) {
+              const base = new Date(entrevistaDetalle.fecha_hora);
               fechaEntrevista = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 12, 0, 0, 0);
             }
           } catch (err) {
@@ -162,8 +162,8 @@ export function NoteEditor({
       
       // Añadir a la lista local
       const note: Note = {
-        id: textoGuardado.id,
-        content: textoGuardado.contenido,
+        id: String(textoGuardado.id ?? ''),
+        content: textoGuardado.contenido ?? '',
         timestamp: fechaBase,
       };
       

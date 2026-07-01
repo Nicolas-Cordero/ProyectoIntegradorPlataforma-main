@@ -1,0 +1,1 @@
+export { FamiliarCard } from './FamiliarCard';

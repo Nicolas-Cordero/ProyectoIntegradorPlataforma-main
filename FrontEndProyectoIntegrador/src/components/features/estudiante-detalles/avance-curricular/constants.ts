@@ -1,6 +1,6 @@
-import type { EstadoEstudiante } from '../../../types';
-import type { EstadoRamoAvance } from '../../../services/ramo-avance.service';
-import type { BackendSemestre, TipoSemestre } from '../../../services/semestre-avance.service';
+import type { EstadoEstudiante } from '../../../../types';
+import type { EstadoRamoAvance } from '../../../../services/ramo-avance.service';
+import type { BackendSemestre, TipoSemestre } from '../../../../services/semestre-avance.service';
 import type { CodigoSemUI, RamoUI } from './types';
 
 export const UI_TO_BACKEND: Record<CodigoSemUI, BackendSemestre> = {

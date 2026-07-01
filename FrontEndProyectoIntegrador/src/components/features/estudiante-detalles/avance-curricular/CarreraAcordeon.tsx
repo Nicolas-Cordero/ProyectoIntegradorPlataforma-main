@@ -6,9 +6,9 @@ import {
   ExpandLess as ExpandLessIcon,
   School as SchoolIcon,
 } from '@mui/icons-material';
-import { Alert } from '../../../components/ui';
-import { Spinner } from '../../../components/ui';
-import type { EstadoEstudiante } from '../../../types';
+import { Alert } from '../../../ui';
+import { Spinner } from '../../../ui';
+import type { EstadoEstudiante } from '../../../../types';
 import type { CarreraUI, RamoUI } from './types';
 import { esCerrado, semLabel } from './constants';
 import { SemestreColumna } from './SemestreColumna';
@@ -44,7 +44,17 @@ export function CarreraAcordeon({
   }, [expandido, carrera.cargando, carrera.semestres.length]);
 
   const ultimoSem = carrera.semestres.at(-1) ?? null;
-  const puedeAgregarSem = !carrera.cargando && (!ultimoSem || esCerrado(ultimoSem.ramos));
+  const carreraActiva = carrera.estado === 'ACTIVO';
+  const puedeAgregarSem = !carrera.cargando && carreraActiva && (!ultimoSem || esCerrado(ultimoSem.ramos));
+
+  const tooltipAgregarSem =
+    carrera.cargando
+      ? 'Espera mientras se cargan los datos'
+      : !carreraActiva
+        ? 'La carrera debe estar Activa para agregar semestres'
+        : !puedeAgregarSem
+          ? 'Cierra el semestre actual antes de agregar uno nuevo'
+          : undefined;
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -71,13 +81,7 @@ export function CarreraAcordeon({
             <button
               onClick={onAgregarSemestre}
               disabled={!puedeAgregarSem}
-              title={
-                carrera.cargando
-                  ? 'Espera mientras se cargan los datos'
-                  : !puedeAgregarSem
-                    ? 'Cierra el semestre actual antes de agregar uno nuevo'
-                    : undefined
-              }
+              title={tooltipAgregarSem}
               className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg bg-[#65B39B] text-white hover:bg-[#4a9e87] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <AddIcon sx={{ fontSize: 16 }} />
@@ -110,7 +114,15 @@ export function CarreraAcordeon({
           {/* ── Administración de semestres (primero) ── */}
           {!carrera.cargando && !carrera.error && (
             <>
-              {!puedeAgregarSem && ultimoSem && (
+              {!carreraActiva && (
+                <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-100 border border-gray-200 rounded-xl px-4 py-3 mb-5">
+                  <span>🔒</span>
+                  <span>
+                    La carrera está en estado <strong>{carrera.estado}</strong>. No se pueden agregar nuevos semestres hasta que esté <strong>Activa</strong>.
+                  </span>
+                </div>
+              )}
+              {!puedeAgregarSem && carreraActiva && ultimoSem && (
                 <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-5">
                   <span>⚠️</span>
                   <span>

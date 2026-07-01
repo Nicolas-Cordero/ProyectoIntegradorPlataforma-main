@@ -6,9 +6,10 @@ import { logger } from '../../config';
 import type { Estudiante, Entrevista } from '../../types';
 import { useWorkspaceTabs } from '../../hooks';
 import { sidebarSections } from '../../config/workspaceSections';
-import { LoadingState, ErrorState } from '../../components/features/estudiante-detalles/entrevista-workspace';
-
-import { TopNavbar, Sidebar, TabManager } from '../../components/features/estudiante-detalles/interview-workspace';
+import {
+  LoadingState, ErrorState,
+  TopNavbar, Sidebar, TabManager,
+} from '../../components/features/estudiante-detalles/entrevista-workspace';
 
 export function EntrevistaWorkspace() {
   const navigate = useNavigate();

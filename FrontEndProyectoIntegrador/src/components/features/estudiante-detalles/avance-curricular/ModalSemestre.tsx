@@ -1,5 +1,5 @@
-import { Modal, Input, Select, Alert } from '../../../components/ui';
-import type { TipoSemestre } from '../../../services/semestre-avance.service';
+import { Modal, Input, Select, Alert } from '../../../ui';
+import type { TipoSemestre } from '../../../../services/semestre-avance.service';
 import type { CodigoSemUI } from './types';
 
 export interface FormSemestre {

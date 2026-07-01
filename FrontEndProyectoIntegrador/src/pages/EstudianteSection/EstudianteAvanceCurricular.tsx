@@ -1,33 +1,33 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { Add as AddIcon } from '@mui/icons-material';
-import { Alert } from '../../../components/ui';
-import { Spinner } from '../../../components/ui';
-import { useConfirmDialog } from '../../../components/ui';
-import { useAuthContext } from '../../../context/AuthContext';
-import PermissionService from '../../../services/permissionService';
-import type { EstudianteOutletContext } from '../EstudianteDetail';
+import { Alert } from '../../components/ui';
+import { Spinner } from '../../components/ui';
+import { useConfirmDialog } from '../../components/ui';
+import { useAuthContext } from '../../context/AuthContext';
+import PermissionService from '../../services/permissionService';
+import type { EstudianteOutletContext } from './EstudianteDetail';
 import {
   universidadService,
   carreraAvanceService,
   semestreAvanceService,
   ramoAvanceService,
   historialEstadoCarreraService,
-} from '../../../services';
-import type { EstadoEstudiante } from '../../../types';
-import type { UniversidadDto } from '../../../services/universidad.service';
-import type { CreateCarreraAvanceDto, ViaAcceso } from '../../../services/carrera-avance.service';
-import type { SemestreDto, CreateSemestreDto } from '../../../services/semestre-avance.service';
-import type { EstadoRamoAvance } from '../../../services/ramo-avance.service';
-import type { CarreraUI, RamoUI, SemestreUI } from './types';
+} from '../../services';
+import type { EstadoEstudiante } from '../../types';
+import type { UniversidadDto } from '../../services/universidad.service';
+import type { CreateCarreraAvanceDto, ViaAcceso } from '../../services/carrera-avance.service';
+import type { SemestreDto, CreateSemestreDto } from '../../services/semestre-avance.service';
+import type { EstadoRamoAvance } from '../../services/ramo-avance.service';
+import type { CarreraUI, RamoUI, SemestreUI } from '../../components/features/estudiante-detalles/avance-curricular';
 import {
   UI_TO_BACKEND, BACKEND_TO_UI, ORDEN_SEMESTRE,
   normalizarNota, esCerrado,
-} from './constants';
-import { CarreraAcordeon } from './CarreraAcordeon';
-import { ModalCarrera, type FormCarrera } from './ModalCarrera';
-import { ModalSemestre, type FormSemestre } from './ModalSemestre';
-import { ModalRamo, type FormRamo } from './ModalRamo';
+  CarreraAcordeon,
+  ModalCarrera, type FormCarrera,
+  ModalSemestre, type FormSemestre,
+  ModalRamo, type FormRamo,
+} from '../../components/features/estudiante-detalles/avance-curricular';
 
 export default function EstudianteAvanceCurricular() {
   const { estudiante, canEdit } = useOutletContext<EstudianteOutletContext>();

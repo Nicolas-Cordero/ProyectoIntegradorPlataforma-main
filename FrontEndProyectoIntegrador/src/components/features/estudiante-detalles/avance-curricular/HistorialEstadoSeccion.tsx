@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Select } from '../../../components/ui';
-import { historialEstadoCarreraService } from '../../../services';
-import type { EstadoEstudiante } from '../../../types';
+import { Select } from '../../../ui';
+import { historialEstadoCarreraService } from '../../../../services';
+import type { EstadoEstudiante } from '../../../../types';
 import type { CarreraUI } from './types';
 import { ESTADO_CARRERA_CHIP, ESTADO_CARRERA_OPTS } from './constants';
 

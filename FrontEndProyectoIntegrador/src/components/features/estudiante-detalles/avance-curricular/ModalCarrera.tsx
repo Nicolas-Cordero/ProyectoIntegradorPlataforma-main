@@ -1,6 +1,6 @@
-import { Modal, Input, Select, Alert } from '../../../components/ui';
-import type { UniversidadDto } from '../../../services/universidad.service';
-import type { ViaAcceso } from '../../../services/carrera-avance.service';
+import { Modal, Input, Select, Alert } from '../../../ui';
+import type { UniversidadDto } from '../../../../services/universidad.service';
+import type { ViaAcceso } from '../../../../services/carrera-avance.service';
 import { VIA_ACCESO_OPTS } from './constants';
 
 export interface FormCarrera {

@@ -1,13 +1,16 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import type { ReactNode } from 'react';
-import { Box, Typography, Divider } from '@mui/material';
 import { estudianteService, paesService } from '../../services';
-import { Modal, Input, Alert, Button } from '../../components/ui';
 import type { EstudianteOutletContext } from './EstudianteDetail';
 import type { UpdateEstudianteDto } from '../../services/estudiante.service';
-import type { UpdatePaesDto, CreatePaesDto } from '../../services/paes.service';
+import type { UpdatePaesDto } from '../../services/paes.service';
 import type { Paes } from '../../types';
+import {
+  InfoCard,
+  InlineField,
+  PaesField,
+  CreatePaesModal,
+} from '../../components/features/estudiante-detalles/datos-personales';
 
 function formatFecha(fecha: Date | string | undefined): string {
   if (!fecha) return 'No especificado';
@@ -25,330 +28,6 @@ function calcularEdad(fechaNacimiento: Date | string | undefined): string {
   const mes = hoy.getMonth() - fecha.getMonth();
   if (mes < 0 || (mes === 0 && hoy.getDate() < fecha.getDate())) edad--;
   return `${edad} años`;
-}
-
-function InfoCard({ titulo, children, defaultExpanded = false }: { titulo: string; children: ReactNode; defaultExpanded?: boolean }) {
-  const [expanded, setExpanded] = useState(defaultExpanded);
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-4">
-      <button
-        onClick={() => setExpanded(e => !e)}
-        className="w-full flex items-center justify-between px-6 py-4 text-left"
-        aria-expanded={expanded}
-      >
-        <h2 className="text-lg font-bold text-gray-800">{titulo}</h2>
-        <span
-          className="text-gray-400 text-lg transition-transform duration-200"
-          style={{ display: 'inline-block', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
-        >
-          ▾
-        </span>
-      </button>
-      {expanded && (
-        <div className="px-6 pb-5 pt-1 border-t border-gray-100">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
-
-type FieldType = 'text' | 'email' | 'tel' | 'number' | 'date' | 'select';
-
-interface InlineFieldProps {
-  label: string;
-  value: string | number | undefined | null;
-  fieldKey?: keyof UpdateEstudianteDto;
-  type?: FieldType;
-  options?: { value: string; label: string }[];
-  editable?: boolean;
-  readOnly?: boolean;
-  onSave?: (key: keyof UpdateEstudianteDto, value: string) => Promise<boolean>;
-}
-
-function InlineField({ label, value, fieldKey, type = 'text', options, editable, readOnly, onSave }: InlineFieldProps) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState('');
-  const [displayOverride, setDisplayOverride] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement | HTMLSelectElement>(null);
-
-  const baseValue = displayOverride ?? (value !== null && value !== undefined ? String(value) : 'No especificado');
-
-  const startEdit = () => {
-    if (!editable || readOnly || !fieldKey) return;
-    setDraft(value !== null && value !== undefined ? String(value) : '');
-    setEditing(true);
-    setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 0);
-  };
-
-  const save = async () => {
-    if (!fieldKey || !onSave) { setEditing(false); return; }
-    const ok = await onSave(fieldKey, draft);
-    if (ok) setDisplayOverride(draft || 'No especificado');
-    setEditing(false);
-  };
-
-  const cancel = () => {
-    setEditing(false);
-    setDraft('');
-  };
-
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') { e.preventDefault(); save(); }
-    if (e.key === 'Escape') cancel();
-  };
-
-  return (
-    <div className="py-3 grid grid-cols-[210px_1fr] gap-4 items-center border-b border-gray-50 last:border-0 group">
-      <span className="text-sm text-gray-500 uppercase tracking-wide font-medium">{label}</span>
-      {editing && fieldKey ? (
-        options ? (
-          <select
-            ref={inputRef as React.RefObject<HTMLSelectElement>}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={save}
-            onKeyDown={onKeyDown}
-            className="text-base border-2 border-[#65B39B] rounded-md px-2 py-1.5 focus:outline-none w-full max-w-xs"
-          >
-            {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-        ) : (
-          <input
-            ref={inputRef as React.RefObject<HTMLInputElement>}
-            type={type}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={save}
-            onKeyDown={onKeyDown}
-            className="text-base border-2 border-[#65B39B] rounded-md px-2 py-1.5 focus:outline-none w-full max-w-xs"
-          />
-        )
-      ) : (
-        <span
-          onDoubleClick={startEdit}
-          title={editable && !readOnly ? 'Doble clic para editar' : undefined}
-          className={`text-base font-semibold text-gray-800 select-none ${
-            editable && !readOnly
-              ? 'cursor-pointer rounded px-1 -mx-1 group-hover:bg-[#65B39B]/10 group-hover:text-[#3a7a6b] transition-colors'
-              : ''
-          }`}
-        >
-          {baseValue}
-        </span>
-      )}
-    </div>
-  );
-}
-
-type PaesFieldKey = keyof UpdatePaesDto;
-
-interface PaesFieldProps {
-  label: string;
-  value: number | undefined | null;
-  paesKey?: PaesFieldKey;
-  editable?: boolean;
-  onSave?: (key: PaesFieldKey, value: string) => Promise<boolean>;
-}
-
-function PaesField({ label, value, paesKey, editable, onSave }: PaesFieldProps) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState('');
-  const [displayOverride, setDisplayOverride] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const baseValue = displayOverride ?? (value !== null && value !== undefined ? String(value) : 'No especificado');
-
-  const startEdit = () => {
-    if (!editable || !paesKey) return;
-    setDraft(value !== null && value !== undefined ? String(value) : '');
-    setEditing(true);
-    setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 0);
-  };
-
-  const save = async () => {
-    if (!paesKey || !onSave) { setEditing(false); return; }
-    const ok = await onSave(paesKey, draft);
-    if (ok) setDisplayOverride(draft || 'No especificado');
-    setEditing(false);
-  };
-
-  const cancel = () => {
-    setEditing(false);
-    setDraft('');
-  };
-
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') { e.preventDefault(); save(); }
-    if (e.key === 'Escape') cancel();
-  };
-
-  return (
-    <div className="py-3 grid grid-cols-[210px_1fr] gap-4 items-center border-b border-gray-50 last:border-0 group">
-      <span className="text-sm text-gray-500 uppercase tracking-wide font-medium">{label}</span>
-      {editing && paesKey ? (
-        <input
-          ref={inputRef}
-          type="number"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={save}
-          onKeyDown={onKeyDown}
-          className="text-base border-2 border-[#65B39B] rounded-md px-2 py-1.5 focus:outline-none w-full max-w-xs"
-        />
-      ) : (
-        <span
-          onDoubleClick={startEdit}
-          title={editable ? 'Doble clic para editar' : undefined}
-          className={`text-base font-semibold text-gray-800 select-none ${
-            editable
-              ? 'cursor-pointer rounded px-1 -mx-1 group-hover:bg-[#65B39B]/10 group-hover:text-[#3a7a6b] transition-colors'
-              : ''
-          }`}
-        >
-          {baseValue}
-        </span>
-      )}
-    </div>
-  );
-}
-
-const INPUT_CLASS =
-  'w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] bg-white transition-colors';
-
-const LABEL_CLASS = 'block text-xs font-semibold text-gray-600 mb-1';
-
-interface CreatePaesModalProps {
-  open: boolean;
-  rutEstudiante: string;
-  onClose: () => void;
-  onSuccess: (paes: Paes) => void;
-}
-
-function CreatePaesModal({ open, rutEstudiante, onClose, onSuccess }: CreatePaesModalProps) {
-  const EMPTY = { lenguaje: '', matematicas: '', nem: '', ranking: '', matematicas2: '', ciencias: '', historia: '' };
-  const [form, setForm] = useState(EMPTY);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (open) { setForm(EMPTY); setError(''); }
-  }, [open]);
-
-  const set = (field: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm(prev => ({ ...prev, [field]: e.target.value }));
-
-  const validate = (): string => {
-    if (!form.lenguaje) return 'Competencia Lectora es obligatoria.';
-    if (isNaN(Number(form.lenguaje))) return 'Competencia Lectora debe ser un número.';
-    if (!form.matematicas) return 'Competencia Matemática M1 es obligatoria.';
-    if (isNaN(Number(form.matematicas))) return 'Competencia Matemática M1 debe ser un número.';
-    if (!form.nem) return 'NEM es obligatorio.';
-    if (isNaN(Number(form.nem))) return 'NEM debe ser un número.';
-    if (!form.ranking) return 'Ranking es obligatorio.';
-    if (isNaN(Number(form.ranking))) return 'Ranking debe ser un número.';
-    if (form.matematicas2 && isNaN(Number(form.matematicas2))) return 'Competencia Matemática M2 debe ser un número.';
-    if (form.ciencias && isNaN(Number(form.ciencias))) return 'Ciencias debe ser un número.';
-    if (form.historia && isNaN(Number(form.historia))) return 'Historia y Ciencias Sociales debe ser un número.';
-    return '';
-  };
-
-  const handleSubmit = async () => {
-    const err = validate();
-    if (err) { setError(err); return; }
-    setLoading(true);
-    setError('');
-    try {
-      const dto: CreatePaesDto = {
-        rut_estudiante: rutEstudiante,
-        lenguaje: Number(form.lenguaje),
-        matematicas: Number(form.matematicas),
-        nem: Number(form.nem),
-        ranking: Number(form.ranking),
-        ...(form.matematicas2 ? { matematicas2: Number(form.matematicas2) } : {}),
-        ...(form.ciencias ? { ciencias: Number(form.ciencias) } : {}),
-        ...(form.historia ? { historia: Number(form.historia) } : {}),
-      };
-      const result = await paesService.createPaes(dto);
-      onSuccess(result);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Error al registrar los puntajes PAES.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Modal
-      titulo="Registrar Puntajes PAES"
-      abierto={open}
-      onCerrar={() => { if (!loading) onClose(); }}
-      tamanio="md"
-      acciones={
-        <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
-          <Button variante="outline" tamano="md" onClick={onClose} deshabilitado={loading}>
-            Cancelar
-          </Button>
-          <Button variante="primary" tamano="md" onClick={handleSubmit} cargando={loading}>
-            Registrar
-          </Button>
-        </Box>
-      }
-    >
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {error && (
-          <Alert tipo="error" mensaje={error} cerrable onCerrar={() => setError('')} />
-        )}
-
-        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#65B39B', mt: 0.5 }}>
-          Puntajes obligatorios
-        </Typography>
-
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-          <div>
-            <label className={LABEL_CLASS}>Competencia Lectora *</label>
-            <input type="number" value={form.lenguaje} onChange={set('lenguaje')} disabled={loading} placeholder="ej: 600" className={INPUT_CLASS} />
-          </div>
-          <div>
-            <label className={LABEL_CLASS}>Competencia Matemática M1 *</label>
-            <input type="number" value={form.matematicas} onChange={set('matematicas')} disabled={loading} placeholder="ej: 550" className={INPUT_CLASS} />
-          </div>
-        </Box>
-
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-          <div>
-            <label className={LABEL_CLASS}>NEM *</label>
-            <input type="number" value={form.nem} onChange={set('nem')} disabled={loading} placeholder="ej: 650" className={INPUT_CLASS} />
-          </div>
-          <div>
-            <label className={LABEL_CLASS}>Ranking *</label>
-            <input type="number" value={form.ranking} onChange={set('ranking')} disabled={loading} placeholder="ej: 700" className={INPUT_CLASS} />
-          </div>
-        </Box>
-
-        <Divider sx={{ my: 0.5 }} />
-
-        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#65B39B' }}>
-          Puntajes opcionales
-        </Typography>
-
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
-          <div>
-            <label className={LABEL_CLASS}>Matemática M2</label>
-            <input type="number" value={form.matematicas2} onChange={set('matematicas2')} disabled={loading} placeholder="ej: 500" className={INPUT_CLASS} />
-          </div>
-          <div>
-            <label className={LABEL_CLASS}>Ciencias</label>
-            <input type="number" value={form.ciencias} onChange={set('ciencias')} disabled={loading} placeholder="ej: 500" className={INPUT_CLASS} />
-          </div>
-          <div>
-            <label className={LABEL_CLASS}>Historia y Cs. Sociales</label>
-            <input type="number" value={form.historia} onChange={set('historia')} disabled={loading} placeholder="ej: 500" className={INPUT_CLASS} />
-          </div>
-        </Box>
-      </Box>
-    </Modal>
-  );
 }
 
 export default function EstudianteDatosPersonales() {
@@ -417,7 +96,7 @@ export default function EstudianteDatosPersonales() {
         </div>
       )}
 
-      <InfoCard titulo="Información Personal" defaultExpanded={true}>
+      <InfoCard titulo="Información Personal" defaultExpanded>
         <InlineField label="Nombre"              value={estudiante.nombre}                fieldKey="nombre"    editable={e} onSave={handleSave} />
         <InlineField label="Apellido"             value={estudiante.apellido}              fieldKey="apellido"  editable={e} onSave={handleSave} />
         <InlineField label="RUT"                  value={estudiante.rut_estudiante}        readOnly />
@@ -448,10 +127,10 @@ export default function EstudianteDatosPersonales() {
           <p className="text-sm text-gray-400 italic py-3">Cargando puntajes...</p>
         ) : paes ? (
           <>
-            <PaesField label="Competencia Lectora"      value={paes.lenguaje}     paesKey="lenguaje"     editable={e} onSave={handlePaesSave} />
-            <PaesField label="Competencia Matemática M1" value={paes.matematicas}  paesKey="matematicas"  editable={e} onSave={handlePaesSave} />
-            <PaesField label="NEM"                       value={paes.nem}          paesKey="nem"          editable={e} onSave={handlePaesSave} />
-            <PaesField label="Ranking"                   value={paes.ranking}      paesKey="ranking"      editable={e} onSave={handlePaesSave} />
+            <PaesField label="Competencia Lectora"        value={paes.lenguaje}     paesKey="lenguaje"     editable={e} onSave={handlePaesSave} />
+            <PaesField label="Competencia Matemática M1"  value={paes.matematicas}  paesKey="matematicas"  editable={e} onSave={handlePaesSave} />
+            <PaesField label="NEM"                        value={paes.nem}          paesKey="nem"          editable={e} onSave={handlePaesSave} />
+            <PaesField label="Ranking"                    value={paes.ranking}      paesKey="ranking"      editable={e} onSave={handlePaesSave} />
             {paes.matematicas2 != null && (
               <PaesField label="Competencia Matemática M2" value={paes.matematicas2} paesKey="matematicas2" editable={e} onSave={handlePaesSave} />
             )}

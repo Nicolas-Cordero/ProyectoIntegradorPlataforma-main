@@ -1,7 +1,7 @@
-import type { CarreraAvanceDto } from '../../../services/carrera-avance.service';
-import type { HistorialEstadoCarreraDto } from '../../../services';
-import type { EstadoRamoAvance } from '../../../services/ramo-avance.service';
-import type { TipoSemestre } from '../../../services/semestre-avance.service';
+import type { CarreraAvanceDto } from '../../../../services/carrera-avance.service';
+import type { HistorialEstadoCarreraDto } from '../../../../services';
+import type { EstadoRamoAvance } from '../../../../services/ramo-avance.service';
+import type { TipoSemestre } from '../../../../services/semestre-avance.service';
 
 export type CodigoSemUI = '1' | '2' | 'INVIERNO' | 'VERANO';
 

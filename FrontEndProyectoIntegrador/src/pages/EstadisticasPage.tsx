@@ -1,10 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import type { ReactNode, ElementType } from 'react';
-import {
-  PieChart, Pie, Cell,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip as ReTooltip, Legend, ResponsiveContainer,
-} from 'recharts';
 import {
   TrendingUp as TrendingIcon,
   TrendingDown as TrendingDownIcon,
@@ -20,6 +14,20 @@ import { ErrorMessage } from '../components/ui/ErrorMessage';
 import { useEstudiantes } from '../hooks/useEstudiantes';
 import { estudianteService } from '../services';
 import type { Generacion, EstadoEstudiante, Genero } from '../types';
+import {
+  EstadoPieChart,
+  GeneracionBarChart,
+  SegmentedBar,
+  CohorteTable,
+  KpiCard,
+  Section,
+  fmtNum,
+  fmtPct,
+  ESTADO_LABELS,
+  ESTADO_COLORS,
+  ESTADO_ORDER,
+} from '../components/features/estadisticas';
+import type { PieItem, CohorteRow } from '../components/features/estadisticas';
 
 // ── Clasificación Activo / No-Activo ──────────────────────────────────────────
 // Activo   : ACTIVO — becario actualmente cursando con beca vigente
@@ -44,30 +52,6 @@ const FILTRO_LABELS: Record<Filtro, string> = {
   TODOS:      'Todos',
 };
 
-// ── Etiquetas y colores ───────────────────────────────────────────────────────
-
-const ESTADO_LABELS: Record<EstadoEstudiante, string> = {
-  ACTIVO:     'Estudiando',
-  TITULADO:   'Titulado/a',
-  EGRESADO:   'Egresado/a',
-  SUSPENDIDO: 'Suspendido/a',
-  RETIRADO:   'Retirado/a',
-  ELIMINADO:  'Eliminado/a',
-};
-
-const ESTADO_COLORS: Record<EstadoEstudiante, string> = {
-  ACTIVO:     '#65B39B',
-  TITULADO:   '#4CAF50',
-  EGRESADO:   '#7B8FD4',
-  SUSPENDIDO: '#C7654F',
-  RETIRADO:   '#9E9E9E',
-  ELIMINADO:  '#BF360C',
-};
-
-const ESTADO_ORDER: EstadoEstudiante[] = [
-  'ACTIVO', 'TITULADO', 'EGRESADO', 'SUSPENDIDO', 'RETIRADO', 'ELIMINADO',
-];
-
 const GENERO_LABELS: Record<Genero, string> = {
   FEMENINO:   'Femenino',
   MASCULINO:  'Masculino',
@@ -79,249 +63,6 @@ const GENERO_COLORS: Record<Genero, string> = {
   MASCULINO:  '#7B8FD4',
   NO_BINARIO: '#EEB35D',
 };
-
-// ── Formatters ────────────────────────────────────────────────────────────────
-
-const fmtNum = (n: number) => n.toLocaleString('es-CL');
-const fmtPct = (n: number) => `${n.toFixed(1).replace('.', ',')}%`;
-
-// ── Tooltips personalizados para recharts ─────────────────────────────────────
-
-interface PieItem { label: string; count: number; pct: number; color: string }
-
-function PieTooltip({ active, payload }: { active?: boolean; payload?: { payload: PieItem }[] }) {
-  if (!active || !payload?.length) return null;
-  const d = payload[0].payload;
-  return (
-    <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-lg text-sm">
-      <p className="font-semibold text-gray-800">{d.label}</p>
-      <p className="text-gray-600">
-        {fmtNum(d.count)}{' '}
-        <span className="text-gray-400">({fmtPct(d.pct)})</span>
-      </p>
-    </div>
-  );
-}
-
-function BarTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-lg text-sm">
-      <p className="font-semibold text-gray-800">{label}</p>
-      <p className="text-gray-600">{fmtNum(payload[0].value)} becarios</p>
-    </div>
-  );
-}
-
-// ── Gráfico de torta: distribución por estado ─────────────────────────────────
-
-function EstadoPieChart({ data }: { data: PieItem[] }) {
-  if (data.length === 0) return <p className="text-sm text-gray-400">Sin datos de estado.</p>;
-  return (
-    <ResponsiveContainer width="100%" height={260}>
-      <PieChart>
-        <Pie
-          data={data}
-          dataKey="count"
-          nameKey="label"
-          cx="50%"
-          cy="50%"
-          innerRadius={65}
-          outerRadius={100}
-          paddingAngle={2}
-        >
-          {data.map((entry, i) => (
-            <Cell key={i} fill={entry.color} />
-          ))}
-        </Pie>
-        <ReTooltip content={<PieTooltip />} />
-        <Legend
-          formatter={(value) => (
-            <span className="text-sm text-gray-600">{value}</span>
-          )}
-        />
-      </PieChart>
-    </ResponsiveContainer>
-  );
-}
-
-// ── Gráfico de barras: becarios por generación ────────────────────────────────
-
-function GeneracionBarChart({ data, color = '#65B39B' }: { data: { label: string; count: number }[]; color?: string }) {
-  if (data.length === 0) return <p className="text-sm text-gray-400">Sin datos de generación.</p>;
-  return (
-    <ResponsiveContainer width="100%" height={200}>
-      <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-        <XAxis
-          dataKey="label"
-          tick={{ fontSize: 12, fill: '#6B7280' }}
-          axisLine={false}
-          tickLine={false}
-        />
-        <YAxis
-          tick={{ fontSize: 12, fill: '#6B7280' }}
-          axisLine={false}
-          tickLine={false}
-          allowDecimals={false}
-        />
-        <ReTooltip content={<BarTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)' }} />
-        <Bar dataKey="count" fill={color} radius={[6, 6, 0, 0]} maxBarSize={48} />
-      </BarChart>
-    </ResponsiveContainer>
-  );
-}
-
-// ── Barra segmentada: género ──────────────────────────────────────────────────
-
-function SegmentedBar({
-  data,
-  total,
-}: {
-  data: { label: string; count: number; color: string }[];
-  total: number;
-}) {
-  const filtered = data.filter(d => d.count > 0);
-  if (filtered.length === 0) return <p className="text-sm text-gray-400">Sin datos de género.</p>;
-  return (
-    <div>
-      <div className="flex h-7 rounded-lg overflow-hidden gap-px" role="img" aria-label="Distribución por género">
-        {filtered.map(d => (
-          <div
-            key={d.label}
-            style={{ width: `${(d.count / total) * 100}%`, backgroundColor: d.color }}
-            title={`${d.label}: ${fmtNum(d.count)} (${fmtPct((d.count / total) * 100)})`}
-          />
-        ))}
-      </div>
-      <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4">
-        {filtered.map(d => (
-          <div key={d.label} className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
-            <span className="text-sm text-gray-600">{d.label}</span>
-            <span className="text-sm font-bold text-gray-800 ml-0.5">{fmtNum(d.count)}</span>
-            <span className="text-xs text-gray-400">({fmtPct((d.count / total) * 100)})</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Tabla de cohortes ─────────────────────────────────────────────────────────
-
-interface CohorteRow {
-  año: number;
-  total: number;
-  counts: Record<string, number>;
-}
-
-function CohorteTable({
-  presentStates,
-  rows,
-}: {
-  presentStates: EstadoEstudiante[];
-  rows: CohorteRow[];
-}) {
-  if (rows.length === 0) return <p className="text-sm text-gray-400">Sin datos de cohortes.</p>;
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm border-collapse">
-        <thead>
-          <tr className="border-b border-gray-200">
-            <th className="text-left py-2 pr-4 font-semibold text-gray-600 whitespace-nowrap">Cohorte</th>
-            <th className="text-right py-2 px-2 font-semibold text-gray-600 whitespace-nowrap">Total</th>
-            {presentStates.map(est => (
-              <th
-                key={est}
-                className="text-right py-2 px-2 font-semibold whitespace-nowrap"
-                style={{ color: ESTADO_COLORS[est] }}
-              >
-                {ESTADO_LABELS[est]}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(({ año, total, counts }) => (
-            <tr key={año} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-              <td className="py-2 pr-4 font-bold text-gray-800">{año}</td>
-              <td className="py-2 px-2 text-right font-semibold text-gray-700">{fmtNum(total)}</td>
-              {presentStates.map(est => {
-                const count = counts[est] ?? 0;
-                const pct = total > 0 ? (count / total) * 100 : 0;
-                return (
-                  <td key={est} className="py-2 px-2 text-right">
-                    {count > 0 ? (
-                      <>
-                        <span className="font-semibold text-gray-800">{fmtNum(count)}</span>
-                        <span className="text-xs text-gray-400 ml-1">({fmtPct(pct)})</span>
-                      </>
-                    ) : (
-                      <span className="text-gray-300">–</span>
-                    )}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-// ── KpiCard y Section ─────────────────────────────────────────────────────────
-
-function KpiCard({
-  label,
-  value,
-  subtitle,
-  icon: Icon,
-  color,
-  bg,
-}: {
-  label: string;
-  value: string | number;
-  subtitle?: string;
-  icon: ElementType;
-  color: string;
-  bg: string;
-}) {
-  const display = typeof value === 'number' ? fmtNum(value) : value;
-  return (
-    <div
-      className="rounded-xl bg-white border border-black/5"
-      style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}
-      role="region"
-      aria-label={`${label}: ${display}`}
-    >
-      <div className="flex flex-col gap-3 p-5">
-        <div className="w-11 h-11 rounded-lg flex items-center justify-center" style={{ backgroundColor: bg }}>
-          <Icon style={{ color, fontSize: 24 }} />
-        </div>
-        <p className="text-[2.125rem] font-extrabold text-gray-800 leading-none">{display}</p>
-        <div>
-          <p className="text-sm text-gray-500 font-medium">{label}</p>
-          {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div className="rounded-xl bg-white" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
-      <div className="p-6">
-        <p className="text-base font-bold text-gray-800 mb-4">{title}</p>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-// ── Página principal ──────────────────────────────────────────────────────────
 
 export function EstadisticasPage() {
   const { estudiantes, loading, error, refresh } = useEstudiantes();

@@ -1,5 +1,5 @@
-import { Modal, Input, Select, Alert } from '../../../components/ui';
-import type { EstadoRamoAvance } from '../../../services/ramo-avance.service';
+import { Modal, Input, Select, Alert } from '../../../ui';
+import type { EstadoRamoAvance } from '../../../../services/ramo-avance.service';
 import { ESTADO_RAMO_OPTS } from './constants';
 
 export interface FormRamo {

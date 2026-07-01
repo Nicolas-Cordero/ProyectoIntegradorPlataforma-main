@@ -3,7 +3,6 @@ import { PrismaService } from "../prisma/prisma.service";
 import { estudiante, EstadoEstudiante, Prisma } from "@prisma/client";
 import { CreateEstudianteDto } from "./dto/create-estudiante.dto";
 import { UpdateEstudianteDto } from "./dto/update-estudiante.dto";
-import { estadoPermiteLogin } from "./estudiante.utils";
 
 
 @Injectable()
@@ -29,7 +28,7 @@ export class EstudianteRepository{
       include: {
         generacion_rel: { select: { id: true, año: true, descripcion: true } },
         liceo: { select: { nombre: true } },
-        carreras: { select: { nombre: true } },
+        carreras: { select: { nombre: true, estado: true } },
       },
     });
   }
@@ -47,7 +46,7 @@ export class EstudianteRepository{
         liceo: true,
         paes: true,
         carreras: { include: { universidad: true } },
-        familiares: { where: { es_contacto_emergencia: true } },
+        familiares: true,
         beneficios: true,
         ramos: true,
         contactos_emergencia: true,
@@ -74,13 +73,16 @@ export class EstudianteRepository{
    */
   async findBecariosActivos() {
     return this.prisma.estudiante.findMany({
-      where: { estado: EstadoEstudiante.ACTIVO },
+      where: {
+        carreras: { some: { estado: EstadoEstudiante.ACTIVO } },
+      },
       include: {
         generacion_rel: { select: { id: true, año: true } },
         liceo:          { select: { nombre: true } },
         carreras: {
           select: {
             nombre:      true,
+            estado:      true,
             universidad: { select: { nombre: true } },
           },
         },
@@ -164,7 +166,6 @@ export class EstudianteRepository{
     if (updateEstudianteDto.apellido !== undefined) userData.apellido = updateEstudianteDto.apellido;
     if (updateEstudianteDto.email !== undefined) userData.email = updateEstudianteDto.email;
     if (updateEstudianteDto.telefono !== undefined) userData.telefono = updateEstudianteDto.telefono;
-    if (updateEstudianteDto.estado !== undefined) userData.activo = estadoPermiteLogin(updateEstudianteDto.estado);
 
     try {
       return await this.prisma.$transaction(async (tx) => {

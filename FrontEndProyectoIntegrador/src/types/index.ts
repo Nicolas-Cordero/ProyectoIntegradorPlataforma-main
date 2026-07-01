@@ -94,7 +94,6 @@ export type Parentesco =
 
 export interface Familiar {
   id: number;
-  rut_familiar: string;
   rut_estudiante: string;
   nombre: string;
   telefono: string;
@@ -112,6 +111,7 @@ export interface Carrera {
   duracion_sem: number;
   codigo_universidad: number;
   via_acceso: 'ESPECIAL' | 'REGULAR' | 'PACE';
+  estado: EstadoEstudiante;
 }
 
 // ============================================

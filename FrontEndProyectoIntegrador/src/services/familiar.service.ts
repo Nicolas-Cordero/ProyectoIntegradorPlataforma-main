@@ -3,7 +3,6 @@ import type { Familiar, Parentesco } from '../types';
 
 export interface CreateFamiliarDto {
   rut_estudiante: string;
-  rut_familiar: string;
   nombre: string;
   telefono: string;
   parentesco: Parentesco;

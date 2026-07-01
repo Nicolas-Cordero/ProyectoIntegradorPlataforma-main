@@ -12,9 +12,8 @@ import {
   Max,
   IsOptional,
 } from 'class-validator';
-//import { TipoEstudiante } from hay que crear el enum en el schema
 import { Type } from 'class-transformer';
-import { EstadoEstudiante, Genero } from '@prisma/client';
+import { Genero } from '@prisma/client';
 
 
 
@@ -90,16 +89,6 @@ export class CreateEstudianteDto {
   @IsNumber({ maxDecimalPlaces: 1 })
   @Min(1.0)
   @Max(7.0)
-  @IsNotEmpty()  
-  promedios_media!: number;
-
-
-  @IsEnum(EstadoEstudiante)
   @IsNotEmpty()
-  estado!: EstadoEstudiante;
-
-
-
-  // @IsEnum(TipoEstudiante)
-  // tipo_de_estudiante: TipoEstudiante;
+  promedios_media!: number;
 }

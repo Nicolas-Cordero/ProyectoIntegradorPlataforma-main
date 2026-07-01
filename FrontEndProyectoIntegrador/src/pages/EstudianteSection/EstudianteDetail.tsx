@@ -96,13 +96,11 @@ export default function EstudianteDetail() {
     );
   }
 
-  // generacion y liceo ahora vienen incluidos en findOneComplete — sin fetches adicionales.
   const generacion = estudiante.generacion_rel ?? null;
   const liceo = estudiante.liceo ?? null;
 
   const chipClass = ESTADO_CHIP[estudiante.estado] ?? 'bg-gray-100 text-gray-700';
-  // familiares ya viene filtrado a es_contacto_emergencia: true desde el backend.
-  const contactoEmergencia = estudiante.familiares?.[0] ?? null;
+  const contactoEmergencia = estudiante.familiares?.find(f => f.es_contacto_emergencia) ?? null;
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-[#FFFBF0]">

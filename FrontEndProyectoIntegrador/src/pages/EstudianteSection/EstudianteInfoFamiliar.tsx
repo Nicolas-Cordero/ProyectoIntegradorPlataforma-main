@@ -31,7 +31,6 @@ const PARENTESCO_LABEL: Record<Parentesco, string> = {
 };
 
 interface FormState {
-  rut_familiar: string;
   nombre: string;
   telefono: string;
   parentesco: Parentesco;
@@ -40,7 +39,6 @@ interface FormState {
 }
 
 const EMPTY_FORM: FormState = {
-  rut_familiar: '',
   nombre: '',
   telefono: '',
   parentesco: 'OTRO',
@@ -101,10 +99,6 @@ function FamiliarCard({ familiar, canEdit, canDelete, onEdit, onDelete }: Famili
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
         <div>
-          <span className="text-sm text-gray-500 uppercase tracking-wide">RUT</span>
-          <p className="text-base font-medium text-gray-800">{familiar.rut_familiar}</p>
-        </div>
-        <div>
           <span className="text-sm text-gray-500 uppercase tracking-wide">Teléfono</span>
           <p className="text-base font-medium text-gray-800">{familiar.telefono}</p>
         </div>
@@ -149,7 +143,6 @@ export default function EstudianteInfoFamiliar() {
   const openEdit = (familiar: Familiar) => {
     setEditingId(familiar.id);
     setForm({
-      rut_familiar: familiar.rut_familiar,
       nombre: familiar.nombre,
       telefono: familiar.telefono,
       parentesco: familiar.parentesco,
@@ -161,8 +154,8 @@ export default function EstudianteInfoFamiliar() {
   };
 
   const handleSave = async () => {
-    if (!form.rut_familiar || !form.nombre || !form.telefono) {
-      setError('RUT, nombre y teléfono son obligatorios');
+    if (!form.nombre || !form.telefono) {
+      setError('Nombre y teléfono son obligatorios');
       return;
     }
     setSaving(true);
@@ -180,7 +173,6 @@ export default function EstudianteInfoFamiliar() {
       } else {
         const create: CreateFamiliarDto = {
           rut_estudiante: estudiante.rut_estudiante,
-          rut_familiar: form.rut_familiar,
           nombre: form.nombre,
           telefono: form.telefono,
           parentesco: form.parentesco,
@@ -293,13 +285,6 @@ export default function EstudianteInfoFamiliar() {
           {error && <Alert tipo="error" mensaje={error} />}
           {/*fix muy cutre*/}
           <p></p>
-          <Input
-            etiqueta="RUT del familiar"
-            valor={form.rut_familiar}
-            onChange={(v) => setForm(f => ({ ...f, rut_familiar: v }))}
-            placeholder="12345678-9"
-            deshabilitado={editingId !== null}
-          />
           <Input
             etiqueta="Nombre"
             valor={form.nombre}

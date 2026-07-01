@@ -114,6 +114,7 @@ model usuario {
   entrevistas entrevista[] @relation("Entrevistador")
   audit_logs  audit_log[]
   refresh_tokens refresh_token[]
+  historial_estados historial_estado_carrera[]
 }
 
 
@@ -215,7 +216,6 @@ model estudiante {
 
   foto_url         String?
 
-  estado           EstadoEstudiante
   promedios_media  Decimal @db.Decimal(3,1)
 
   generacion_id    Int
@@ -237,7 +237,6 @@ model estudiante {
 
 model familiar {
   id                    Int     @id @default(autoincrement())
-  rut_familiar          String
   rut_estudiante        String
   nombre                String
   telefono              String
@@ -249,7 +248,7 @@ model familiar {
 
   contactos_emergencia contacto_emergencia[]
 
-  @@unique([rut_familiar, rut_estudiante])
+  @@unique([id, rut_estudiante])
 }
 
 
@@ -287,12 +286,14 @@ model carrera {
   duracion_sem       Int
   codigo_universidad Int
   via_acceso         ViaAcceso
+  estado             EstadoEstudiante @default(ACTIVO)
 
   estudiante  estudiante  @relation(fields: [rut_estudiante], references: [rut_estudiante])
   universidad universidad @relation(fields: [codigo_universidad], references: [codigo_universidad])
 
   ramos             ramo[]
   semestre_carreras semestre_carrera[]
+  historial_estados historial_estado_carrera[]
 }
 
 
@@ -404,4 +405,16 @@ model audit_log {
   created_at  DateTime @default(now())
 
   usuario usuario @relation(fields: [rut_usuario], references: [rut_usuario])
+}
+
+model historial_estado_carrera {
+  id              Int               @id @default(autoincrement())
+  codigo_carrera  Int
+  estado_anterior EstadoEstudiante?
+  estado_nuevo    EstadoEstudiante
+  rut_usuario     String
+  created_at      DateTime          @default(now())
+
+  carrera carrera  @relation(fields: [codigo_carrera], references: [codigo_carrera])
+  usuario usuario  @relation(fields: [rut_usuario],    references: [rut_usuario])
 }

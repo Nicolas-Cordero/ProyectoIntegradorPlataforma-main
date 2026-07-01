@@ -10,11 +10,6 @@ export class CreateFamiliarDto {
 
   @IsString()
   @IsNotEmpty()
-  rut_familiar!: string;
-
-
-  @IsString()
-  @IsNotEmpty()
   nombre!: string;
 
 

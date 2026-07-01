@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { School as SchoolIcon } from '@mui/icons-material';
 import { Select, Alert, Spinner } from '../../components/ui';
 import type { EstudianteOutletContext } from './EstudianteDetail';
-import { carreraAvanceService, ramoAvanceService } from '../../services';
+import { carreraAvanceService, ramoAvanceService, historialEstadoCarreraService } from '../../services';
 import type { CarreraAvanceDto } from '../../services/carrera-avance.service';
 import type { BackendSemestre, TipoSemestre } from '../../services/semestre-avance.service';
 import type { RamoAvanceDto, EstadoRamoAvance } from '../../services/ramo-avance.service';
@@ -104,6 +104,9 @@ export default function EstudianteDesempenoAcademico() {
   const [cargandoSemestres, setCargandoSemestres] = useState(false);
   const [errorSemestres, setErrorSemestres] = useState<string | null>(null);
 
+  const [semSupendidos, setSemSupendidos] = useState<number | null>(null);
+  const [cargandoSemSusp, setCargandoSemSusp] = useState(false);
+
   // ── Carga inicial de carreras ─────────────────────────────────────────────
   useEffect(() => {
     let cancelado = false;
@@ -134,6 +137,19 @@ export default function EstudianteDesempenoAcademico() {
       })
       .catch(() => { if (!cancelado) setErrorSemestres('No se pudieron cargar los datos de la carrera.'); })
       .finally(() => { if (!cancelado) setCargandoSemestres(false); });
+    return () => { cancelado = true; };
+  }, [carreraSel]);
+
+  // ── Carga de semestres suspendidos al seleccionar carrera ─────────────────
+  useEffect(() => {
+    if (carreraSel === null) return;
+    let cancelado = false;
+    setCargandoSemSusp(true);
+    setSemSupendidos(null);
+    historialEstadoCarreraService.getSemestresSupendidos(carreraSel)
+      .then(count => { if (!cancelado) setSemSupendidos(count); })
+      .catch(() => { if (!cancelado) setSemSupendidos(null); })
+      .finally(() => { if (!cancelado) setCargandoSemSusp(false); });
     return () => { cancelado = true; };
   }, [carreraSel]);
 
@@ -228,8 +244,7 @@ export default function EstudianteDesempenoAcademico() {
                         },
                         {
                           label: 'Semestres suspendidos',
-                          valor: 'por implementar',
-                          italica: true,
+                          valor: cargandoSemSusp ? '…' : (semSupendidos !== null ? String(semSupendidos) : '—'),
                         },
                         {
                           label: 'Duración total de la carrera',

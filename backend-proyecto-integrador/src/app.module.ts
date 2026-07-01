@@ -28,6 +28,7 @@ import { StorageModule } from './storage/storage.module';
 import { PaesModule } from './paes/paes.module';
 import { AcuerdoModule } from './acuerdo/acuerdo.module';
 import { PdfGeneratorModule } from './pdf-generator/pdf-generator.module';
+import { HistorialEstadoCarreraModule } from './historial-estado-carrera';
 
 
 
@@ -68,6 +69,7 @@ import { PdfGeneratorModule } from './pdf-generator/pdf-generator.module';
     PaesModule,
     AcuerdoModule,
     PdfGeneratorModule,
+    HistorialEstadoCarreraModule,
   ],
   providers: [
     PrismaService,

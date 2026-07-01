@@ -44,3 +44,7 @@ export type {
 
 // Storage
 export { storageService } from './storage.service';
+
+// Historial de estado de carrera
+export { historialEstadoCarreraService } from './historial-estado-carrera.service';
+export type { HistorialEstadoCarreraDto } from './historial-estado-carrera.service';

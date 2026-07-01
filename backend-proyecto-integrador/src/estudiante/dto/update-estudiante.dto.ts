@@ -16,5 +16,4 @@ export class UpdateEstudianteDto extends PartialType(
       'puntaje_paes',
       'foto_url',
       'promedios_media',
-      'estado'
     ])) {}

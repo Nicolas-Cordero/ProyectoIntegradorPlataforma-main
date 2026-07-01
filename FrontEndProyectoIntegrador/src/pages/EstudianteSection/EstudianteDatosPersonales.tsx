@@ -439,18 +439,7 @@ export default function EstudianteDatosPersonales() {
 
       <InfoCard titulo="Información Académica">
         <InlineField label="Generación"    value={generacionLabel} readOnly />
-        <InlineField label="Estado"        value={estudiante.estado} fieldKey="estado" editable={e}
-          type="select"
-          options={[
-            { value: 'ACTIVO',     label: 'Activo'     },
-            { value: 'SUSPENDIDO', label: 'Suspendido' },
-            { value: 'ELIMINADO',   label: 'Eliminado'   },
-            { value: 'RETIRADO',    label: 'Retirado'    },
-            { value: 'EGRESADO',    label: 'Egresado'    },
-            { value: 'TITULADO',    label: 'Titulado'    },
-          ]}
-          onSave={handleSave}
-        />
+        <InlineField label="Estado" value={estudiante.estado} readOnly />
         <InlineField label="Promedio Media" value={estudiante.promedios_media} fieldKey="promedios_media" type="number" editable={e} onSave={handleSave} />
       </InfoCard>
 
@@ -524,7 +513,6 @@ export default function EstudianteDatosPersonales() {
             <InlineField label="Nombre"      value={contactoEmergencia.nombre}                              readOnly />
             <InlineField label="Parentesco"  value={contactoEmergencia.parentesco}                          readOnly />
             <InlineField label="Teléfono"    value={contactoEmergencia.telefono}                            readOnly />
-            <InlineField label="RUT"         value={contactoEmergencia.rut_familiar}                        readOnly />
             {contactoEmergencia.observacion && (
               <InlineField label="Observación" value={contactoEmergencia.observacion} readOnly />
             )}

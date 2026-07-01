@@ -6,7 +6,7 @@ import { Modal, Input, Select, Alert, Button } from '../../components/ui';
 import { estudianteService, alertasService } from '../../services';
 import type { Alerta } from '../../services';
 import type { EstudianteOutletContext } from './EstudianteDetail';
-import type { EstadoEstudiante, Genero } from '../../types';
+import type { Genero } from '../../types';
 import type { UpdateEstudianteDto } from '../../services/estudiante.service';
 import { FotoPerfilModal } from '../../components/features/estudiante-detalles/FotoPerfilModal';
 import userSvg from '../../assets/icons/user.svg';
@@ -55,7 +55,6 @@ export default function EstudiantePerfil() {
       rbd_liceo:        estudiante.rbd_liceo,
       puntaje_paes:     estudiante.puntaje_paes,
       promedios_media:  parseFloat(normalizarDecimal(estudiante.promedios_media)) || 0,
-      estado:           estudiante.estado,
     });
     setSaveError('');
     setModalOpen(true);
@@ -234,19 +233,6 @@ export default function EstudiantePerfil() {
               { valor: 'MASCULINO',  etiqueta: 'Masculino'  },
               { valor: 'FEMENINO',   etiqueta: 'Femenino'   },
               { valor: 'NO_BINARIO', etiqueta: 'No binario' },
-            ]}
-          />
-          <Select
-            etiqueta="Estado en sistema"
-            valor={editForm.estado ?? ''}
-            onChange={(v) => setEditForm(f => ({ ...f, estado: v as EstadoEstudiante }))}
-            opciones={[
-              { valor: 'ACTIVO',     etiqueta: 'Activo'     },
-              { valor: 'SUSPENDIDO', etiqueta: 'Suspendido' },
-              { valor: 'ELIMINADO',   etiqueta: 'Eliminado'   },
-              { valor: 'RETIRADO',    etiqueta: 'Retirado'    },
-              { valor: 'EGRESADO',    etiqueta: 'Egresado'    },
-              { valor: 'TITULADO',    etiqueta: 'Titulado'    },
             ]}
           />
           <Input etiqueta="RBD Liceo" valor={editForm.rbd_liceo ?? ''} onChange={(v) => setEditForm(f => ({ ...f, rbd_liceo: v }))} />

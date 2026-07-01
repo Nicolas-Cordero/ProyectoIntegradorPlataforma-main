@@ -9,6 +9,7 @@ export interface CarreraAvanceDto {
   duracion_sem: number;
   codigo_universidad: number;
   via_acceso: ViaAcceso;
+  estado: import('../types').EstadoEstudiante;
 }
 
 export interface CreateCarreraAvanceDto {

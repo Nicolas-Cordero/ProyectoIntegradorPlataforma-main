@@ -2,10 +2,9 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { CreateEstudianteDto } from './dto/create-estudiante.dto';
 import { UpdateEstudianteDto } from './dto/update-estudiante.dto';
 import { EstudianteRepository } from './estudiante.repository';
-import { estudiante, Prisma, UserRol } from '@prisma/client';
+import { estudiante, EstadoEstudiante, Prisma, UserRol } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { rutSinDV } from '../common/rut.util';
-import { estadoPermiteLogin } from './estudiante.utils';
 
 
 @Injectable()
@@ -14,17 +13,19 @@ export class EstudianteService {
     private readonly estudianteRepo: EstudianteRepository
   ) {}
 
+  private derivarEstado(carreras: { estado: EstadoEstudiante }[]): EstadoEstudiante {
+    if (carreras.length === 0) return EstadoEstudiante.ACTIVO;
+    if (carreras.some(c => c.estado === EstadoEstudiante.ACTIVO)) return EstadoEstudiante.ACTIVO;
+    return carreras[carreras.length - 1].estado;
+  }
 
 
   async create(createEstudianteDto: CreateEstudianteDto) {
-    // Validar que no exista un estudiante con el mismo RUT
     const existing = await this.estudianteRepo.findEstudianteByRut(createEstudianteDto.rut_estudiante);
     if (existing) {
       throw new ConflictException(`Ya existe un estudiante con RUT ${createEstudianteDto.rut_estudiante}`);
     }
 
-    // Usuario de login en paralelo (rol ESTUDIANTE): contraseña = RUT sin dígito
-    // verificador, con cambio forzado; `activo` derivado del estado del estudiante.
     const hashedPassword = await bcrypt.hash(rutSinDV(createEstudianteDto.rut_estudiante), 10);
     const usuarioData: Prisma.usuarioUncheckedCreateInput = {
       rut_usuario: createEstudianteDto.rut_estudiante,
@@ -35,7 +36,7 @@ export class EstudianteService {
       rol: UserRol.ESTUDIANTE,
       password: hashedPassword,
       must_change_password: true,
-      activo: estadoPermiteLogin(createEstudianteDto.estado),
+      activo: true,
     };
 
     try {
@@ -59,14 +60,15 @@ export class EstudianteService {
     return this.estudianteRepo.findEstudianteByGeneracionId(generacion_id);
   }
 
-  
+
 
   async findOneSimple(rut_estudiante: string) {
     const est = await this.estudianteRepo.findEstudianteByRutSimple(rut_estudiante);
     if (!est) {
       throw new NotFoundException(`Estudiante con RUT ${rut_estudiante} no encontrado`);
     }
-    return est;
+    const estado = this.derivarEstado(est.carreras ?? []);
+    return { ...est, estado };
   }
 
   async findOneComplete(rut_estudiante: string) {
@@ -74,10 +76,11 @@ export class EstudianteService {
     if (!est) {
       throw new NotFoundException(`Estudiante con RUT ${rut_estudiante} no encontrado`);
     }
-    return est;
+    const estado = this.derivarEstado(est.carreras ?? []);
+    return { ...est, estado };
   }
 
-  
+
   async findSortedByGeneracion(): Promise<Record<number, estudiante[]>> {
     const estudiantes = await this.estudianteRepo.findAllEstudiantes();
     const resultado: Record<number, estudiante[]> = {};
@@ -95,52 +98,13 @@ export class EstudianteService {
 
 
   update(rut_estudiante: string, updateEstudianteDto: UpdateEstudianteDto): Promise<estudiante> {
-    // Sincroniza campos compartidos y el estado (activo) hacia el usuario.
     return this.estudianteRepo.updateWithUserSync(rut_estudiante, updateEstudianteDto);
   }
 
 
 
   remove(rut_estudiante: string): Promise<estudiante> {
-    //hay que hacer un borrado seguro.
-    //con todas las cosas que apuntan a estudiante
-    //familiares, asociacion de beneficios, carreras, ramos, entrevistas, contactos de emergencia.
-    // Inhabilita además el login del usuario asociado (activo = false).
     return this.estudianteRepo.removeWithUserDisable(rut_estudiante);
   }
-
-  //la revisaremos
-  // para retornar estadisiticas.
-  // async findStadistics() {
-  //   const gensInfo = await this.estudianteRepository
-  //     .createQueryBuilder('estudiante')
-  //     .leftJoin('estado_academico', 'estado', 'estado.estudiante_id = estudiante.id_estudiante')
-  //     .select('estudiante.generacion', 'generacion')
-  //     .addSelect('COUNT(estudiante.id_estudiante)', 'total')
-  //     .addSelect(
-  //       "SUM(CASE WHEN estado.status = 'activo' THEN 1 ELSE 0 END)",
-  //       'activos',
-  //     )
-  //     .groupBy('estudiante.generacion')
-  //     .getRawMany(); // retorna array de objs { generacion: string, total: string, activos: string }
-
-  //   const generaciones = gensInfo.map((r) => ({
-  //     generacion: r.generacion,
-  //     total: parseInt(r.total, 10),
-  //     activos: parseInt(r.activos, 10),
-  //   }));
-
-  //   const totalGens = generaciones.length;
-  //   const totalStudents = generaciones.reduce((sum, r) => sum + r.total, 0);
-  //   const totalActives = generaciones.reduce((sum, r) => sum + r.activos, 0);
-
-  //   return {
-  //     generacionesTotal: totalGens,
-  //     estudiantesTotal: totalStudents,
-  //     activosTotal: totalActives,
-  //     generaciones: generaciones,
-  //   };
-  // }
-
 
 }

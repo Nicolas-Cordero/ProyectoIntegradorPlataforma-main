@@ -3,7 +3,9 @@ import { CarreraService } from './carrera.service';
 import { CreateCarreraDto } from './dto/create-carrera.dto';
 import { UpdateCarreraDto } from './dto/update-carrera.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRol } from '@prisma/client';
+import type { AuthenticatedUser } from '../auth/interfaces/auth.interfaces';
 
 @Controller('carrera')
 export class CarreraController {
@@ -11,18 +13,12 @@ export class CarreraController {
 
   @Post()
   @Roles(UserRol.ADMIN, UserRol.TUTOR)
-  create(@Body() createCarreraDto: CreateCarreraDto) {
-    return this.carreraService.create(createCarreraDto);
+  create(
+    @Body() createCarreraDto: CreateCarreraDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.carreraService.create(createCarreraDto, user.rut_usuario);
   }
-
-
-  
-  //la dejaremos comentada por ahora.
-  // @Get()
-  // findAll() {
-  //   return this.carreraService.findAll();
-  // }
-
 
   @Get('estudiante/:rut')
   findByEstudiante(@Param('rut') rut_estudiante: string) {
@@ -31,12 +27,15 @@ export class CarreraController {
 
   @Get(':codigoCarrera')
   findOne(@Param('codigoCarrera', ParseIntPipe) codigo_carrera: number) {
-    return this.carreraService.findOne(+codigo_carrera);
+    return this.carreraService.findOne(codigo_carrera);
   }
 
   @Patch(':codigoCarrera')
   @Roles(UserRol.ADMIN, UserRol.TUTOR)
-  update(@Param('codigoCarrera', ParseIntPipe) codigo_carrera: number, @Body() updateCarreraDto: UpdateCarreraDto) {
+  update(
+    @Param('codigoCarrera', ParseIntPipe) codigo_carrera: number,
+    @Body() updateCarreraDto: UpdateCarreraDto,
+  ) {
     return this.carreraService.update(codigo_carrera, updateCarreraDto);
   }
 

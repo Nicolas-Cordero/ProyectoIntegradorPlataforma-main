@@ -3,7 +3,7 @@ import { Box, Divider, Typography } from '@mui/material';
 import { Modal, Input, Select, Alert, Button } from '../../../ui';
 import { estudianteService, liceoService } from '../../../../services';
 import { normalizarRut, normalizarTelefono, esTelefonoValido } from '../../../../utils/validators';
-import type { Generacion, Genero, EstadoEstudiante, Liceo } from '../../../../types';
+import type { Generacion, Genero, Liceo } from '../../../../types';
 
 interface Props {
   open: boolean;
@@ -24,7 +24,6 @@ interface FormState {
   genero: Genero | '';
   rbd_liceo: string;
   promedios_media: string;
-  estado: EstadoEstudiante | '';
   generacion_id: string; // string para el <select>
 }
 
@@ -39,7 +38,6 @@ const EMPTY: FormState = {
   genero: '',
   rbd_liceo: '',
   promedios_media: '',
-  estado: 'ACTIVO',
   generacion_id: '',
 };
 
@@ -96,7 +94,6 @@ export const CreateEstudianteModal: React.FC<Props> = ({
     if (!form.rbd_liceo.trim()) return 'El RBD del liceo es obligatorio.';
     const prom = parseFloat(form.promedios_media);
     if (isNaN(prom) || prom < 1 || prom > 7) return 'El promedio debe estar entre 1.0 y 7.0.';
-    if (!form.estado) return 'El estado es obligatorio.';
     if (generacionId === undefined && !form.generacion_id) return 'La generación es obligatoria.';
     return '';
   };
@@ -124,7 +121,6 @@ export const CreateEstudianteModal: React.FC<Props> = ({
         genero: form.genero as Genero,
         rbd_liceo: form.rbd_liceo.trim(),
         promedios_media: promRedondeado,
-        estado: form.estado as EstadoEstudiante,
       });
       onSuccess();
       onClose();
@@ -335,30 +331,14 @@ export const CreateEstudianteModal: React.FC<Props> = ({
           />
         </Box>
 
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-          <Input
-            etiqueta="Promedio Media * (1.0 – 7.0)"
-            tipo="number"
-            valor={form.promedios_media}
-            onChange={set('promedios_media')}
-            placeholder="5.5"
-            deshabilitado={loading}
-          />
-          <Select
-            etiqueta="Estado *"
-            opciones={[
-              { valor: 'ACTIVO',     etiqueta: 'Activo'     },
-              { valor: 'SUSPENDIDO', etiqueta: 'Suspendido' },
-              { valor: 'RETIRADO', etiqueta: 'Retirado' },
-              { valor: 'EGRESADO', etiqueta: 'Egresado' },
-              { valor: 'TITULADO', etiqueta: 'Titulado' },
-              { valor: 'ELIMINADO', etiqueta: 'Eliminado' },
-            ]}
-            valor={form.estado}
-            onChange={set('estado')}
-            deshabilitado={loading}
-          />
-        </Box>
+        <Input
+          etiqueta="Promedio Media * (1.0 – 7.0)"
+          tipo="number"
+          valor={form.promedios_media}
+          onChange={set('promedios_media')}
+          placeholder="5.5"
+          deshabilitado={loading}
+        />
 
       </Box>
     </Modal>

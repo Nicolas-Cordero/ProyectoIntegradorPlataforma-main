@@ -3,7 +3,7 @@
 // =====================================
 
 import { BaseHttpClient } from './base.http';
-import type { Estudiante, Genero, EstadoEstudiante, Generacion } from '../types';
+import type { Estudiante, Genero, Generacion } from '../types';
 
 export interface CreateEstudianteDto {
   rut_estudiante: string;
@@ -19,7 +19,6 @@ export interface CreateEstudianteDto {
   puntaje_paes?: number;
   foto_url?: string;
   promedios_media: number;
-  estado: EstadoEstudiante;
 }
 
 export interface UpdateEstudianteDto {
@@ -35,7 +34,6 @@ export interface UpdateEstudianteDto {
   puntaje_paes?: number;
   foto_url?: string;
   promedios_media?: number;
-  estado?: EstadoEstudiante;
 }
 
 export interface CreateManyResult {

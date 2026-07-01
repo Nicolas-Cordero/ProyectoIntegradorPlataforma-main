@@ -5,7 +5,7 @@ import { Modal, Alert, Button } from '../../ui';
 import { estudianteService } from '../../../services';
 import { normalizarRut, normalizarTelefono } from '../../../utils/validators';
 import type { CreateEstudianteDto } from '../../../services/estudiante.service';
-import type { Genero, EstadoEstudiante } from '../../../types';
+import type { Genero } from '../../../types';
 
 interface Props {
   open: boolean;
@@ -28,7 +28,6 @@ const COLUMNS = [
   'genero',           // MASCULINO / FEMENINO / NO_BINARIO
   'rbd_liceo',
   'promedios_media',  // 1.0 – 7.0
-  'estado',           // ACTIVO / SUSPENDIDO / RETIRADO / EGRESADO / TITULADO / ELIMINADO
 ] as const;
 
 type RawRow = Record<string, string>;
@@ -58,7 +57,6 @@ function downloadTemplate() {
     'MASCULINO',
     '12345',
     '6.0',
-    'ACTIVO',
   ].join(',');
   const blob = new Blob([`${header}\n${example}\n`], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -105,7 +103,6 @@ function rowToDto(row: RawRow, generacion_id: number): CreateEstudianteDto {
     genero: (String(row.genero ?? '').trim().toUpperCase() as Genero) || 'MASCULINO',
     rbd_liceo: String(row.rbd_liceo ?? '').trim(),
     promedios_media: parseFloat(String(row.promedios_media ?? '0').replace(',', '.')),
-    estado: (String(row.estado ?? 'ACTIVO').trim().toUpperCase() as EstadoEstudiante),
     generacion_id,
     puntaje_paes: row.puntaje_paes ? parseInt(String(row.puntaje_paes)) : undefined,
     foto_url: row.foto_url ? String(row.foto_url).trim() : undefined,
@@ -170,7 +167,7 @@ export const ExcelImportModal: React.FC<Props> = ({
   };
 
   const PREVIEW_COLS: string[] = [
-    'rut_estudiante', 'nombre', 'apellido', 'genero', 'estado', 'promedios_media',
+    'rut_estudiante', 'nombre', 'apellido', 'genero', 'promedios_media',
   ];
 
   return (

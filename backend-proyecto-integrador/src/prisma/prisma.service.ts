@@ -9,7 +9,10 @@ export class PrismaService
 {
   constructor() {
     const databaseUrl = process.env.DATABASE_URL;
-    if (!databaseUrl) throw new Error('DATABASE_URL no está definido. Revisa las variables de entorno.');
+    if (!databaseUrl)
+      throw new Error(
+        'DATABASE_URL no está definido. Revisa las variables de entorno.',
+      );
     super({
       adapter: new PrismaPg({
         connectionString: databaseUrl,

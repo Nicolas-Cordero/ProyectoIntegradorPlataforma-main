@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateRamoDto } from './dto/create-ramo.dto';
 import { CreateRamoMeDto } from './dto/create-ramo-me.dto';
 import { UpdateRamoDto } from './dto/update-ramo.dto';
@@ -11,15 +15,11 @@ export class RamoService {
   constructor(
     private readonly ramoRepository: RamoRepository,
     private readonly storageService: StorageService,
-  ){}
-
-
+  ) {}
 
   create(createRamoDto: CreateRamoDto): Promise<ramo> {
     return this.ramoRepository.create(createRamoDto);
   }
-
-
 
   async findOne(id_ramo: number): Promise<ramo> {
     const ramo = await this.ramoRepository.findOne(id_ramo);
@@ -48,18 +48,27 @@ export class RamoService {
   }
 
   // Fuerza el rut del estudiante autenticado: el body no incluye rut_estudiante.
-  createForEstudiante(rut_estudiante: string, createRamoDto: CreateRamoMeDto): Promise<ramo> {
+  createForEstudiante(
+    rut_estudiante: string,
+    createRamoDto: CreateRamoMeDto,
+  ): Promise<ramo> {
     return this.ramoRepository.create({ ...createRamoDto, rut_estudiante });
   }
 
   // Solo permite modificar un ramo que pertenece al estudiante autenticado.
-  async updateOwn(id_ramo: number, rut_estudiante: string, updateRamoDto: UpdateRamoDto): Promise<ramo> {
+  async updateOwn(
+    id_ramo: number,
+    rut_estudiante: string,
+    updateRamoDto: UpdateRamoDto,
+  ): Promise<ramo> {
     const ramo = await this.ramoRepository.findOne(id_ramo);
     if (!ramo) {
       throw new NotFoundException(`Ramo con id ${id_ramo} no encontrado`);
     }
     if (ramo.rut_estudiante !== rut_estudiante) {
-      throw new ForbiddenException('No puedes modificar un ramo que no te pertenece');
+      throw new ForbiddenException(
+        'No puedes modificar un ramo que no te pertenece',
+      );
     }
     return this.ramoRepository.update(id_ramo, updateRamoDto);
   }
@@ -75,7 +84,9 @@ export class RamoService {
       throw new NotFoundException(`Ramo con id ${id_ramo} no encontrado`);
     }
     if (ramo.rut_estudiante !== rut_estudiante) {
-      throw new ForbiddenException('No puedes subir un certificado a un ramo que no te pertenece');
+      throw new ForbiddenException(
+        'No puedes subir un certificado a un ramo que no te pertenece',
+      );
     }
     const { url } = await this.storageService.uploadPDF(file, 'certificados');
     return this.ramoRepository.updateCertificado(id_ramo, url);

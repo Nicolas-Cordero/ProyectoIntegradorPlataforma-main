@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PdfGeneratorController } from './pdf-generator.controller';
-import { PdfGeneratorService }    from './pdf-generator.service';
+import { PdfGeneratorService } from './pdf-generator.service';
 
 const mockPdfGeneratorService = { pdfGenerate: jest.fn() };
 

@@ -7,9 +7,6 @@ import { StorageModule } from '../storage/storage.module';
 @Module({
   imports: [StorageModule],
   controllers: [RamoController],
-  providers: [
-    RamoService,
-    RamoRepository,
-  ],
+  providers: [RamoService, RamoRepository],
 })
 export class RamoModule {}

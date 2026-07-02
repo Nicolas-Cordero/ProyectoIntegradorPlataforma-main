@@ -11,7 +11,6 @@ import {
 import { Type } from 'class-transformer';
 import { Topico } from '@prisma/client';
 
-
 export class ComentarioNestedDto {
   @IsEnum(Topico)
   topico!: Topico;
@@ -20,7 +19,6 @@ export class ComentarioNestedDto {
   @IsNotEmpty()
   texto!: string;
 }
-
 
 export class CreateEntrevistaDto {
   @IsString()

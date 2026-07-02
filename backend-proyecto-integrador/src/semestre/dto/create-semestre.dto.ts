@@ -1,7 +1,7 @@
-import { TipoSemestre } from "@prisma/client";
+import { TipoSemestre } from '@prisma/client';
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsNotEmpty } from "class-validator";
-import { Semestre } from "../semestre.enum";
+import { IsEnum, IsInt, IsNotEmpty } from 'class-validator';
+import { Semestre } from '../semestre.enum';
 
 export class CreateSemestreDto {
   @Type(() => Number)

@@ -31,8 +31,12 @@ export class AcuerdoService {
     const objetivo = fecha.getTime();
 
     return acuerdos.reduce((masCercano, actual) => {
-      const diffActual = Math.abs(new Date(actual.createdAt).getTime() - objetivo);
-      const diffCercano = Math.abs(new Date(masCercano.createdAt).getTime() - objetivo);
+      const diffActual = Math.abs(
+        new Date(actual.createdAt).getTime() - objetivo,
+      );
+      const diffCercano = Math.abs(
+        new Date(masCercano.createdAt).getTime() - objetivo,
+      );
       return diffActual < diffCercano ? actual : masCercano;
     });
   }
@@ -42,10 +46,15 @@ export class AcuerdoService {
    * versión nueva (nueva fila con su propio `createdAt`), sin mutar la original.
    * Si no se encuentra el acuerdo base, se crea a partir de lo recibido.
    */
-  async update(id: number, updateAcuerdoDto: UpdateAcuerdoDto): Promise<acuerdo> {
+  async update(
+    id: number,
+    updateAcuerdoDto: UpdateAcuerdoDto,
+  ): Promise<acuerdo> {
     const acuerdos = await this.acuerdoRepo.findAll();
     const base = acuerdos?.find((a) => a.id === id);
-    const documentoBase = base?.documento as unknown as DocumentoCompromiso | undefined;
+    const documentoBase = base?.documento as unknown as
+      | DocumentoCompromiso
+      | undefined;
 
     const documentoActualizado = {
       ...documentoBase,
@@ -82,10 +91,17 @@ export class AcuerdoService {
    * Estado de firma del estudiante respecto de la versión vigente del acuerdo.
    * Si no existe ningún acuerdo, `hayAcuerdoVigente` es false y no hay nada que firmar.
    */
-  async getEstadoFirmaVigente(rut_estudiante: string): Promise<EstadoFirmaAcuerdo> {
+  async getEstadoFirmaVigente(
+    rut_estudiante: string,
+  ): Promise<EstadoFirmaAcuerdo> {
     const vigente = await this.acuerdoRepo.findVigente();
     if (!vigente) {
-      return { hayAcuerdoVigente: false, acuerdoId: null, firmado: false, firmadoAt: null };
+      return {
+        hayAcuerdoVigente: false,
+        acuerdoId: null,
+        firmado: false,
+        firmadoAt: null,
+      };
     }
     const firma = await this.acuerdoRepo.findFirma(vigente.id, rut_estudiante);
     return {

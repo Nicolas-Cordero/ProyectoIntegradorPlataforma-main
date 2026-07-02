@@ -4,12 +4,11 @@ export interface IPdfGenerator<T = unknown> {
   pdfGenerate(dto: T): Promise<Buffer>;
 }
 
-
 export enum Generators {
-  ACADEMICO            = 'academico_generator',
-  ENTREVISTA           = 'entrevista_generator',
-  ENTREVISTA_RESUMEN   = 'entrevista_resumen_generator',
-  SEMESTRE             = 'semestre_generator',
-  ESTADISTICAS         = 'estadisticas_generator',
-  ACUERDO              = 'acuerdo_generator',
+  ACADEMICO = 'academico_generator',
+  ENTREVISTA = 'entrevista_generator',
+  ENTREVISTA_RESUMEN = 'entrevista_resumen_generator',
+  SEMESTRE = 'semestre_generator',
+  ESTADISTICAS = 'estadisticas_generator',
+  ACUERDO = 'acuerdo_generator',
 }

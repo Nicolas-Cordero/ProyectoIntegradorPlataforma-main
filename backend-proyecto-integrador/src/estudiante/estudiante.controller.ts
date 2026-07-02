@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query, UseInterceptors, UploadedFile } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+  Query,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { EstudianteService } from './estudiante.service';
@@ -29,7 +41,6 @@ export class EstudianteController {
     return this.estudianteService.findAll(soloActivos === 'true');
   }
 
-
   // El estudiante consulta su propia información (rut tomado del JWT).
   // Debe declararse antes de las rutas con :rut_estudiante.
   @Get('me')
@@ -38,26 +49,23 @@ export class EstudianteController {
     return this.estudianteService.findOneComplete(user.rut_usuario);
   }
 
-
   @Get('generacion/:generacion_id')
   @Roles(UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA)
-  findByGeneracion(@Param('generacion_id', ParseIntPipe) generacion_id: number) {
+  findByGeneracion(
+    @Param('generacion_id', ParseIntPipe) generacion_id: number,
+  ) {
     return this.estudianteService.findByGeneracion(generacion_id);
   }
 
-
-
-
-//TODO: SIMPLE DEBERIA DEVOLVER LA INFO JUSTA Y NECESARIA PARA EL PERFIL
-// Revisar las de abajo
+  //TODO: SIMPLE DEBERIA DEVOLVER LA INFO JUSTA Y NECESARIA PARA EL PERFIL
+  // Revisar las de abajo
   @Get(':rut_estudiante/simple')
   @Roles(UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA)
   findOne(@Param('rut_estudiante') rut_estudiante: string) {
     return this.estudianteService.findOneSimple(rut_estudiante);
   }
 
-
-//COMPLETE DEBERIA DEVOLVER LA INFO PARA "DATOS PERSONALES."
+  //COMPLETE DEBERIA DEVOLVER LA INFO PARA "DATOS PERSONALES."
   @Get(':rut_estudiante/complete')
   @Roles(UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA)
   findOneComplete(@Param('rut_estudiante') rut_estudiante: string) {
@@ -66,7 +74,10 @@ export class EstudianteController {
 
   @Patch(':rut_estudiante')
   @Roles(UserRol.ADMIN, UserRol.TUTOR)
-  update(@Param('rut_estudiante') rut_estudiante: string, @Body() updateEstudianteDto: UpdateEstudianteDto) {
+  update(
+    @Param('rut_estudiante') rut_estudiante: string,
+    @Body() updateEstudianteDto: UpdateEstudianteDto,
+  ) {
     return this.estudianteService.update(rut_estudiante, updateEstudianteDto);
   }
 
@@ -101,7 +112,6 @@ export class EstudianteController {
   remove(@Param('id') id: string) {
     return this.estudianteService.remove(id);
   }
-
 
   // @Get('estadisticas')
   // findStadistics(){

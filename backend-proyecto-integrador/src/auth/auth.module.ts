@@ -14,7 +14,6 @@ import { RefreshTokenRepository } from './services/refresh-token.repository';
 import { UsersRepository } from '../users';
 
 @Module({
-
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     ConfigModule.forFeature(emailConfig),
@@ -30,9 +29,7 @@ import { UsersRepository } from '../users';
     }),
   ],
 
-  controllers: [
-    AuthController
-  ],
+  controllers: [AuthController],
 
   providers: [
     AuthService,
@@ -42,15 +39,9 @@ import { UsersRepository } from '../users';
     RefreshTokenRepository,
     JwtStrategy,
     JwtRefreshStrategy,
-    UsersRepository
+    UsersRepository,
   ],
 
-  exports: [
-    AuthService,
-    TokenService,
-    JwtStrategy,
-    PassportModule
-  ],
-
+  exports: [AuthService, TokenService, JwtStrategy, PassportModule],
 })
 export class AuthModule {}

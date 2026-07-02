@@ -7,9 +7,9 @@ export class AuthResponseDto {
 export class UserResponseDto {
   rut_usuario!: string;
   nombre!: string;
-  apellido!: string
+  apellido!: string;
   email!: string;
-  telefono!: string
+  telefono!: string;
   rol!: string;
   activo!: boolean;
   must_change_password!: boolean;

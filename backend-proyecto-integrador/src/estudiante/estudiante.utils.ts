@@ -1,9 +1,7 @@
 import { EstadoEstudiante } from '@prisma/client';
 
 // Solo estudiantes ACTIVOS pueden iniciar sesión en la app móvil.
-const ESTADOS_ACTIVOS: EstadoEstudiante[] = [
-  EstadoEstudiante.ACTIVO,
-];
+const ESTADOS_ACTIVOS: EstadoEstudiante[] = [EstadoEstudiante.ACTIVO];
 
 /**
  * Indica si, dado el estado del estudiante, su usuario debe poder iniciar sesión.

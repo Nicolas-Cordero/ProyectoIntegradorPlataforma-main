@@ -1,12 +1,16 @@
 import { Reflector } from '@nestjs/core';
-import { ForbiddenException } from '@nestjs/common';
+import { ForbiddenException, Type } from '@nestjs/common';
 import { UserRol } from '@prisma/client';
 import { EntrevistasController } from './entrevistas.controller';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { ROLES_KEY } from '../auth/decorators/roles.decorator';
 
 // Construye un ExecutionContext mínimo para probar el RolesGuard
-function mockContext(handler: Function, classRef: Function, userRol: UserRol) {
+function mockContext(
+  handler: (...args: unknown[]) => unknown,
+  classRef: Type<unknown>,
+  userRol: UserRol,
+) {
   return {
     getHandler: () => handler,
     getClass: () => classRef,

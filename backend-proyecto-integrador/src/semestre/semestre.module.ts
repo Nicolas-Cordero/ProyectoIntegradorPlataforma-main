@@ -5,9 +5,6 @@ import { SemestreRepository } from './semestre.repository';
 
 @Module({
   controllers: [SemestreController],
-  providers: [
-    SemestreService,
-    SemestreRepository,
-  ],
+  providers: [SemestreService, SemestreRepository],
 })
 export class SemestreModule {}

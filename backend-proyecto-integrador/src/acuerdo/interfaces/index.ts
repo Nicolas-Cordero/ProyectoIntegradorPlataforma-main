@@ -1,2 +1,2 @@
-export * from "./Topico"
-export * from "./DocumentoCompromiso"
+export * from './Topico';
+export * from './DocumentoCompromiso';

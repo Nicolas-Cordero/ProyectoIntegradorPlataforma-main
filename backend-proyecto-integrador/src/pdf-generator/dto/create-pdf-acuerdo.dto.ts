@@ -4,9 +4,9 @@ export class TopicoAcuerdoDto {
 }
 
 export class CreatePdfAcuerdoDto {
-  titulo:    string;
+  titulo: string;
   subtitulo: string;
-  abstract:  string;
-  topicos:   TopicoAcuerdoDto[];
-  version:   string;
+  abstract: string;
+  topicos: TopicoAcuerdoDto[];
+  version: string;
 }

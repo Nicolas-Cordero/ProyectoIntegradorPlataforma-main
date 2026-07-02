@@ -7,9 +7,6 @@ import { AuthModule } from '../auth/auth.module';
 @Module({
   imports: [AuthModule],
   controllers: [ComentarioController],
-  providers: [
-    ComentarioService,
-    ComentarioRepository,
-  ],
+  providers: [ComentarioService, ComentarioRepository],
 })
 export class ComentarioModule {}

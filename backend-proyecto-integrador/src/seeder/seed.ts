@@ -1,16 +1,14 @@
-import 'dotenv/config'
+import 'dotenv/config';
 import { prisma } from './prisma-client';
 
-import { 
+import {
   usersSeeder,
   beneficiosSeeder,
   liceosSeeder,
   universidadesSeeder,
   semestresSeeder,
-  compromisoSeeder
-
-  } from './seeds';
-
+  compromisoSeeder,
+} from './seeds';
 
 async function main() {
   console.log('Starting seeders...');
@@ -30,6 +28,6 @@ main()
     console.error('Seeder error:', error);
     process.exit(1);
   })
-  .finally(async () => {
-    await prisma.$disconnect();
+  .finally(() => {
+    void prisma.$disconnect();
   });

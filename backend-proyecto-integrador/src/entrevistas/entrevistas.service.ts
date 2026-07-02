@@ -1,6 +1,9 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { EntrevistaRepository } from './entrevista.repository';
-import type { EntrevistaConRelaciones, EntrevistaConDetalle } from './entrevista.repository';
+import type {
+  EntrevistaConRelaciones,
+  EntrevistaConDetalle,
+} from './entrevista.repository';
 import { PrismaService } from '../prisma/prisma.service';
 import { entrevista, TipoSemestre } from '@prisma/client';
 import { UpdateEntrevistaDto, CreateEntrevistaDto } from './dto';
@@ -18,7 +21,8 @@ export class EntrevistasService {
   async resolveSemestreId(fecha: Date): Promise<number> {
     const year = fecha.getFullYear();
     const month = fecha.getMonth() + 1;
-    const semestre = month <= 6 ? Semestre.PRIMER_SEMESTRE : Semestre.SEGUNDO_SEMESTRE;
+    const semestre =
+      month <= 6 ? Semestre.PRIMER_SEMESTRE : Semestre.SEGUNDO_SEMESTRE;
 
     const result = await this.prisma.semestre.upsert({
       where: { year_semestre: { year, semestre } },
@@ -29,7 +33,10 @@ export class EntrevistasService {
     return result.semestre_id;
   }
 
-  async create(createEntrevistaDto: CreateEntrevistaDto, rut_entrevistador: string): Promise<entrevista> {
+  async create(
+    createEntrevistaDto: CreateEntrevistaDto,
+    rut_entrevistador: string,
+  ): Promise<entrevista> {
     const fecha_hora = createEntrevistaDto.fecha_hora ?? new Date();
     const semestre_id = await this.resolveSemestreId(fecha_hora);
 
@@ -48,7 +55,9 @@ export class EntrevistasService {
     return this.entrevistaRepo.findAll();
   }
 
-  findAllByEstudiante(rut_estudiante: string): Promise<EntrevistaConRelaciones[]> {
+  findAllByEstudiante(
+    rut_estudiante: string,
+  ): Promise<EntrevistaConRelaciones[]> {
     return this.entrevistaRepo.findByEstudiante(rut_estudiante);
   }
 
@@ -65,11 +74,19 @@ export class EntrevistasService {
     return this.entrevistaRepo.delete(id_entrevista);
   }
 
-  async updateEntrevista(id_entrevista: number, updateEntrevistaDto: UpdateEntrevistaDto): Promise<entrevista> {
+  async updateEntrevista(
+    id_entrevista: number,
+    updateEntrevistaDto: UpdateEntrevistaDto,
+  ): Promise<entrevista> {
     let semestre_id: number | undefined;
     if (updateEntrevistaDto.fecha_hora) {
-      semestre_id = await this.resolveSemestreId(updateEntrevistaDto.fecha_hora);
+      semestre_id = await this.resolveSemestreId(
+        updateEntrevistaDto.fecha_hora,
+      );
     }
-    return this.entrevistaRepo.update(id_entrevista, { ...updateEntrevistaDto, semestre_id });
+    return this.entrevistaRepo.update(id_entrevista, {
+      ...updateEntrevistaDto,
+      semestre_id,
+    });
   }
 }

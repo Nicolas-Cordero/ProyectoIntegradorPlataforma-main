@@ -5,9 +5,7 @@ import { liceo } from '@prisma/client';
 
 @Injectable()
 export class LiceoService {
-  constructor(
-    private readonly liceoRepo: LiceoRepository,
-  ) {}
+  constructor(private readonly liceoRepo: LiceoRepository) {}
 
   create(createLiceoDto: CreateLiceoDto): Promise<liceo> {
     return this.liceoRepo.create(createLiceoDto);
@@ -22,7 +20,7 @@ export class LiceoService {
     if (!liceo) {
       throw new Error(`Liceo con RBD ${rbd_liceo} no encontrado`);
     }
-    return liceo
+    return liceo;
   }
 
   update(rbd_liceo: string, updateLiceoDto: UpdateLiceoDto) {

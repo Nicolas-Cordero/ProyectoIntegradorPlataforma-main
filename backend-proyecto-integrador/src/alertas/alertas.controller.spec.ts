@@ -24,9 +24,7 @@ describe('AlertasController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AlertasController],
-      providers: [
-        { provide: AlertasService, useValue: mockAlertasService },
-      ],
+      providers: [{ provide: AlertasService, useValue: mockAlertasService }],
     }).compile();
 
     controller = module.get<AlertasController>(AlertasController);
@@ -34,17 +32,12 @@ describe('AlertasController', () => {
 
   afterEach(() => jest.clearAllMocks());
 
-
-  
   // ── getAllAlertas ──────────────────────────────────────────────────────────
 
   describe('getAllAlertas', () => {
     it('debe retornar todas las alertas que entrega el servicio', async () => {
       // Arrange
-      const alertasMock = [
-        makeAlerta('12345678-9'),
-        makeAlerta('98765432-1'),
-      ];
+      const alertasMock = [makeAlerta('12345678-9'), makeAlerta('98765432-1')];
       mockAlertasService.getAllAlertas.mockResolvedValue(alertasMock);
 
       // Act
@@ -74,15 +67,21 @@ describe('AlertasController', () => {
       // Arrange
       const rut = '12345678-9';
       const alertasMock = [makeAlerta(rut)];
-      mockAlertasService.getAllAlertasByEstudiante.mockResolvedValue(alertasMock);
+      mockAlertasService.getAllAlertasByEstudiante.mockResolvedValue(
+        alertasMock,
+      );
 
       // Act
       const resultado = await controller.getAllAlertasByEstudiante(rut);
 
       // Assert
       expect(resultado).toEqual(alertasMock);
-      expect(mockAlertasService.getAllAlertasByEstudiante).toHaveBeenCalledWith(rut);
-      expect(mockAlertasService.getAllAlertasByEstudiante).toHaveBeenCalledTimes(1);
+      expect(mockAlertasService.getAllAlertasByEstudiante).toHaveBeenCalledWith(
+        rut,
+      );
+      expect(
+        mockAlertasService.getAllAlertasByEstudiante,
+      ).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -92,10 +91,7 @@ describe('AlertasController', () => {
     it('debe pasar la generacion al servicio y retornar su respuesta', async () => {
       // Arrange
       const generacion = '2020';
-      const alertasMock = [
-        makeAlerta('12345678-9'),
-        makeAlerta('98765432-1'),
-      ];
+      const alertasMock = [makeAlerta('12345678-9'), makeAlerta('98765432-1')];
       mockAlertasService.getAlertasByGeneracion.mockResolvedValue(alertasMock);
 
       // Act
@@ -103,8 +99,12 @@ describe('AlertasController', () => {
 
       // Assert
       expect(resultado).toEqual(alertasMock);
-      expect(mockAlertasService.getAlertasByGeneracion).toHaveBeenCalledWith(generacion);
-      expect(mockAlertasService.getAlertasByGeneracion).toHaveBeenCalledTimes(1);
+      expect(mockAlertasService.getAlertasByGeneracion).toHaveBeenCalledWith(
+        generacion,
+      );
+      expect(mockAlertasService.getAlertasByGeneracion).toHaveBeenCalledTimes(
+        1,
+      );
     });
   });
 });

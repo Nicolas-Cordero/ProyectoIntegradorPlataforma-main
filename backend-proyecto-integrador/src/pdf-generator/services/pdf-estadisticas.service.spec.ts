@@ -1,5 +1,5 @@
 import { PdfEstadisticasGenerator } from './pdf-estadisticas.service';
-import { PdfPrinterProvider }        from '../providers/pdf-printer.provider';
+import { PdfPrinterProvider } from '../providers/pdf-printer.provider';
 import type { CreatePdfEstadisticasDto } from '../dto';
 
 const FAKE_BUFFER = Buffer.from('pdf-estadisticas');
@@ -8,15 +8,21 @@ const mockPrinter = { createPdf: jest.fn() };
 
 const dtoValido: CreatePdfEstadisticasDto = {
   kpis: {
-    total: 120, activos: 80, titulados: 15, egresados: 10,
-    retirados: 15, tasaDesercion: 12.5, nuevos: 25, nuevosAño: 2024,
+    total: 120,
+    activos: 80,
+    titulados: 15,
+    egresados: 10,
+    retirados: 15,
+    tasaDesercion: 12.5,
+    nuevos: 25,
+    nuevosAño: 2024,
   },
   estadoData: [
-    { label: 'Estudiando',  count: 80, pct: 66.7 },
-    { label: 'Retirado/a',  count: 15, pct: 12.5 },
+    { label: 'Estudiando', count: 80, pct: 66.7 },
+    { label: 'Retirado/a', count: 15, pct: 12.5 },
   ],
   generoData: [
-    { label: 'Femenino',  count: 65, pct: 54.2 },
+    { label: 'Femenino', count: 65, pct: 54.2 },
     { label: 'Masculino', count: 55, pct: 45.8 },
   ],
   porGeneracion: [
@@ -29,8 +35,16 @@ const dtoValido: CreatePdfEstadisticasDto = {
   cohorteData: {
     estados: ['ACTIVO', 'TITULADO', 'RETIRADO'],
     rows: [
-      { año: 2020, total: 30, counts: { ACTIVO: 15, TITULADO: 10, RETIRADO: 5 } },
-      { año: 2021, total: 25, counts: { ACTIVO: 20, TITULADO:  2, RETIRADO: 3 } },
+      {
+        año: 2020,
+        total: 30,
+        counts: { ACTIVO: 15, TITULADO: 10, RETIRADO: 5 },
+      },
+      {
+        año: 2021,
+        total: 25,
+        counts: { ACTIVO: 20, TITULADO: 2, RETIRADO: 3 },
+      },
     ],
   },
 };
@@ -41,7 +55,9 @@ describe('PdfEstadisticasGenerator', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPrinter.createPdf.mockResolvedValue(FAKE_BUFFER);
-    service = new PdfEstadisticasGenerator(mockPrinter as unknown as PdfPrinterProvider);
+    service = new PdfEstadisticasGenerator(
+      mockPrinter as unknown as PdfPrinterProvider,
+    );
   });
 
   it('debe retornar un Buffer cuando recibe un DTO válido', async () => {
@@ -59,8 +75,8 @@ describe('PdfEstadisticasGenerator', () => {
 
     const [docDefinition] = mockPrinter.createPdf.mock.calls[0];
     const contenidoStr = JSON.stringify(docDefinition.content);
-    expect(contenidoStr).toContain('120');     // total histórico
-    expect(contenidoStr).toContain('12,5%');   // tasa de deserción formateada
+    expect(contenidoStr).toContain('120'); // total histórico
+    expect(contenidoStr).toContain('12,5%'); // tasa de deserción formateada
     expect(contenidoStr).toContain('Nuevos 2024');
   });
 

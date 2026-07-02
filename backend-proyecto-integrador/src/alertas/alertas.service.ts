@@ -30,18 +30,22 @@ export class AlertasService {
 
     // El acuerdo vigente es global: se resuelve una vez y las firmas se traen
     // en bloque para no consultar por cada estudiante.
-    const { acuerdoVigente, rutsFirmantes } = await this.cargarContextoAcuerdo();
+    const { acuerdoVigente, rutsFirmantes } =
+      await this.cargarContextoAcuerdo();
 
     const alertas: Alerta[] = [];
 
     for (const est of estudiantes ?? []) {
       if (entrevistas) {
         const entrevistasEst = entrevistas.filter(
-          e => e.rut_estudiante === est.rut_estudiante,
+          (e) => e.rut_estudiante === est.rut_estudiante,
         );
         const alertaEntrevista = this.alertaEntrevista.evaluar(entrevistasEst);
         if (alertaEntrevista) {
-          alertas.push({ rut_estudiante: est.rut_estudiante, ...alertaEntrevista });
+          alertas.push({
+            rut_estudiante: est.rut_estudiante,
+            ...alertaEntrevista,
+          });
         }
       }
 
@@ -68,7 +72,9 @@ export class AlertasService {
     const alertas: Alerta[] = [];
 
     const entrevistas =
-      await this.alertasRepository.getAllEntrevistasbyEstudiante(rut_estudiante);
+      await this.alertasRepository.getAllEntrevistasbyEstudiante(
+        rut_estudiante,
+      );
     if (entrevistas) {
       const alertaEntrevista = this.alertaEntrevista.evaluar(entrevistas);
       if (alertaEntrevista) {
@@ -89,7 +95,10 @@ export class AlertasService {
         acuerdoVigente.id,
         rut_estudiante,
       );
-      const alertaAcuerdo = this.alertaAcuerdo.evaluar(acuerdoVigente, firma != null);
+      const alertaAcuerdo = this.alertaAcuerdo.evaluar(
+        acuerdoVigente,
+        firma != null,
+      );
       if (alertaAcuerdo) {
         alertas.push(alertaAcuerdo);
       }
@@ -103,20 +112,27 @@ export class AlertasService {
   }
 
   async getAlertasByGeneracion(generacion: string): Promise<Alerta[]> {
-    const estudiantes = (await this.alertasRepository.findAllEstudiantes()) ?? [];
-    const filtrados = estudiantes.filter(e => e.generacion === generacion);
+    const estudiantes =
+      (await this.alertasRepository.findAllEstudiantes()) ?? [];
+    const filtrados = estudiantes.filter((e) => e.generacion === generacion);
 
-    const { acuerdoVigente, rutsFirmantes } = await this.cargarContextoAcuerdo();
+    const { acuerdoVigente, rutsFirmantes } =
+      await this.cargarContextoAcuerdo();
 
     const alertas: Alerta[] = [];
 
     for (const est of filtrados) {
       const entrevistas =
-        await this.alertasRepository.getAllEntrevistasbyEstudiante(est.rut_estudiante);
+        await this.alertasRepository.getAllEntrevistasbyEstudiante(
+          est.rut_estudiante,
+        );
       if (entrevistas) {
         const alertaEntrevista = this.alertaEntrevista.evaluar(entrevistas);
         if (alertaEntrevista) {
-          alertas.push({ rut_estudiante: est.rut_estudiante, ...alertaEntrevista });
+          alertas.push({
+            rut_estudiante: est.rut_estudiante,
+            ...alertaEntrevista,
+          });
         }
       }
 
@@ -152,7 +168,9 @@ export class AlertasService {
     if (!acuerdoVigente) {
       return { acuerdoVigente: null, rutsFirmantes: new Set<string>() };
     }
-    const ruts = await this.alertasRepository.getRutsConFirma(acuerdoVigente.id);
+    const ruts = await this.alertasRepository.getRutsConFirma(
+      acuerdoVigente.id,
+    );
     return { acuerdoVigente, rutsFirmantes: new Set(ruts) };
   }
 }

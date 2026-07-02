@@ -27,7 +27,7 @@ const mockAcuerdo = {
       },
     ],
   },
-}
+};
 
 const mockAcuerdoAntiguo = {
   id: 1,
@@ -43,8 +43,7 @@ const mockAcuerdoAntiguo = {
       },
     ],
   },
-}
-
+};
 
 describe('AcuerdoService', () => {
   let service: AcuerdoService;
@@ -53,7 +52,7 @@ describe('AcuerdoService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AcuerdoService,
-        { provide: AcuerdoRepository, useValue: mockRepository }
+        { provide: AcuerdoRepository, useValue: mockRepository },
       ],
     }).compile();
 
@@ -67,7 +66,6 @@ describe('AcuerdoService', () => {
     jest.resetAllMocks();
     jest.useRealTimers();
   });
-
 
   it('Debe retornar todos los acuerdos registrados hasta la fecha.', async () => {
     mockRepository.findAll.mockResolvedValue([mockAcuerdo]);
@@ -93,7 +91,6 @@ describe('AcuerdoService', () => {
     });
   });
 
-
   it('Debe retornar el acuerdo mas cercano a x fecha', async () => {
     mockRepository.findAll.mockResolvedValue([mockAcuerdo, mockAcuerdoAntiguo]);
 
@@ -115,8 +112,6 @@ describe('AcuerdoService', () => {
       }),
     });
   });
-
-
 
   it('Debe crear un nuevo acuerdo con los cambios aplicados y retornar la nueva instancia con createdAt en la fecha de creación.', async () => {
     const fechaOriginal = new Date('2025-01-01');
@@ -152,7 +147,6 @@ describe('AcuerdoService', () => {
     expect(documento.titulo).toBe('Título actualizado');
   });
 
-
   // ── Firma del acuerdo ────────────────────────────────────────────────────
 
   it('Debe firmar la versión vigente del acuerdo en nombre del estudiante', async () => {
@@ -167,7 +161,10 @@ describe('AcuerdoService', () => {
     const estado = await service.firmarVigente('12345678-9');
 
     // Se firma la versión vigente resuelta en el servidor, no una arbitraria.
-    expect(mockRepository.firmar).toHaveBeenCalledWith(mockAcuerdo.id, '12345678-9');
+    expect(mockRepository.firmar).toHaveBeenCalledWith(
+      mockAcuerdo.id,
+      '12345678-9',
+    );
     expect(estado).toEqual({
       hayAcuerdoVigente: true,
       acuerdoId: mockAcuerdo.id,
@@ -179,7 +176,9 @@ describe('AcuerdoService', () => {
   it('Debe lanzar NotFoundException al firmar si no hay acuerdo vigente', async () => {
     mockRepository.findVigente.mockResolvedValue(null);
 
-    await expect(service.firmarVigente('12345678-9')).rejects.toThrow(NotFoundException);
+    await expect(service.firmarVigente('12345678-9')).rejects.toThrow(
+      NotFoundException,
+    );
     expect(mockRepository.firmar).not.toHaveBeenCalled();
   });
 

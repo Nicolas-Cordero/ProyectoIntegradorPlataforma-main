@@ -2,14 +2,14 @@ import { TipoSemestre } from '@prisma/client';
 import { Semestre } from '../../semestre/semestre.enum';
 import { prisma } from '../prisma-client';
 
-
 export async function semestresSeeder() {
   for (let year = 2000; year <= 2100; year++) {
     const semestres = [
       {
         year,
         semestre: Semestre.VERANO,
-        tipo:TipoSemestre.RECUPERATIVO,},
+        tipo: TipoSemestre.RECUPERATIVO,
+      },
       {
         year,
         semestre: Semestre.PRIMER_SEMESTRE,
@@ -40,8 +40,8 @@ export async function semestresSeeder() {
           year: semestreData.year,
           semestre: semestreData.semestre,
           tipo: semestreData.tipo,
-        },  
-      })
+        },
+      });
     }
   }
 

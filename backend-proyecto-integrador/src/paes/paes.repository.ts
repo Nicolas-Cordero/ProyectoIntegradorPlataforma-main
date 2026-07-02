@@ -1,8 +1,8 @@
-import { Injectable, InternalServerErrorException } from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
-import { paes } from "@prisma/client";
-import { CreatePaesDto } from "./dto/create-paes.dto";
-import { UpdatePaesDto } from "./dto/update-paes.dto";
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { paes } from '@prisma/client';
+import { CreatePaesDto } from './dto/create-paes.dto';
+import { UpdatePaesDto } from './dto/update-paes.dto';
 
 @Injectable()
 export class PaesRepository {
@@ -18,7 +18,9 @@ export class PaesRepository {
     return this.prisma.paes.findMany();
   }
 
-  async findAllEstudiantes(): Promise<{ rut_estudiante: string; generacion: string }[]> {
+  async findAllEstudiantes(): Promise<
+    { rut_estudiante: string; generacion: string }[]
+  > {
     const estudiantes = await this.prisma.estudiante.findMany({
       select: {
         rut_estudiante: true,
@@ -27,40 +29,31 @@ export class PaesRepository {
         },
       },
     });
-    return estudiantes.map(e => ({
+    return estudiantes.map((e) => ({
       rut_estudiante: e.rut_estudiante,
       generacion: String(e.generacion_rel.año),
     }));
   }
 
   async create(createPaesDto: CreatePaesDto): Promise<paes> {
-    try {
-      return await this.prisma.paes.create({
-        data: createPaesDto,
-      });
-    } catch (error) {
-      throw new InternalServerErrorException(`No se pudo crear el registro PAES para ${createPaesDto.rut_estudiante}`);
-    }
+    return this.prisma.paes.create({
+      data: createPaesDto,
+    });
   }
 
-  async update(rut_estudiante: string, updatePaesDto: UpdatePaesDto): Promise<paes> {
-    try {
-      return await this.prisma.paes.update({
-        where: { rut_estudiante },
-        data: updatePaesDto,
-      });
-    } catch (error) {
-      throw new InternalServerErrorException(`No se pudo actualizar el registro PAES de ${rut_estudiante}`);
-    }
+  async update(
+    rut_estudiante: string,
+    updatePaesDto: UpdatePaesDto,
+  ): Promise<paes> {
+    return this.prisma.paes.update({
+      where: { rut_estudiante },
+      data: updatePaesDto,
+    });
   }
 
   async remove(id: number): Promise<void> {
-    try {
-      await this.prisma.paes.delete({
-        where: { id },
-      });
-    } catch (error) {
-      throw new InternalServerErrorException(`No se pudo eliminar el registro PAES con id ${id}`);
-    }
+    await this.prisma.paes.delete({
+      where: { id },
+    });
   }
 }

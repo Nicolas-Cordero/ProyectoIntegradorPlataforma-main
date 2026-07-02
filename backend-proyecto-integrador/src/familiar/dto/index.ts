@@ -1,2 +1,2 @@
-export { CreateFamiliarDto } from "./create-familiar.dto";
-export { UpdateFamiliarDto } from "./update-familiar.dto";
+export { CreateFamiliarDto } from './create-familiar.dto';
+export { UpdateFamiliarDto } from './update-familiar.dto';

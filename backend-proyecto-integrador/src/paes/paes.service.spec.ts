@@ -20,7 +20,7 @@ describe('PaesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaesService,
-        { provide: PaesRepository, useValue: mockRepository }
+        { provide: PaesRepository, useValue: mockRepository },
       ],
     }).compile();
 
@@ -32,11 +32,9 @@ describe('PaesService', () => {
     jest.useRealTimers();
   });
 
-
-
   it('Debe escribir los puntajes paes del estudiante en la base de datos', async () => {
     const createPaesDto: CreatePaesDto = {
-      rut_estudiante: "21427760-3",
+      rut_estudiante: '21427760-3',
       matematicas: 500,
       lenguaje: 600,
       nem: 650,
@@ -72,11 +70,9 @@ describe('PaesService', () => {
     });
   });
 
-
-
   it('Debe actualizar los puntajes paes de un estudiante', async () => {
     mockRepository.findPaesByEstudiante.mockResolvedValue({
-      rut_estudiante: "21427760-3",
+      rut_estudiante: '21427760-3',
       matematicas: 500,
       lenguaje: 600,
       nem: 650,
@@ -119,11 +115,9 @@ describe('PaesService', () => {
     });
   });
 
-
-
   it('Cada estudiante solo debe tener una sola prueba paes (rut_estudiante Unique en la base de datos)', async () => {
     const createPaesDto: CreatePaesDto = {
-      rut_estudiante: "21427760-3",
+      rut_estudiante: '21427760-3',
       matematicas: 500,
       lenguaje: 600,
       nem: 650,
@@ -138,7 +132,7 @@ describe('PaesService', () => {
     mockRepository.findPaesByEstudiante
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce({
-        rut_estudiante: "21427760-3",
+        rut_estudiante: '21427760-3',
         matematicas: 500,
         lenguaje: 600,
         nem: 650,
@@ -172,11 +166,9 @@ describe('PaesService', () => {
     await expect(service.create(createPaesDto)).rejects.toThrow();
   });
 
-
-
   it('Se debe poder actualizar ciertos campos, no necesariamente todos', async () => {
     mockRepository.findPaesByEstudiante.mockResolvedValue({
-      rut_estudiante: "21427760-3",
+      rut_estudiante: '21427760-3',
       matematicas: 500,
       lenguaje: 600,
       nem: 650,
@@ -213,11 +205,9 @@ describe('PaesService', () => {
     });
   });
 
-
-
   it('Se debe poder actualizar solo el NEM o el Ranking sin afectar los demás campos', async () => {
     mockRepository.findPaesByEstudiante.mockResolvedValue({
-      rut_estudiante: "21427760-3",
+      rut_estudiante: '21427760-3',
       matematicas: 500,
       lenguaje: 600,
       nem: 650,
@@ -246,8 +236,6 @@ describe('PaesService', () => {
     expect(response.matematicas).toBe(500);
     expect(response.lenguaje).toBe(600);
   });
-
-
 
   it('Se debe poder buscar por generación', async () => {
     mockRepository.findAllEstudiantes.mockResolvedValue([
@@ -314,8 +302,6 @@ describe('PaesService', () => {
       },
     ]);
   });
-
-
 
   it('Se debe poder obtener todos los puntajes paes', async () => {
     mockRepository.findAll.mockResolvedValue([
@@ -387,8 +373,6 @@ describe('PaesService', () => {
     ]);
   });
 
-
-
   it('Se debe poder remover una instancia por estudiante', async () => {
     mockRepository.findPaesByEstudiante.mockResolvedValue({
       id: 1,
@@ -408,5 +392,4 @@ describe('PaesService', () => {
 
     expect(response).toBeUndefined();
   });
-
 });

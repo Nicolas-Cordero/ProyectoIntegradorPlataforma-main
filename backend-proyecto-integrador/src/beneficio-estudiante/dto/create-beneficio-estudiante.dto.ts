@@ -1,5 +1,12 @@
 import { Type } from 'class-transformer';
-import {IsDate, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString} from 'class-validator';
+import {
+  IsDate,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { EstadoBeneficio } from '@prisma/client';
 
 export class CreateBeneficioEstudianteDto {
@@ -7,7 +14,7 @@ export class CreateBeneficioEstudianteDto {
   @IsNotEmpty()
   rut_estudiante!: string;
 
-  @Type(()=>Number)
+  @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
   codigo_beneficio!: number;
@@ -26,4 +33,3 @@ export class CreateBeneficioEstudianteDto {
   @IsOptional()
   estado!: EstadoBeneficio;
 }
-

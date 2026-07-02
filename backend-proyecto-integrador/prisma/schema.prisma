@@ -287,6 +287,7 @@ model carrera {
   codigo_universidad Int
   via_acceso         ViaAcceso
   estado             EstadoEstudiante @default(ACTIVO)
+  anio_ingreso       Int
 
   estudiante  estudiante  @relation(fields: [rut_estudiante], references: [rut_estudiante])
   universidad universidad @relation(fields: [codigo_universidad], references: [codigo_universidad])

@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { generacion } from '@prisma/client';
 import { CreateGeneracionDto } from './dto/create-generacion.dto';
@@ -27,31 +27,19 @@ export class GeneracionesRepository {
   }
 
   async create(data: CreateGeneracionDto): Promise<generacion> {
-    try {
-      return await this.prisma.generacion.create({ data });
-    } catch (error) {
-      throw new InternalServerErrorException(`No se pudo crear la generación ${data.año}`);
-    }
+    return this.prisma.generacion.create({ data });
   }
 
   async update(id: number, data: UpdateGeneracionDto): Promise<generacion> {
-    try {
-      return await this.prisma.generacion.update({
-        where: { id },
-        data,
-      });
-    } catch (error) {
-      throw new InternalServerErrorException(`No se pudo actualizar la generación con id ${id}`);
-    }
+    return this.prisma.generacion.update({
+      where: { id },
+      data,
+    });
   }
 
   async delete(id: number): Promise<generacion> {
-    try {
-      return await this.prisma.generacion.delete({
-        where: { id },
-      });
-    } catch (error) {
-      throw new InternalServerErrorException(`No se pudo eliminar la generación con id ${id}`);
-    }
+    return this.prisma.generacion.delete({
+      where: { id },
+    });
   }
 }

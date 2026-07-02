@@ -1,10 +1,19 @@
-import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma, ramo } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRamoDto, UpdateRamoDto } from './dto';
 
 export type RamoConDetalle = ramo & {
-  semestre: { semestre_id: number; year: number; semestre: string; tipo: string };
+  semestre: {
+    semestre_id: number;
+    year: number;
+    semestre: string;
+    tipo: string;
+  };
 };
 
 @Injectable()
@@ -17,25 +26,36 @@ export class RamoRepository {
         data: {
           ...createRamoDto,
           comentario: createRamoDto.comentario ?? '',
-          intento:    createRamoDto.intento    ?? 1,
+          intento: createRamoDto.intento ?? 1,
         },
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new ConflictException('Ya existe un ramo con ese nombre en este semestre y carrera.');
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'Ya existe un ramo con ese nombre en este semestre y carrera.',
+        );
       }
-      throw new InternalServerErrorException('No se pudo crear el ramo.');
+      throw error;
     }
   }
 
   async update(id_ramo: number, updateRamoDto: UpdateRamoDto): Promise<ramo> {
     try {
-      return await this.prisma.ramo.update({ where: { id: id_ramo }, data: updateRamoDto });
+      return await this.prisma.ramo.update({
+        where: { id: id_ramo },
+        data: updateRamoDto,
+      });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-        throw new ConflictException(`Ramo ${id_ramo} no encontrado.`);
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(`Ramo ${id_ramo} no encontrado.`);
       }
-      throw new InternalServerErrorException(`No se pudo actualizar el ramo ${id_ramo}.`);
+      throw error;
     }
   }
 
@@ -43,10 +63,13 @@ export class RamoRepository {
     try {
       return await this.prisma.ramo.delete({ where: { id: id_ramo } });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-        throw new ConflictException(`Ramo ${id_ramo} no encontrado.`);
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(`Ramo ${id_ramo} no encontrado.`);
       }
-      throw new InternalServerErrorException('No se pudo eliminar el ramo.');
+      throw error;
     }
   }
 
@@ -69,17 +92,23 @@ export class RamoRepository {
     return this.prisma.ramo.findUnique({ where: { id: id_ramo } });
   }
 
-  async updateCertificado(id_ramo: number, url_certificado: string): Promise<ramo> {
+  async updateCertificado(
+    id_ramo: number,
+    url_certificado: string,
+  ): Promise<ramo> {
     try {
       return await this.prisma.ramo.update({
         where: { id: id_ramo },
         data: { url_certificado },
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-        throw new ConflictException(`Ramo ${id_ramo} no encontrado.`);
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(`Ramo ${id_ramo} no encontrado.`);
       }
-      throw new InternalServerErrorException(`No se pudo actualizar el certificado del ramo ${id_ramo}.`);
+      throw error;
     }
   }
 }

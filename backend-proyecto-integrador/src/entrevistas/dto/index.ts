@@ -1,2 +1,2 @@
-export { UpdateEntrevistaDto } from "./update-entrevista.dto";
-export { CreateEntrevistaDto } from "./create-entrevista.dto";
+export { UpdateEntrevistaDto } from './update-entrevista.dto';
+export { CreateEntrevistaDto } from './create-entrevista.dto';

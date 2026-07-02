@@ -12,7 +12,7 @@ export class AlertasRepository {
         generacion_rel: { select: { año: true } },
       },
     });
-    return estudiantes.map(e => ({
+    return estudiantes.map((e) => ({
       rut_estudiante: e.rut_estudiante,
       generacion: String(e.generacion_rel.año),
     }));
@@ -69,7 +69,7 @@ export class AlertasRepository {
       where: { acuerdo_id },
       select: { rut_estudiante: true },
     });
-    return firmas.map(f => f.rut_estudiante);
+    return firmas.map((f) => f.rut_estudiante);
   }
 
   // Verifica si un estudiante puntual firmó una versión del acuerdo.

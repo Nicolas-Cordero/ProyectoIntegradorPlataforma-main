@@ -54,7 +54,10 @@ export class AlertaNotasService {
     const alertas: Alerta[] = [];
 
     for (const ramo of ramos) {
-      if (opciones.soloRamosDelEstudiante && ramo.rut_estudiante !== rut_estudiante) {
+      if (
+        opciones.soloRamosDelEstudiante &&
+        ramo.rut_estudiante !== rut_estudiante
+      ) {
         continue;
       }
       if (ramo.estado === EstadoRamo.ELIMINADO) {
@@ -64,7 +67,9 @@ export class AlertaNotasService {
         continue;
       }
 
-      const semestre = await this.alertasRepository.getSemestreById(ramo.semestre_id);
+      const semestre = await this.alertasRepository.getSemestreById(
+        ramo.semestre_id,
+      );
       if (!semestre || !this.semestreVencidoHace30Dias(semestre)) {
         continue;
       }
@@ -83,7 +88,10 @@ export class AlertaNotasService {
     return alertas;
   }
 
-  private semestreVencidoHace30Dias(semestre: { year: number; semestre: string }): boolean {
+  private semestreVencidoHace30Dias(semestre: {
+    year: number;
+    semestre: string;
+  }): boolean {
     const fin = FIN_SEMESTRE[semestre.semestre];
     if (!fin) {
       return false;

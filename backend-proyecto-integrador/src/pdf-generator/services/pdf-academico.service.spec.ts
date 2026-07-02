@@ -1,5 +1,5 @@
 import { PdfAcademicoGenerator } from './pdf-academico.service';
-import { PdfPrinterProvider }    from '../providers/pdf-printer.provider';
+import { PdfPrinterProvider } from '../providers/pdf-printer.provider';
 import type { CreatePdfAcademicoDto } from '../dto';
 
 const FAKE_BUFFER = Buffer.from('pdf-academico');
@@ -8,21 +8,48 @@ const mockPrinter = { createPdf: jest.fn() };
 
 const dtoValido: CreatePdfAcademicoDto = {
   nombreEstudiante: 'Ana García',
-  rutEstudiante:    '9.876.543-2',
+  rutEstudiante: '9.876.543-2',
   carrera: { nombre: 'Medicina', duracion_sem: 12 },
   resumen: {
-    semFinalizados:  4,
-    totalRamos:      30,
-    ramosAprobados:  25,
+    semFinalizados: 4,
+    totalRamos: 30,
+    ramosAprobados: 25,
     ramosReprobados: 3,
-    ramosCursando:   2,
+    ramosCursando: 2,
     ramosEliminados: 0,
     promedioGeneral: 5.8,
   },
   semestres: [
-    { year: 2022, tipo: 'REGULAR', codigo: '1', estado: 'CERRADO', totalRamos: 6, aprobados: 6, reprobados: 0, eliminados: 0 },
-    { year: 2022, tipo: 'REGULAR', codigo: '2', estado: 'CERRADO', totalRamos: 6, aprobados: 5, reprobados: 1, eliminados: 0 },
-    { year: 2023, tipo: 'REGULAR', codigo: '1', estado: 'EN_CURSO', totalRamos: 6, aprobados: 0, reprobados: 0, eliminados: 0 },
+    {
+      year: 2022,
+      tipo: 'REGULAR',
+      codigo: '1',
+      estado: 'CERRADO',
+      totalRamos: 6,
+      aprobados: 6,
+      reprobados: 0,
+      eliminados: 0,
+    },
+    {
+      year: 2022,
+      tipo: 'REGULAR',
+      codigo: '2',
+      estado: 'CERRADO',
+      totalRamos: 6,
+      aprobados: 5,
+      reprobados: 1,
+      eliminados: 0,
+    },
+    {
+      year: 2023,
+      tipo: 'REGULAR',
+      codigo: '1',
+      estado: 'EN_CURSO',
+      totalRamos: 6,
+      aprobados: 0,
+      reprobados: 0,
+      eliminados: 0,
+    },
   ],
 };
 
@@ -32,7 +59,9 @@ describe('PdfAcademicoGenerator', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPrinter.createPdf.mockResolvedValue(FAKE_BUFFER);
-    service = new PdfAcademicoGenerator(mockPrinter as unknown as PdfPrinterProvider);
+    service = new PdfAcademicoGenerator(
+      mockPrinter as unknown as PdfPrinterProvider,
+    );
   });
 
   it('debe retornar un Buffer cuando recibe un DTO válido', async () => {

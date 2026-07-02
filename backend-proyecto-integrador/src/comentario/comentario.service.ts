@@ -6,10 +6,7 @@ import { ComentarioRepository } from './comentario.repository';
 
 @Injectable()
 export class ComentarioService {
-  constructor(
-    private readonly comentarioRepo: ComentarioRepository
-  ){}
-
+  constructor(private readonly comentarioRepo: ComentarioRepository) {}
 
   create(createComentarioDto: CreateComentarioDto): Promise<comentario> {
     return this.comentarioRepo.create(createComentarioDto);
@@ -19,23 +16,27 @@ export class ComentarioService {
     return this.comentarioRepo.findAllByEntrevista(id_entrevista);
   }
 
-  async findAllByTopico(topico: Topico, rut_estudiante: string): Promise<comentario[]> {
-    const comentarios_estudiante = await this.comentarioRepo.findAllByEstudiante(rut_estudiante);
-    return comentarios_estudiante.filter(x => x.topico == topico);
+  async findAllByTopico(
+    topico: Topico,
+    rut_estudiante: string,
+  ): Promise<comentario[]> {
+    const comentarios_estudiante =
+      await this.comentarioRepo.findAllByEstudiante(rut_estudiante);
+    return comentarios_estudiante.filter((x) => x.topico == topico);
   }
 
-  findAllByEstudiante(rut_estudiante: string): Promise<comentario[]>{
+  findAllByEstudiante(rut_estudiante: string): Promise<comentario[]> {
     return this.comentarioRepo.findAllByEstudiante(rut_estudiante);
   }
 
   async findOne(id_comentario: number): Promise<comentario> {
-    const comentario =  await this.comentarioRepo.findOne(id_comentario);
-    
-    if(!comentario){
-      throw new Error('No se pudo encontrar el comentario')
+    const comentario = await this.comentarioRepo.findOne(id_comentario);
+
+    if (!comentario) {
+      throw new Error('No se pudo encontrar el comentario');
     }
-    
-    return comentario
+
+    return comentario;
   }
 
   update(id_comentario: number, updateComentarioDto: UpdateComentarioDto) {

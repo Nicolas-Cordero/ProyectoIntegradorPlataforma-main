@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { GeneracionesRepository } from './generaciones.repository';
 import { CreateGeneracionDto } from './dto/create-generacion.dto';
 import { UpdateGeneracionDto } from './dto/update-generacion.dto';
@@ -31,7 +35,9 @@ export class GeneracionesService {
   async create(dto: CreateGeneracionDto): Promise<generacion> {
     const existing = await this.generacionesRepo.findByAño(dto.año);
     if (existing) {
-      throw new ConflictException(`Ya existe una generación para el año ${dto.año}`);
+      throw new ConflictException(
+        `Ya existe una generación para el año ${dto.año}`,
+      );
     }
     return this.generacionesRepo.create(dto);
   }

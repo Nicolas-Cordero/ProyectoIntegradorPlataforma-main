@@ -1,55 +1,40 @@
-import { Injectable, InternalServerErrorException } from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
-import { CreateLiceoDto, UpdateLiceoDto } from "./dto";
-import { liceo } from "@prisma/client";
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateLiceoDto, UpdateLiceoDto } from './dto';
+import { liceo } from '@prisma/client';
 
 @Injectable()
 export class LiceoRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-  ){}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async create(createLiceoDto: CreateLiceoDto): Promise<liceo>{
-    try {
-      return this.prisma.liceo.create({
-        data: createLiceoDto
-      })
-    } catch (error) {
-      throw new InternalServerErrorException(`No se ha podido crear el liceo: ${createLiceoDto.rbd}`)
-    }
+  async create(createLiceoDto: CreateLiceoDto): Promise<liceo> {
+    return this.prisma.liceo.create({
+      data: createLiceoDto,
+    });
   }
 
-  async update(rbd: string, udpateLiceoDto: UpdateLiceoDto): Promise<liceo>{
-    try {
-      return this.prisma.liceo.update({
-        where: {
-          rbd: rbd,
-        },
-        data: udpateLiceoDto,
-      });
-
-    } catch (error) {
-      throw new InternalServerErrorException(`No se ha podido actualizar el liceo: ${rbd}`)
-    }
+  async update(rbd: string, udpateLiceoDto: UpdateLiceoDto): Promise<liceo> {
+    return this.prisma.liceo.update({
+      where: {
+        rbd: rbd,
+      },
+      data: udpateLiceoDto,
+    });
   }
 
-  async remove(rbd: string): Promise<liceo>{
-    try {
-      return this.prisma.liceo.delete({
-        where: {
-          rbd: rbd,
-        },
-      });
-    } catch (error) {
-      throw new InternalServerErrorException(`No se ha podido eliminar el liceo: ${rbd}`)
-    }
+  async remove(rbd: string): Promise<liceo> {
+    return this.prisma.liceo.delete({
+      where: {
+        rbd: rbd,
+      },
+    });
   }
 
-  async findAll(): Promise<liceo[]>{
-    return this.prisma.liceo.findMany()
+  async findAll(): Promise<liceo[]> {
+    return this.prisma.liceo.findMany();
   }
 
-  async findOne(rbd: string): Promise<liceo | null>{
+  async findOne(rbd: string): Promise<liceo | null> {
     return this.prisma.liceo.findUnique({
       where: {
         rbd: rbd,
@@ -57,7 +42,7 @@ export class LiceoRepository {
     });
   }
 
-  async findByComuna(comuna: string): Promise<liceo[]>{
+  async findByComuna(comuna: string): Promise<liceo[]> {
     return this.prisma.liceo.findMany({
       where: {
         comuna: comuna,
@@ -65,16 +50,12 @@ export class LiceoRepository {
     });
   }
 
-
   //sera necesario usar un enum para especialidad?
-    async findByEspecialidad(especialidad: string): Promise<liceo[]>{
+  async findByEspecialidad(especialidad: string): Promise<liceo[]> {
     return this.prisma.liceo.findMany({
       where: {
         especialidad: especialidad,
       },
     });
   }
-
-
-
 }

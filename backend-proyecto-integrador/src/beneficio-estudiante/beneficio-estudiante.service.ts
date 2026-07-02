@@ -11,57 +11,72 @@ export class BeneficioEstudianteService {
   constructor(
     private readonly asociationRepo: BeneficioEstudianteRepository,
     private readonly estudianteRepo: EstudianteRepository,
-    private readonly beneficioRepo: BeneficiosRepository
-  ){}
-
+    private readonly beneficioRepo: BeneficiosRepository,
+  ) {}
 
   createAsociation(createBeneficioEstudianteDto: CreateBeneficioEstudianteDto) {
-    return this.asociationRepo.asociateBeneficioEstudiante(createBeneficioEstudianteDto) ;
+    return this.asociationRepo.asociateBeneficioEstudiante(
+      createBeneficioEstudianteDto,
+    );
   }
 
   findAllAsociations() {
     return this.asociationRepo.findAllAsociations();
   }
 
-
-
-  async findEstudiantesByBeneficio(codigo_beneficio: number): Promise<estudiante[]>{
-    const asociations = await this.asociationRepo.findAllAsociationsByBeneficio(codigo_beneficio);
+  async findEstudiantesByBeneficio(
+    codigo_beneficio: number,
+  ): Promise<estudiante[]> {
+    const asociations =
+      await this.asociationRepo.findAllAsociationsByBeneficio(codigo_beneficio);
     const estudiantes = await Promise.all(
-      asociations.map(async a => {
-        return this.estudianteRepo.findEstudianteByRut(a.rut_estudiante)
-      })
+      asociations.map(async (a) => {
+        return this.estudianteRepo.findEstudianteByRut(a.rut_estudiante);
+      }),
     );
 
-    return estudiantes.filter(e => e !== null);
+    return estudiantes.filter((e) => e !== null);
   }
 
-
-    async findBeneficiosByEstudiante(rut_estudiante: string): Promise<beneficio[]>{
-    const asociations = await this.asociationRepo.findAllAsociationsByEstudiante(rut_estudiante);
+  async findBeneficiosByEstudiante(
+    rut_estudiante: string,
+  ): Promise<beneficio[]> {
+    const asociations =
+      await this.asociationRepo.findAllAsociationsByEstudiante(rut_estudiante);
     const beneficios = await Promise.all(
-      asociations.map(async a => {
-        return this.beneficioRepo.findByCode(a.codigo_beneficio)
-      })
+      asociations.map(async (a) => {
+        return this.beneficioRepo.findByCode(a.codigo_beneficio);
+      }),
     );
 
-    return beneficios.filter(e => e !== null);
+    return beneficios.filter((e) => e !== null);
   }
-
-
-
 
   findOneAsociation(codigo_beneficio: number, rut_estudiante: string) {
-    return this.asociationRepo.findOneAsociation(codigo_beneficio, rut_estudiante)
+    return this.asociationRepo.findOneAsociation(
+      codigo_beneficio,
+      rut_estudiante,
+    );
   }
 
-  update(codigo_beneficio: number,rut_estudiante: string ,updateBeneficioEstudianteDto: UpdateBeneficioEstudianteDto) {
-    return this.asociationRepo.updateAsociation(codigo_beneficio, rut_estudiante, updateBeneficioEstudianteDto);
+  update(
+    codigo_beneficio: number,
+    rut_estudiante: string,
+    updateBeneficioEstudianteDto: UpdateBeneficioEstudianteDto,
+  ) {
+    return this.asociationRepo.updateAsociation(
+      codigo_beneficio,
+      rut_estudiante,
+      updateBeneficioEstudianteDto,
+    );
   }
 
   remove(codigo_beneficio: number, rut_estudiante: string) {
     //al remover una asociación, no se elimina ni el beneficio ni el estudiante, solo la relación entre ambos
     //hay que revisar si es necesario eliminar algo mas
-    return this.asociationRepo.deletAsociation(codigo_beneficio, rut_estudiante);
+    return this.asociationRepo.deletAsociation(
+      codigo_beneficio,
+      rut_estudiante,
+    );
   }
 }

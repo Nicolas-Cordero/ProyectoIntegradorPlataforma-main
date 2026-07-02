@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { UniversidadService } from './universidad.service';
 import { CreateUniversidadDto } from './dto/create-universidad.dto';
 import { UpdateUniversidadDto } from './dto/update-universidad.dto';
@@ -37,7 +46,10 @@ export class UniversidadController {
 
   @Patch(':id_universidad')
   @Roles(UserRol.ADMIN)
-  update(@Param('id_universidad', ParseIntPipe) id_universidad: number, @Body() updateUniversidadDto: UpdateUniversidadDto) {
+  update(
+    @Param('id_universidad', ParseIntPipe) id_universidad: number,
+    @Body() updateUniversidadDto: UpdateUniversidadDto,
+  ) {
     return this.universidadService.update(id_universidad, updateUniversidadDto);
   }
 

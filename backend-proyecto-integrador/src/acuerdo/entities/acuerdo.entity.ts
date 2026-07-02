@@ -1,4 +1,4 @@
-import { DocumentoCompromiso } from "../interfaces";
+import { DocumentoCompromiso } from '../interfaces';
 
 export class Acuerdo {
   id!: number;

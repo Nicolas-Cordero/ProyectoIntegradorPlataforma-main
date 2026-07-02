@@ -2,21 +2,21 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
-  NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
 import { LoginDto, RegisterDto } from './dto/create-auth.dto';
-import { AuthResponseDto, TokensResponseDto, LogoutResponseDto } from './dto/auth-response.dto';
+import {
+  AuthResponseDto,
+  TokensResponseDto,
+  LogoutResponseDto,
+} from './dto/auth-response.dto';
 import { TokenService } from './services/token.service';
 import { AUTH_MESSAGES } from './constants/auth.constants';
 import * as bcrypt from 'bcrypt';
 
-
 import { UsersRepository } from '../users';
-import {usuario} from '@prisma/client'
+import { usuario } from '@prisma/client';
 import { RecoveryService } from './services/recovery.service';
 import { rutSinDV } from '../common/rut.util';
-
 
 @Injectable()
 export class AuthService {
@@ -26,13 +26,13 @@ export class AuthService {
     private readonly recovery: RecoveryService,
   ) {}
 
-
-
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
-
     const user = await this.validateCredentials(loginDto);
     await this.updateLastLogin(user.rut_usuario);
-    const tokens = await this.tokenService.generateTokens(user, loginDto.client ?? 'web');
+    const tokens = await this.tokenService.generateTokens(
+      user,
+      loginDto.client ?? 'web',
+    );
 
     return {
       ...tokens,
@@ -49,21 +49,8 @@ export class AuthService {
     };
   }
 
-
-
-
   async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
-
-    const {
-      rut,
-      nombre,
-      apellido,
-      email,
-      telefono,
-      rol,
-    } = registerDto;
-
-
+    const { rut, nombre, apellido, email, telefono, rol } = registerDto;
 
     const existingRut = await this.userRepo.findByRut(rut);
     if (existingRut) {
@@ -74,8 +61,6 @@ export class AuthService {
     if (existingEmail) {
       throw new ConflictException(AUTH_MESSAGES.EMAIL_ALREADY_EXISTS);
     }
-
-
 
     // Contraseña inicial unificada: el RUT sin dígito verificador, con cambio
     // forzado en el primer ingreso (must_change_password).
@@ -90,8 +75,7 @@ export class AuthService {
       apellido: apellido,
       rol: rol,
       must_change_password: true,
-    })
-
+    });
 
     const tokens = await this.tokenService.generateTokens(savedUser);
 
@@ -110,20 +94,11 @@ export class AuthService {
     };
   }
 
-
-
-
-
-
-
-
-
-
-
   async refreshAccessToken(refreshToken: string): Promise<TokensResponseDto> {
     try {
       const payload = this.tokenService.verifyRefreshToken(refreshToken);
-      const storedToken = await this.tokenService.getStoredRefreshToken(refreshToken);
+      const storedToken =
+        await this.tokenService.getStoredRefreshToken(refreshToken);
 
       if (!storedToken) {
         // Token revocado, ya rotado o desconocido en la BD.
@@ -132,10 +107,10 @@ export class AuthService {
 
       this.validateStoredToken(storedToken, payload);
 
-      const user = await this.userRepo.findByRut(payload.sub)
+      const user = await this.userRepo.findByRut(payload.sub);
 
-      if(!user){
-        throw new Error("No existe ningun usuario asociado a dicho token")
+      if (!user) {
+        throw new Error('No existe ningun usuario asociado a dicho token');
       }
 
       await this.tokenService.invalidateRefreshToken(refreshToken);
@@ -149,9 +124,6 @@ export class AuthService {
     }
   }
 
-
-
-
   async logout(refreshToken: string): Promise<LogoutResponseDto> {
     if (refreshToken) {
       await this.tokenService.invalidateRefreshToken(refreshToken);
@@ -160,14 +132,8 @@ export class AuthService {
   }
 
   cleanExpiredTokens(): void {
-    this.tokenService.cleanExpiredTokens();
+    void this.tokenService.cleanExpiredTokens();
   }
-
-
-
-
-
-
 
   // Private helper methods
   private async validateCredentials(loginDto: LoginDto): Promise<usuario> {
@@ -183,7 +149,6 @@ export class AuthService {
       throw new UnauthorizedException(AUTH_MESSAGES.USER_INACTIVE);
     }
 
-
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException(AUTH_MESSAGES.INVALID_CREDENTIALS);
@@ -192,19 +157,12 @@ export class AuthService {
     return user;
   }
 
-
-
-
   private async updateLastLogin(rut_usuario: string): Promise<void> {
     await this.userRepo.updateLastLogin(rut_usuario);
     await this.userRepo.addLoginAuditLog(rut_usuario);
   }
 
-
-
-
-
-/* PARA QUE SIRVE ESTA FUNCIÓN?
+  /* PARA QUE SIRVE ESTA FUNCIÓN?
   private async findActiveUser(userId: string): Promise<User> {
     const user = await this.usersRepository.findOne({
       where: { id: userId, activo: true },
@@ -218,28 +176,24 @@ export class AuthService {
   }
 */
 
-
-
   private validateStoredToken(
     storedToken: { userId: string; tokenId: string } | undefined,
     payload: { sub: string; tokenId: string },
   ): void {
     // Si el token existe en el Map pero no coincide → posible replay attack → rechazar.
     // Si no está en el Map (ej. servidor reiniciado) → confiar en la firma del JWT.
-    if (storedToken && (
-      storedToken.userId !== payload.sub ||
-      storedToken.tokenId !== payload.tokenId
-    )) {
+    if (
+      storedToken &&
+      (storedToken.userId !== payload.sub ||
+        storedToken.tokenId !== payload.tokenId)
+    ) {
       throw new UnauthorizedException(AUTH_MESSAGES.INVALID_REFRESH_TOKEN);
     }
   }
 
-
-
   // ════════════════════════════════════════════════════════════════════════════
   // MÉTODOS DE RECUPERACIÓN DE CONTRASEÑA
   // ════════════════════════════════════════════════════════════════════════════
-
 
   /**
    * Solicita recuperación de contraseña
@@ -249,10 +203,6 @@ export class AuthService {
   async requestPasswordReset(email: string): Promise<void> {
     await this.recovery.requestPasswordReset(email);
   }
-
-
-
-
 
   /**
    * Verifica si un código de recuperación es válido
@@ -264,17 +214,17 @@ export class AuthService {
     return this.recovery.verifyResetCode(email, code);
   }
 
-
-
-
   /**
    * Restablece la contraseña del usuario
    * @param email Email del usuario
    * @param code Código de verificación
    * @param newPassword Nueva contraseña
    */
-  async resetPassword( email: string, code: string, newPassword: string): Promise<void> {
+  async resetPassword(
+    email: string,
+    code: string,
+    newPassword: string,
+  ): Promise<void> {
     await this.recovery.resetPassword(email, code, newPassword);
   }
-
 }

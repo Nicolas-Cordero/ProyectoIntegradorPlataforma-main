@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 import { UserRol } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -27,7 +34,9 @@ export class HistorialEstadoCarreraController {
 
   @Get('carrera/:codigo_carrera/semestres-suspendidos')
   @Roles(UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA, UserRol.ESTUDIANTE)
-  async getSemestresSupendidos(@Param('codigo_carrera', ParseIntPipe) codigo_carrera: number) {
+  async getSemestresSupendidos(
+    @Param('codigo_carrera', ParseIntPipe) codigo_carrera: number,
+  ) {
     const count = await this.service.getSemestresSupendidos(codigo_carrera);
     return { semestres_suspendidos: count };
   }

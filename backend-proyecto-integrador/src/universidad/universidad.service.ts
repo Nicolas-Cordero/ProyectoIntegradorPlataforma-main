@@ -6,10 +6,7 @@ import { universidad } from '@prisma/client';
 
 @Injectable()
 export class UniversidadService {
-  constructor(
-    private readonly universidadRepo: UniversidadRepository,
-  ) {}
-
+  constructor(private readonly universidadRepo: UniversidadRepository) {}
 
   create(createUniversidadDto: CreateUniversidadDto): Promise<universidad> {
     return this.universidadRepo.create(createUniversidadDto);
@@ -23,7 +20,7 @@ export class UniversidadService {
     const universidad = await this.universidadRepo.findOne(id_universidad);
     if (!universidad) {
       throw new Error(`Universidad con id ${id_universidad} no encontrada`);
-    } 
+    }
     return universidad;
   }
 
@@ -35,7 +32,10 @@ export class UniversidadService {
     return this.universidadRepo.findByEstudiante(rut_estudiante);
   }
 
-  update(id_universidad: number, updateUniversidadDto: UpdateUniversidadDto): Promise<universidad> {
+  update(
+    id_universidad: number,
+    updateUniversidadDto: UpdateUniversidadDto,
+  ): Promise<universidad> {
     return this.universidadRepo.update(id_universidad, updateUniversidadDto);
   }
 

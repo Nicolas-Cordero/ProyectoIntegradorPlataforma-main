@@ -4,7 +4,9 @@ export const JWT_CONFIG = {
     EXPIRATION: process.env.JWT_EXPIRATION || '15m',
   },
   REFRESH_TOKEN: {
-    SECRET: process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key-change-in-production',
+    SECRET:
+      process.env.JWT_REFRESH_SECRET ||
+      'your-refresh-secret-key-change-in-production',
     EXPIRATION: process.env.JWT_REFRESH_EXPIRATION || '7d',
   },
 } as const;
@@ -18,7 +20,7 @@ export const AUTH_MESSAGES = {
   EXPIRED_REFRESH_TOKEN: 'Refresh token inválido o expirado',
   UNAUTHORIZED_USER: 'Usuario no autorizado o inactivo',
   LOGOUT_SUCCESS: 'Sesión cerrada exitosamente',
-  
+
   //Register
   RUT_ALREADY_EXISTS: 'Esta persona ya es usuaria',
   EMAIL_ALREADY_EXISTS: 'El email ya está registrado',

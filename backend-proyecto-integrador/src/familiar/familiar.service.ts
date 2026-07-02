@@ -1,34 +1,38 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import {
-  CreateFamiliarDto,
-  UpdateFamiliarDto,
-} from './dto';
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
+import { CreateFamiliarDto, UpdateFamiliarDto } from './dto';
 import { FamiliarRepository } from './familiar.repository';
 import { familiar } from '@prisma/client';
 
 @Injectable()
 export class FamiliarService {
-  constructor(
-    private readonly familiarRepo: FamiliarRepository,
-  ) {}
+  constructor(private readonly familiarRepo: FamiliarRepository) {}
 
   // === FAMILIAR ===
 
   async create(createDto: CreateFamiliarDto): Promise<familiar> {
     if (createDto.es_contacto_emergencia) {
-      const existing = await this.familiarRepo.findContactoEmergencia(createDto.rut_estudiante);
+      const existing = await this.familiarRepo.findContactoEmergencia(
+        createDto.rut_estudiante,
+      );
       if (existing) {
-        throw new ConflictException('Ya existe un contacto de emergencia para este estudiante');
+        throw new ConflictException(
+          'Ya existe un contacto de emergencia para este estudiante',
+        );
       }
     }
     return this.familiarRepo.create(createDto);
   }
 
-
   async findOne(id_familiar: number): Promise<familiar> {
     const familiar = await this.familiarRepo.findFamiliar(id_familiar);
     if (!familiar) {
-      throw new NotFoundException(`Familiar con ID ${id_familiar} no encontrado`);
+      throw new NotFoundException(
+        `Familiar con ID ${id_familiar} no encontrado`,
+      );
     }
 
     return familiar;
@@ -38,12 +42,20 @@ export class FamiliarService {
     return this.familiarRepo.findByEstudiante(rut_estudiante);
   }
 
-  async update(id_familiar: number, updateDto: UpdateFamiliarDto): Promise<familiar> {
+  async update(
+    id_familiar: number,
+    updateDto: UpdateFamiliarDto,
+  ): Promise<familiar> {
     if (updateDto.es_contacto_emergencia) {
       const current = await this.findOne(id_familiar);
-      const existing = await this.familiarRepo.findContactoEmergencia(current.rut_estudiante, id_familiar);
+      const existing = await this.familiarRepo.findContactoEmergencia(
+        current.rut_estudiante,
+        id_familiar,
+      );
       if (existing) {
-        throw new ConflictException('Ya existe un contacto de emergencia para este estudiante');
+        throw new ConflictException(
+          'Ya existe un contacto de emergencia para este estudiante',
+        );
       }
     }
     return this.familiarRepo.update(id_familiar, updateDto);

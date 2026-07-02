@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { LiceoService } from './liceo.service';
 import { CreateLiceoDto } from './dto/create-liceo.dto';
 import { UpdateLiceoDto } from './dto/update-liceo.dto';
@@ -29,7 +37,10 @@ export class LiceoController {
 
   @Patch(':rbd_liceo')
   @Roles(UserRol.ADMIN)
-  update(@Param('rbd_liceo') rbd_liceo: string, @Body() updateLiceoDto: UpdateLiceoDto) {
+  update(
+    @Param('rbd_liceo') rbd_liceo: string,
+    @Body() updateLiceoDto: UpdateLiceoDto,
+  ) {
     return this.liceoService.update(rbd_liceo, updateLiceoDto);
   }
 

@@ -1,4 +1,4 @@
-import {UserRol} from '@prisma/client'
+import { UserRol } from '@prisma/client';
 
 export const usersData = [
   {
@@ -10,7 +10,7 @@ export const usersData = [
     rol: UserRol.ADMIN,
     password: 'admin123',
   },
-  {    
+  {
     rut_usuario: '12345678-1',
     nombre: 'admin',
     apellido: 'admin',
@@ -26,7 +26,7 @@ export const usersData = [
     email: 'visita@fundacion.cl',
     telefono: '+56987654321',
     rol: UserRol.VISITA,
-    password:'visita123',
+    password: 'visita123',
   },
   {
     rut_usuario: '11223344-5',
@@ -35,7 +35,7 @@ export const usersData = [
     email: 'tutor@fundacion.cl',
     telefono: '+56911223344',
     rol: UserRol.TUTOR,
-    password:'tutor123',
+    password: 'tutor123',
   },
   {
     rut_usuario: '55667788-9',
@@ -44,10 +44,6 @@ export const usersData = [
     email: 'estudiante@fundacion.cl',
     telefono: '+56944332211',
     rol: UserRol.ESTUDIANTE,
-    password:'estudiante123', 
-  }
+    password: 'estudiante123',
+  },
 ];
-
-
-
-

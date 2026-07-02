@@ -1,5 +1,5 @@
 import { PdfAcuerdoGenerator } from './pdf-acuerdo.service';
-import { PdfPrinterProvider }  from '../providers/pdf-printer.provider';
+import { PdfPrinterProvider } from '../providers/pdf-printer.provider';
 import type { CreatePdfAcuerdoDto } from '../dto';
 
 const FAKE_BUFFER = Buffer.from('pdf-acuerdo');
@@ -7,10 +7,11 @@ const FAKE_BUFFER = Buffer.from('pdf-acuerdo');
 const mockPrinter = { createPdf: jest.fn() };
 
 const dtoValido: CreatePdfAcuerdoDto = {
-  titulo:    'Acuerdo de Compromiso 2024',
+  titulo: 'Acuerdo de Compromiso 2024',
   subtitulo: 'Programa de Becas — Fundación Carmen Goudie',
-  abstract:  'El presente acuerdo establece los compromisos mutuos entre el becario y la fundación durante el período académico.',
-  version:   '15 jun. 2024, 10:30',
+  abstract:
+    'El presente acuerdo establece los compromisos mutuos entre el becario y la fundación durante el período académico.',
+  version: '15 jun. 2024, 10:30',
   topicos: [
     {
       nombre: 'Compromisos académicos',
@@ -34,7 +35,9 @@ describe('PdfAcuerdoGenerator', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPrinter.createPdf.mockResolvedValue(FAKE_BUFFER);
-    service = new PdfAcuerdoGenerator(mockPrinter as unknown as PdfPrinterProvider);
+    service = new PdfAcuerdoGenerator(
+      mockPrinter as unknown as PdfPrinterProvider,
+    );
   });
 
   it('debe retornar un Buffer cuando recibe un DTO válido', async () => {

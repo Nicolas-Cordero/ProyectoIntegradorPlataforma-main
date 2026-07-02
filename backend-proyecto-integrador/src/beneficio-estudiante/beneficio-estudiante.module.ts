@@ -11,7 +11,7 @@ import { EstudianteRepository } from '../estudiante';
     BeneficioEstudianteService,
     BeneficioEstudianteRepository,
     EstudianteRepository,
-    BeneficiosRepository
+    BeneficiosRepository,
   ],
 })
 export class BeneficioEstudianteModule {}

@@ -1,4 +1,14 @@
-import { Controller, Get, Patch, Param, Delete, ParseIntPipe, Query, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+  Query,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { ComentarioService } from './comentario.service';
 import { UpdateComentarioDto } from './dto/update-comentario.dto';
 import { Topico, UserRol } from '@prisma/client';
@@ -15,7 +25,9 @@ export class ComentarioController {
   constructor(private readonly comentarioService: ComentarioService) {}
 
   @Get('entrevista/:id_entrevista')
-  findAllByEntrevista(@Param('id_entrevista', ParseIntPipe) id_entrevista: number) {
+  findAllByEntrevista(
+    @Param('id_entrevista', ParseIntPipe) id_entrevista: number,
+  ) {
     return this.comentarioService.findAllByEntrevista(id_entrevista);
   }
 
@@ -38,7 +50,10 @@ export class ComentarioController {
   }
 
   @Patch(':comentario')
-  update(@Param('comentario', ParseIntPipe) id_comentario: number, @Body() updateComentarioDto: UpdateComentarioDto) {
+  update(
+    @Param('comentario', ParseIntPipe) id_comentario: number,
+    @Body() updateComentarioDto: UpdateComentarioDto,
+  ) {
     return this.comentarioService.update(id_comentario, updateComentarioDto);
   }
 

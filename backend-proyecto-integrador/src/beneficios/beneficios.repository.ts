@@ -1,32 +1,45 @@
-import { Injectable } from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
-import { beneficio } from "@prisma/client";
-import { CreateBeneficioDto, UpdateBeneficioDto } from "./dto";
-
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { beneficio, Prisma } from '@prisma/client';
+import { CreateBeneficioDto, UpdateBeneficioDto } from './dto';
 
 @Injectable()
-export class BeneficiosRepository{
-  constructor(private readonly prisma: PrismaService,) {}
+export class BeneficiosRepository {
+  constructor(private readonly prisma: PrismaService) {}
 
   //beneficios
 
-  async createBeneficio(createBeneficioDto: CreateBeneficioDto): Promise<beneficio>{
+  async createBeneficio(
+    createBeneficioDto: CreateBeneficioDto,
+  ): Promise<beneficio> {
     try {
-      return this.prisma.beneficio.create({
-        data: createBeneficioDto
-      })
+      return await this.prisma.beneficio.create({
+        data: createBeneficioDto,
+      });
     } catch (error) {
-      throw new Error(`No se pudo crear el beneficio: ${createBeneficioDto}`)
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          `Ya existe un beneficio con el nombre "${createBeneficioDto.nombre}"`,
+        );
+      }
+      throw error;
     }
   }
 
-  async findAllBeneficios(): Promise<beneficio[]>{
+  async findAllBeneficios(): Promise<beneficio[]> {
     return this.prisma.beneficio.findMany({
-      orderBy:{ nombre: 'asc' }
-    })
+      orderBy: { nombre: 'asc' },
+    });
   }
 
-  async findByCode(codigo: number): Promise<beneficio | null>{
+  async findByCode(codigo: number): Promise<beneficio | null> {
     return this.prisma.beneficio.findUnique({
       where: {
         codigo_beneficio: codigo,
@@ -34,7 +47,7 @@ export class BeneficiosRepository{
     });
   }
 
-  async findByName(nombre: string): Promise<beneficio | null>{
+  async findByName(nombre: string): Promise<beneficio | null> {
     return this.prisma.beneficio.findUnique({
       where: {
         nombre: nombre,
@@ -42,31 +55,45 @@ export class BeneficiosRepository{
     });
   }
 
-  async updateBeneficioByID(id: number, updateBeneficioDto: UpdateBeneficioDto): Promise<beneficio>{
+  async updateBeneficioByID(
+    id: number,
+    updateBeneficioDto: UpdateBeneficioDto,
+  ): Promise<beneficio> {
     try {
-      return this.prisma.beneficio.update({
-        where:{
+      return await this.prisma.beneficio.update({
+        where: {
           codigo_beneficio: id,
         },
         data: updateBeneficioDto,
       });
     } catch (error) {
-      throw new Error(`No se pudo actualizar el beneficio: ${id}`)
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2025')
+          throw new NotFoundException(`Beneficio ${id} no encontrado`);
+        if (error.code === 'P2002')
+          throw new ConflictException(
+            `Ya existe un beneficio con el nombre "${updateBeneficioDto.nombre}"`,
+          );
+      }
+      throw error;
     }
   }
 
-
-  async deleteBeneficioByID(id: number): Promise<beneficio>{
+  async deleteBeneficioByID(id: number): Promise<beneficio> {
     try {
-      return this.prisma.beneficio.delete({
+      return await this.prisma.beneficio.delete({
         where: {
           codigo_beneficio: id,
         },
       });
     } catch (error) {
-      throw new Error(`No se pudo eliminar el beneficio: ${id}`)
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(`Beneficio ${id} no encontrado`);
+      }
+      throw error;
     }
   }
-
-
 }

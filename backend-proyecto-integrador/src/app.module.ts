@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { ConfigModule} from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { appConfig, jwtConfig } from './config';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
@@ -30,13 +30,8 @@ import { AcuerdoModule } from './acuerdo/acuerdo.module';
 import { PdfGeneratorModule } from './pdf-generator/pdf-generator.module';
 import { HistorialEstadoCarreraModule } from './historial-estado-carrera';
 
-
-
-
-
 @Module({
   imports: [
-    
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig, jwtConfig],

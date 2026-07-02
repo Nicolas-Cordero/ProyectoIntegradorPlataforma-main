@@ -7,10 +7,7 @@ export async function usersSeeder() {
   const saltRounds = 10;
 
   for (const user of usersData) {
-    const hashedPassword = await bcrypt.hash(
-      user.password,
-      saltRounds,
-    );
+    const hashedPassword = await bcrypt.hash(user.password, saltRounds);
 
     await prisma.usuario.upsert({
       where: {

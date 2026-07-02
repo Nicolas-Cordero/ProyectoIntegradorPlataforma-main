@@ -22,7 +22,10 @@ export class AlertaAcuerdoService {
    * @param acuerdoVigente versión vigente del acuerdo, o null si no hay acuerdos.
    * @param yaFirmo        si el estudiante tiene firma para esa versión vigente.
    */
-  evaluar(acuerdoVigente: { id: number } | null, yaFirmo: boolean): Alerta | null {
+  evaluar(
+    acuerdoVigente: { id: number } | null,
+    yaFirmo: boolean,
+  ): Alerta | null {
     if (!acuerdoVigente || yaFirmo) {
       return null;
     }

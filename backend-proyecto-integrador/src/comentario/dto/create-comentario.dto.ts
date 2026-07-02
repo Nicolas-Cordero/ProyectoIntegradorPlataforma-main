@@ -1,10 +1,15 @@
-import { Topico } from "@prisma/client";
-import { Type } from "class-transformer";
-import { IsEnum, IsNotEmpty, IsNumber, IsString, MaxLength } from "class-validator";
+import { Topico } from '@prisma/client';
+import { Type } from 'class-transformer';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 export class CreateComentarioDto {
-
-  @Type(()=>Number)
+  @Type(() => Number)
   @IsNotEmpty()
   @IsNumber()
   entrevista_id!: number;
@@ -15,6 +20,8 @@ export class CreateComentarioDto {
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(2000, { message: 'El comentario no puede superar los 2000 caracteres' })
+  @MaxLength(2000, {
+    message: 'El comentario no puede superar los 2000 caracteres',
+  })
   texto!: string;
 }

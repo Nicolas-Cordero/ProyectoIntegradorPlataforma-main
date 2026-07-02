@@ -1,71 +1,58 @@
 import {
   Injectable,
   Logger,
-  UnauthorizedException,
-  ConflictException,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { UsersRepository } from "../../users";
-import { EmailService } from "./email.service";
+import { UsersRepository } from '../../users';
+import { EmailService } from './email.service';
 import * as bcrypt from 'bcrypt';
 import { randomInt } from 'crypto';
 
-
-
 @Injectable()
-export class RecoveryService{
+export class RecoveryService {
   private readonly logger = new Logger(RecoveryService.name);
 
   constructor(
     private readonly userRepo: UsersRepository,
     private readonly emailService: EmailService,
-  ){}
-
-
-
+  ) {}
 
   /**
    * Genera un código aleatorio de 6 dígitos
    * y su respectivo tiempo de expiración
    * @returns Código de 6 dígitos con 15 mins de tiempo
    */
-  generateResetCode(minutes: number): {resetCode: string, expirationDate: Date} {
-    const resetCode = randomInt(100000, 1000000).toString()
+  generateResetCode(minutes: number): {
+    resetCode: string;
+    expirationDate: Date;
+  } {
+    const resetCode = randomInt(100000, 1000000).toString();
 
     // Calcular fecha de expiración (15 minutos por defecto)
-    const expirationDate = new Date()
-    expirationDate.setMinutes(expirationDate.getMinutes() + minutes)
-    return {resetCode, expirationDate};
+    const expirationDate = new Date();
+    expirationDate.setMinutes(expirationDate.getMinutes() + minutes);
+    return { resetCode, expirationDate };
   }
 
+  /**
+   * Solicita recuperación de contraseña
+   * Genera un código y lo envía por email
+   * @param email Email del usuario
+   */
+  async requestPasswordReset(email: string): Promise<void> {
+    // Buscar usuario por email
+    const user = await this.userRepo.findByEmail(email);
 
+    // Por seguridad, no revelamos si el email existe o no
+    // Siempre retornamos éxito para evitar enumeración de usuarios
+    if (!user) {
+      // Simulamos un delay para que no se pueda distinguir
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return;
+    }
 
-
-
-
-    /**
-     * Solicita recuperación de contraseña
-     * Genera un código y lo envía por email
-     * @param email Email del usuario
-     */
-    async requestPasswordReset(email: string): Promise<void> {
-      // Buscar usuario por email
-      const user = await this.userRepo.findByEmail(email)
-  
-
-
-      // Por seguridad, no revelamos si el email existe o no
-      // Siempre retornamos éxito para evitar enumeración de usuarios
-      if (!user) {
-        // Simulamos un delay para que no se pueda distinguir
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return;
-      }
-
-
-
-      /* Será necesario saber si estan activos???????
+    /* Será necesario saber si estan activos???????
       // Verificar que el usuario esté activo
       if (!user.activo) {
         // Tampoco revelamos que el usuario está inactivo
@@ -74,142 +61,130 @@ export class RecoveryService{
       }
       */
 
+    // Generar código de 6 dígitos
+    const { resetCode, expirationDate } = this.generateResetCode(15);
 
-  
-      // Generar código de 6 dígitos
-      const {resetCode, expirationDate} = this.generateResetCode(15);
+    const hashedResetCode = await bcrypt.hash(resetCode, 10);
 
+    // Guardar código y fecha de expiración en la base de datos
+    await this.userRepo.updateResetToken(
+      user.rut_usuario,
+      hashedResetCode,
+      expirationDate,
+    );
 
-      const hashedResetCode = await bcrypt.hash(resetCode, 10);
+    // Enviar email con el código
+    try {
+      await this.emailService.sendPasswordResetEmail(email, resetCode);
+    } catch {
+      // Si falla el envío del email, limpiar el código
+      await this.userRepo.updateResetToken(user.rut_usuario, null, null);
 
-      // Guardar código y fecha de expiración en la base de datos
-      await this.userRepo.updateResetToken(user.rut_usuario, hashedResetCode, expirationDate)
+      throw new BadRequestException(
+        'No se pudo enviar el email de recuperación. ' +
+          'Por favor, verifica tu dirección de email e intenta nuevamente.',
+      );
+    }
+  }
 
+  /**
+   * Verifica si un código de recuperación es válido
+   * @param email Email del usuario
+   * @param code Código de verificación
+   * @returns true si el código es válido, false en caso contrario
+   */
+  async verifyResetCode(email: string, code: string): Promise<boolean> {
+    const user = await this.userRepo.findByEmail(email);
 
-      // Enviar email con el código
-      try {
-        await this.emailService.sendPasswordResetEmail(email, resetCode);
-      } catch (error) {
-
-
-        // Si falla el envío del email, limpiar el código
-        await this.userRepo.updateResetToken(user.rut_usuario, null, null);
-        
-        throw new BadRequestException(
-          'No se pudo enviar el email de recuperación. ' +
-          'Por favor, verifica tu dirección de email e intenta nuevamente.'
-        );
-      }
+    // Si no existe el usuario o no tiene código, retornar false
+    if (!user || !user.reset_token || !user.reset_token_expires) {
+      return false;
     }
 
-
-    /**
-     * Verifica si un código de recuperación es válido
-     * @param email Email del usuario
-     * @param code Código de verificación
-     * @returns true si el código es válido, false en caso contrario
-     */
-    async verifyResetCode(email: string, code: string): Promise<boolean> {
-
-      const user = await this.userRepo.findByEmail(email)
-
-      // Si no existe el usuario o no tiene código, retornar false
-      if (!user || !user.reset_token|| !user.reset_token_expires) {
-        return false;
-      }
-
-      // Verificar si el código expiró
-      const now = new Date();
-      if (now > user.reset_token_expires) {
-        // Limpiar código expirado
-        await this.userRepo.updateResetToken(user.rut_usuario, null, null)
-        return false;
-      }
-
-      // Verificar si el código coincide
-      return await bcrypt.compare(code, user.reset_token);
+    // Verificar si el código expiró
+    const now = new Date();
+    if (now > user.reset_token_expires) {
+      // Limpiar código expirado
+      await this.userRepo.updateResetToken(user.rut_usuario, null, null);
+      return false;
     }
 
+    // Verificar si el código coincide
+    return await bcrypt.compare(code, user.reset_token);
+  }
 
+  /**
+   * Restablece la contraseña del usuario
+   * @param email Email del usuario
+   * @param code Código de verificación
+   * @param newPassword Nueva contraseña
+   */
+  async resetPassword(
+    email: string,
+    code: string,
+    newPassword: string,
+  ): Promise<void> {
+    // Buscar usuario
+    const user = await this.userRepo.findByEmail(email);
 
-      /**
-       * Restablece la contraseña del usuario
-       * @param email Email del usuario
-       * @param code Código de verificación
-       * @param newPassword Nueva contraseña
-       */
-      async resetPassword(
-        email: string,
-        code: string,
-        newPassword: string,
-      ): Promise<void> {
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
 
-        // Buscar usuario
-        const user = await this.userRepo.findByEmail(email);
+    // Verificar que exista un código de reset
+    if (!user.reset_token || !user.reset_token_expires) {
+      throw new BadRequestException(
+        'No hay una solicitud de recuperación de contraseña activa. ' +
+          'Por favor, solicita un nuevo código.',
+      );
+    }
 
-    
-        if (!user) {
-          throw new NotFoundException('Usuario no encontrado');
-        }
+    // Verificar si el código expiró
+    const now = new Date();
+    if (now > user.reset_token_expires) {
+      // Limpiar código expirado
+      await this.userRepo.updateResetToken(user.rut_usuario, null, null);
 
-        // Verificar que exista un código de reset
-        if (!user.reset_token || !user.reset_token_expires) {
-          throw new BadRequestException(
-            'No hay una solicitud de recuperación de contraseña activa. ' +
-            'Por favor, solicita un nuevo código.'
-          );
-        }
+      throw new BadRequestException(
+        'El código de recuperación ha expirado. ' +
+          'Por favor, solicita un nuevo código.',
+      );
+    }
 
-    
-        // Verificar si el código expiró
-        const now = new Date();
-        if (now > user.reset_token_expires) {
+    if (!(await this.verifyResetCode(email, code))) {
+      throw new BadRequestException('El código de verificación es inválido');
+    }
 
-          // Limpiar código expirado
-          await this.userRepo.updateResetToken(user.rut_usuario, null, null);
-          
-          throw new BadRequestException(
-            'El código de recuperación ha expirado. ' +
-            'Por favor, solicita un nuevo código.'
-          );
-        }
-    
+    // Validar que la nueva contraseña no sea igual a la anterior
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      throw new BadRequestException(
+        'La nueva contraseña no puede ser igual a la anterior',
+      );
+    }
 
-        if (!(await this.verifyResetCode(email, code))){
-          throw new BadRequestException(
-            'El código de verificación es inválido'
-          );
-        }
-    
-        // Validar que la nueva contraseña no sea igual a la anterior
-        const isSamePassword = await bcrypt.compare(newPassword, user.password);
-        if (isSamePassword) {
-          throw new BadRequestException(
-            'La nueva contraseña no puede ser igual a la anterior'
-          );
-        }
-    
-        // Hash de la nueva contraseña
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-    
-        // Actualizar contraseña y limpiar código de reset
-        await this.userRepo.update(user.rut_usuario, {
-          password: hashedPassword,
-          must_change_password: false,
-        });
-        
-        // Invalidar refresh tokens existentes por seguridad
-        await this.userRepo.updateResetToken(user.rut_usuario, null, null);
-    
-        // Enviar email de notificación (opcional, no falla si hay error)
-        try {
-          await this.emailService.sendPasswordChangedNotification(email);
-        } catch (error: unknown) {
-          // Log el error pero no fallar el proceso
-          const message = error instanceof Error ? error.message : 'Error desconocido';
-          this.logger.error(`Error al enviar notificación de cambio de contraseña: ${message}`);
-        }
-      }
-    
+    // Hash de la nueva contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
+    // Actualizar contraseña y limpiar código de reset
+    await this.userRepo.update(user.rut_usuario, {
+      password: hashedPassword,
+      must_change_password: false,
+    });
+
+    // Invalidar refresh tokens existentes por seguridad
+    await this.userRepo.updateResetToken(user.rut_usuario, null, null);
+
+    // Enviar email de notificación (opcional, no falla si hay error)
+    try {
+      await this.emailService.sendPasswordChangedNotification(email);
+    } catch (error: unknown) {
+      // Log el error pero no fallar el proceso
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido';
+      this.logger.error(
+        `Error al enviar notificación de cambio de contraseña: ${message}`,
+      );
+    }
+  }
 }

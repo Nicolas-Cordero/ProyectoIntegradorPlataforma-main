@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePaesDto } from './dto/create-paes.dto';
 import { UpdatePaesDto } from './dto/update-paes.dto';
 import { PaesRepository } from './paes.repository';
@@ -8,9 +12,13 @@ export class PaesService {
   constructor(private readonly paesRepo: PaesRepository) {}
 
   async create(createPaesDto: CreatePaesDto) {
-    const existing = await this.paesRepo.findPaesByEstudiante(createPaesDto.rut_estudiante);
+    const existing = await this.paesRepo.findPaesByEstudiante(
+      createPaesDto.rut_estudiante,
+    );
     if (existing) {
-      throw new ConflictException(`El estudiante ${createPaesDto.rut_estudiante} ya tiene PAES registrada`);
+      throw new ConflictException(
+        `El estudiante ${createPaesDto.rut_estudiante} ya tiene PAES registrada`,
+      );
     }
     return this.paesRepo.create(createPaesDto);
   }
@@ -22,7 +30,9 @@ export class PaesService {
   async findByEstudiante(rut_estudiante: string) {
     const existing = await this.paesRepo.findPaesByEstudiante(rut_estudiante);
     if (!existing) {
-      throw new NotFoundException(`No se encontró PAES para el estudiante ${rut_estudiante}`);
+      throw new NotFoundException(
+        `No se encontró PAES para el estudiante ${rut_estudiante}`,
+      );
     }
     return existing;
   }
@@ -30,7 +40,9 @@ export class PaesService {
   async update(rut_estudiante: string, updatePaesDto: UpdatePaesDto) {
     const existing = await this.paesRepo.findPaesByEstudiante(rut_estudiante);
     if (!existing) {
-      throw new NotFoundException(`No se encontró PAES para el estudiante ${rut_estudiante}`);
+      throw new NotFoundException(
+        `No se encontró PAES para el estudiante ${rut_estudiante}`,
+      );
     }
     return this.paesRepo.update(rut_estudiante, updatePaesDto);
   }
@@ -41,17 +53,19 @@ export class PaesService {
 
     const rutsInGeneration = new Set(
       estudiantes
-        .filter(e => e.generacion === generacion)
-        .map(e => e.rut_estudiante),
+        .filter((e) => e.generacion === generacion)
+        .map((e) => e.rut_estudiante),
     );
 
-    return allPaes.filter(p => rutsInGeneration.has(p.rut_estudiante));
+    return allPaes.filter((p) => rutsInGeneration.has(p.rut_estudiante));
   }
 
   async removeByEstudiante(rut_estudiante: string): Promise<void> {
     const existing = await this.paesRepo.findPaesByEstudiante(rut_estudiante);
     if (!existing) {
-      throw new NotFoundException(`No se encontró PAES para el estudiante ${rut_estudiante}`);
+      throw new NotFoundException(
+        `No se encontró PAES para el estudiante ${rut_estudiante}`,
+      );
     }
     await this.paesRepo.remove(existing.id);
   }

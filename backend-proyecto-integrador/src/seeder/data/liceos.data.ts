@@ -14,6 +14,7 @@ export const liceosData = [
   {
     rbd: '54321',
     nombre: 'Liceo Politécnico Manuel Rodríguez',
-    comuna: 'Concepción', 
+    comuna: 'Concepción',
     especialidad: 'Politécnico',
-  }];
+  },
+];

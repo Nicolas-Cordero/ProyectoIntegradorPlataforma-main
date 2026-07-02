@@ -31,9 +31,6 @@ import { Roles } from './decorators/roles.decorator';
 import { UserRol } from '@prisma/client';
 import type { AuthenticatedUser } from './interfaces/auth.interfaces';
 
-
-
-
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -47,7 +44,11 @@ export class AuthController {
     };
   }
 
-  private setAuthCookies(res: Response, accessToken: string, refreshToken: string): void {
+  private setAuthCookies(
+    res: Response,
+    accessToken: string,
+    refreshToken: string,
+  ): void {
     // access token: 15 min de expiración coherente con jwt.config.ts
     res.cookie('access_token', accessToken, {
       ...this.cookieOptions,
@@ -59,9 +60,6 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
   }
-
-
-
 
   /**
    * Registra un nuevo usuario
@@ -76,13 +74,11 @@ export class AuthController {
     @Body() registerDto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<UserResponseDto> {
-    const { accessToken, refreshToken, user } = await this.authService.register(registerDto);
+    const { accessToken, refreshToken, user } =
+      await this.authService.register(registerDto);
     this.setAuthCookies(res, accessToken, refreshToken);
     return user;
   }
-
-
-  
 
   /**
    * Inicia sesión con credenciales
@@ -98,13 +94,12 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthBodyResponseDto> {
-    const { accessToken, refreshToken, user } = await this.authService.login(loginDto);
+    const { accessToken, refreshToken, user } =
+      await this.authService.login(loginDto);
     this.setAuthCookies(res, accessToken, refreshToken);
     // La web usa la cookie; el móvil usa estos tokens del body.
     return { ...user, accessToken, refreshToken };
   }
-
-
 
   /**
    * Refresca el token de acceso
@@ -121,20 +116,26 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ message: string; accessToken: string; refreshToken: string }> {
     // Web: refresh desde cookie. Móvil: refresh desde el body.
-    const refreshToken = req.cookies?.refresh_token ?? req.body?.refreshToken;
+    const body = req.body as { refreshToken?: string } | undefined;
+    const refreshToken =
+      (req.cookies?.refresh_token as string | undefined) ??
+      body?.refreshToken ??
+      '';
     const { accessToken, refreshToken: newRefreshToken } =
       await this.authService.refreshAccessToken(refreshToken);
     this.setAuthCookies(res, accessToken, newRefreshToken);
-    return { message: 'Token renovado', accessToken, refreshToken: newRefreshToken };
+    return {
+      message: 'Token renovado',
+      accessToken,
+      refreshToken: newRefreshToken,
+    };
   }
-
-
 
   /**
    * Deslogea al usuario
    * @param  RefreshTokenDto token de refresco
    * @returns LogoutResponseDto Respuesta de logout exitoso o no
-   * 
+   *
    */
   @Post('logout')
   @UseGuards(JwtAuthGuard)
@@ -143,20 +144,20 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<LogoutResponseDto> {
-    const refreshToken = req.cookies?.refresh_token ?? req.body?.refreshToken;
+    const body = req.body as { refreshToken?: string } | undefined;
+    const refreshToken =
+      (req.cookies?.refresh_token as string | undefined) ??
+      body?.refreshToken ??
+      '';
     const result = await this.authService.logout(refreshToken);
     res.clearCookie('access_token', this.cookieOptions);
     res.clearCookie('refresh_token', this.cookieOptions);
     return result;
   }
-  
-
-
-
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  async getMe(@CurrentUser() user: AuthenticatedUser): Promise<UserResponseDto> {
+  getMe(@CurrentUser() user: AuthenticatedUser): UserResponseDto {
     return {
       rut_usuario: user.rut_usuario,
       email: user.email,
@@ -171,7 +172,7 @@ export class AuthController {
 
   @Get('profile')
   @UseGuards(JwtAuthGuard)
-  async getProfile(@CurrentUser() user: AuthenticatedUser): Promise<UserResponseDto> {
+  getProfile(@CurrentUser() user: AuthenticatedUser): UserResponseDto {
     return {
       rut_usuario: user.rut_usuario,
       email: user.email,
@@ -184,11 +185,12 @@ export class AuthController {
     };
   }
 
-
   @Get('validate')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async validateToken(@CurrentUser() user: AuthenticatedUser): Promise<ValidateTokenResponseDto> {
+  validateToken(
+    @CurrentUser() user: AuthenticatedUser,
+  ): ValidateTokenResponseDto {
     return {
       valid: true,
       user: {
@@ -204,12 +206,6 @@ export class AuthController {
     };
   }
 
-
-
-
-
-
-  
   // ════════════════════════════════════════════════════════════════════════════
   // ENDPOINTS DE RECUPERACIÓN DE CONTRASEÑA
   // ════════════════════════════════════════════════════════════════════════════
@@ -229,13 +225,10 @@ export class AuthController {
   ): Promise<{ message: string }> {
     await this.authService.requestPasswordReset(dto.email);
     return {
-      message: 'Si el email existe en nuestro sistema, recibirás un código de recuperación',
+      message:
+        'Si el email existe en nuestro sistema, recibirás un código de recuperación',
     };
   }
-
-
-
-
 
   /**REVISAR FRONT, EN UNA DE ESAS ES INNECESARIA   <------------------------------------------
    * Verifica si un código de recuperación es válido

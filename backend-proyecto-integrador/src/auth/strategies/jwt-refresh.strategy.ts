@@ -6,7 +6,10 @@ import { Request } from 'express';
 import { JwtRefreshPayload } from '../interfaces/auth.interfaces';
 
 @Injectable()
-export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
+export class JwtRefreshStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh',
+) {
   constructor(private readonly configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromBodyField('refreshToken'),
@@ -16,9 +19,10 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
     });
   }
 
-  async validate(req: Request, payload: JwtRefreshPayload) {
-    const refreshToken = req.body?.refreshToken;
-    
+  validate(req: Request, payload: JwtRefreshPayload) {
+    const body = req.body as { refreshToken?: string } | undefined;
+    const refreshToken = body?.refreshToken;
+
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token no se encontró');
     }

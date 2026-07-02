@@ -9,10 +9,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { FamiliarService } from './familiar.service';
-import {
-  CreateFamiliarDto,
-  UpdateFamiliarDto,
-} from './dto';
+import { CreateFamiliarDto, UpdateFamiliarDto } from './dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRol } from '@prisma/client';
 
@@ -20,7 +17,6 @@ import { UserRol } from '@prisma/client';
 @Roles(UserRol.ADMIN, UserRol.TUTOR)
 export class FamiliarController {
   constructor(private readonly familiarService: FamiliarService) {}
-
 
   @Post()
   create(@Body() createDto: CreateFamiliarDto) {

@@ -7,7 +7,10 @@ export default registerAs('email', () => {
   const from = process.env.EMAIL_FROM;
   const fromName = process.env.EMAIL_FROM_NAME;
 
-  if (process.env.NODE_ENV === 'production' && (!host || !user || !pass || !from || !fromName)) {
+  if (
+    process.env.NODE_ENV === 'production' &&
+    (!host || !user || !pass || !from || !fromName)
+  ) {
     throw new Error(
       'EMAIL_HOST, EMAIL_USER, EMAIL_PASSWORD, EMAIL_FROM o EMAIL_FROM_NAME no están definidos. Revisa las variables de entorno.',
     );
@@ -23,6 +26,9 @@ export default registerAs('email', () => {
     },
     from: from || 'no-reply@example.com',
     fromName: fromName || 'Sistema de Becarios',
-    resetCodeExpiration: parseInt(process.env.RESET_CODE_EXPIRATION || '15', 10),
+    resetCodeExpiration: parseInt(
+      process.env.RESET_CODE_EXPIRATION || '15',
+      10,
+    ),
   };
 });

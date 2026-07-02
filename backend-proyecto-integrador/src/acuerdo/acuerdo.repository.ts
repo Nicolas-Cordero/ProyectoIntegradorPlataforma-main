@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Prisma, acuerdo } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { DocumentoCompromiso } from './interfaces';
@@ -14,21 +14,13 @@ export class AcuerdoRepository {
   }
 
   async create(documento: DocumentoCompromiso): Promise<acuerdo> {
-    try {
-      return await this.prisma.acuerdo.create({
-        data: { documento: documento as unknown as Prisma.InputJsonValue },
-      });
-    } catch (error) {
-      throw new InternalServerErrorException('No se pudo crear el acuerdo');
-    }
+    return this.prisma.acuerdo.create({
+      data: { documento: documento as unknown as Prisma.InputJsonValue },
+    });
   }
 
   async remove(id: number): Promise<void> {
-    try {
-      await this.prisma.acuerdo.delete({ where: { id } });
-    } catch (error) {
-      throw new InternalServerErrorException(`No se pudo eliminar el acuerdo con id ${id}`);
-    }
+    await this.prisma.acuerdo.delete({ where: { id } });
   }
 
   // Versión vigente del acuerdo = la más reciente (o null si no hay ninguna).

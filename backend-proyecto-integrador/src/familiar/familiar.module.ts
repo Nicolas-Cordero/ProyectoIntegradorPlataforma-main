@@ -6,10 +6,7 @@ import { FamiliarRepository } from './familiar.repository';
 @Module({
   imports: [],
   controllers: [FamiliarController],
-  providers: [
-    FamiliarService,
-    FamiliarRepository,
-  ],
+  providers: [FamiliarService, FamiliarRepository],
   exports: [FamiliarService],
 })
 export class FamiliarModule {}

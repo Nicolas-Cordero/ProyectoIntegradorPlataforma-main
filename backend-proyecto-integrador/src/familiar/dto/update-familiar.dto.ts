@@ -8,4 +8,5 @@ export class UpdateFamiliarDto extends PartialType(
     'parentesco',
     'observacion',
     'es_contacto_emergencia',
-  ])) {}
+  ]),
+) {}

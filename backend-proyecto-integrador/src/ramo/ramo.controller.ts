@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, BadRequestException, UseInterceptors, UploadedFile } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+  BadRequestException,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { RamoService } from './ramo.service';
@@ -31,8 +43,14 @@ export class RamoController {
 
   @Post('me')
   @Roles(UserRol.ESTUDIANTE)
-  createMine(@CurrentUser() user: AuthenticatedUser, @Body() createRamoDto: CreateRamoMeDto) {
-    return this.ramoService.createForEstudiante(user.rut_usuario, createRamoDto);
+  createMine(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() createRamoDto: CreateRamoMeDto,
+  ) {
+    return this.ramoService.createForEstudiante(
+      user.rut_usuario,
+      createRamoDto,
+    );
   }
 
   @Patch('me/:id_ramo')
@@ -61,7 +79,9 @@ export class RamoController {
 
   // Rutas con segmentos literales ANTES de rutas con parámetros puros para evitar ambigüedad
   @Get('carrera/:codigo_carrera')
-  findAllByCarrera(@Param('codigo_carrera', ParseIntPipe) codigo_carrera: number) {
+  findAllByCarrera(
+    @Param('codigo_carrera', ParseIntPipe) codigo_carrera: number,
+  ) {
     return this.ramoService.findAllByCarrera(codigo_carrera);
   }
 
@@ -72,7 +92,10 @@ export class RamoController {
 
   @Patch(':id_ramo')
   @Roles(UserRol.ADMIN, UserRol.TUTOR)
-  update(@Param('id_ramo', ParseIntPipe) id_ramo: number, @Body() updateRamoDto: UpdateRamoDto) {
+  update(
+    @Param('id_ramo', ParseIntPipe) id_ramo: number,
+    @Body() updateRamoDto: UpdateRamoDto,
+  ) {
     return this.ramoService.update(id_ramo, updateRamoDto);
   }
 

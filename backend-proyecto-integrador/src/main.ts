@@ -11,12 +11,13 @@ async function bootstrap() {
 
   const isProd = process.env.NODE_ENV === 'production';
   if (isProd && !process.env.CORS_ORIGINS) {
-    throw new Error('CORS_ORIGINS no está definido. Revisa las variables de entorno.');
+    throw new Error(
+      'CORS_ORIGINS no está definido. Revisa las variables de entorno.',
+    );
   }
 
   // Lista explícita de orígenes (exacto, case-sensitive).
-  const allowedOrigins = process.env.CORS_ORIGINS
-    ?.split(',')
+  const allowedOrigins = process.env.CORS_ORIGINS?.split(',')
     .map((o) => o.trim())
     .filter(Boolean) || [
     'http://localhost:5173',
@@ -43,16 +44,17 @@ async function bootstrap() {
         /^https?:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$/,
         /^https?:\/\/172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}(:\d+)?$/,
         // Túneles de desarrollo
-        /^https:\/\/[^.]+\.devtunnels\.ms$/,   // VS Code Dev Tunnels
-        /^https:\/\/[^.]+\.ngrok-free\.app$/,  // ngrok (plan free)
-        /^https:\/\/[^.]+\.ngrok\.io$/,        // ngrok (plan pago)
-        /^https:\/\/[^.]+\.loca\.lt$/,         // localtunnel
+        /^https:\/\/[^.]+\.devtunnels\.ms$/, // VS Code Dev Tunnels
+        /^https:\/\/[^.]+\.ngrok-free\.app$/, // ngrok (plan free)
+        /^https:\/\/[^.]+\.ngrok\.io$/, // ngrok (plan pago)
+        /^https:\/\/[^.]+\.loca\.lt$/, // localtunnel
         /^https:\/\/[^.]+\.trycloudflare\.com$/,
       ];
 
   const isAllowed = (origin: string): boolean => {
     if (allowedOrigins.includes(origin)) return true;
-    if ([...allowedPatterns, ...devPatterns].some((re) => re.test(origin))) return true;
+    if ([...allowedPatterns, ...devPatterns].some((re) => re.test(origin)))
+      return true;
     return false;
   };
 
@@ -87,7 +89,9 @@ async function bootstrap() {
         const messages = errors
           .flatMap((err) => Object.values(err.constraints || {}))
           .join('; ');
-        return new BadRequestException(messages || 'Datos de entrada inválidos');
+        return new BadRequestException(
+          messages || 'Datos de entrada inválidos',
+        );
       },
     }),
   );
@@ -102,4 +106,4 @@ async function bootstrap() {
   logger.log(`Server running on port: ${port}`);
   logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 }
-bootstrap();
+void bootstrap();

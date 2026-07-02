@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Param, Delete, ParseIntPipe, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  ParseIntPipe,
+  HttpCode,
+} from '@nestjs/common';
 import { SemestreService } from './semestre.service';
 import { CreateSemestreDto } from './dto/create-semestre.dto';
 import { LinkCarreraDto } from './dto/link-carrera.dto';
@@ -27,14 +36,20 @@ export class SemestreController {
   @Roles(UserRol.ADMIN, UserRol.TUTOR)
   @HttpCode(200)
   linkCarrera(@Body() dto: LinkCarreraDto) {
-    return this.semestreService.linkCarrera(dto.semestre_id, dto.codigo_carrera);
+    return this.semestreService.linkCarrera(
+      dto.semestre_id,
+      dto.codigo_carrera,
+    );
   }
 
   @Delete('unlink-carrera')
   @Roles(UserRol.ADMIN, UserRol.TUTOR)
   @HttpCode(200)
   unlinkCarrera(@Body() dto: LinkCarreraDto) {
-    return this.semestreService.unlinkCarrera(dto.semestre_id, dto.codigo_carrera);
+    return this.semestreService.unlinkCarrera(
+      dto.semestre_id,
+      dto.codigo_carrera,
+    );
   }
 
   @Get()

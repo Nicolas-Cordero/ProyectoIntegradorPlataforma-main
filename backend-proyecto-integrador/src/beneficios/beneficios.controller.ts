@@ -9,14 +9,9 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { BeneficiosService } from './beneficios.service';
-import {
-  CreateBeneficioDto,
-  UpdateBeneficioDto,
-} from './dto';
+import { CreateBeneficioDto, UpdateBeneficioDto } from './dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRol } from '@prisma/client';
-
-
 
 @Controller('beneficios')
 @Roles(UserRol.ADMIN)
@@ -25,37 +20,25 @@ export class BeneficiosController {
 
   // === CATÁLOGO DE BENEFICIOS ===
 
-
-
   //metodo  para crear nuevos beneficios.
   @Post()
   createBeneficio(@Body() createDto: CreateBeneficioDto) {
     return this.beneficiosService.createBeneficio(createDto);
   }
 
-
-
-//metodo para obtener todos los beneficios disponibles.
+  //metodo para obtener todos los beneficios disponibles.
   @Get()
   findAllBeneficios() {
     return this.beneficiosService.findAllBeneficios();
   }
 
-
-
-
-
-//este metodo si tiene sentido debido a que busca un beneficio segun su id.
+  //este metodo si tiene sentido debido a que busca un beneficio segun su id.
   @Get(':id')
   findBeneficio(@Param('id', ParseIntPipe) id: number) {
     return this.beneficiosService.findBeneficioById(id);
   }
 
-
-
-
-
-//tiene sentido debido a que lo actualiza
+  //tiene sentido debido a que lo actualiza
   @Patch(':id')
   updateBeneficio(
     @Param('id', ParseIntPipe) id: number,
@@ -64,13 +47,9 @@ export class BeneficiosController {
     return this.beneficiosService.updateBeneficio(id, updateDto);
   }
 
-
-
-
-//lo remueve
+  //lo remueve
   @Delete(':id')
   removeBeneficio(@Param('id', ParseIntPipe) id: number) {
     return this.beneficiosService.removeBeneficio(id);
   }
-
 }

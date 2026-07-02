@@ -1,17 +1,21 @@
 import { Parentesco } from '@prisma/client';
-import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
-
+import {
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+} from 'class-validator';
 
 export class CreateFamiliarDto {
   @IsString()
   @IsNotEmpty()
   rut_estudiante!: string;
 
-
   @IsString()
   @IsNotEmpty()
   nombre!: string;
-
 
   @IsNotEmpty({ message: 'El teléfono es requerido' })
   @Matches(/^\+569\s?\d{4}\s?\d{4}$/, {
@@ -19,12 +23,10 @@ export class CreateFamiliarDto {
   })
   telefono!: string;
 
-
   @IsNotEmpty()
   @IsEnum(Parentesco)
   parentesco!: Parentesco;
 
-  
   @IsString()
   @IsOptional()
   observacion?: string;

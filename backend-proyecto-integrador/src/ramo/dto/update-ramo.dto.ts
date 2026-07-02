@@ -7,5 +7,6 @@ export class UpdateRamoDto extends PartialType(
     'estado',
     'comentario',
     'intento',
-    'nota_final'
-  ] as const) ){}
+    'nota_final',
+  ] as const),
+) {}

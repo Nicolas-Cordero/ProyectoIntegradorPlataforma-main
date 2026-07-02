@@ -13,13 +13,13 @@ import { rutSinDV } from '../common/rut.util';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    private readonly usersRepo: UsersRepository,
-  ) {}
+  constructor(private readonly usersRepo: UsersRepository) {}
 
   async create(createUserDto: CreateUserDto): Promise<SafeUsuario> {
     const existingUser = await this.usersRepo.findByEmail(createUserDto.email);
-    const existingRut = await this.usersRepo.findByRut(createUserDto.rut_usuario);
+    const existingRut = await this.usersRepo.findByRut(
+      createUserDto.rut_usuario,
+    );
     if (existingRut) {
       throw new ConflictException('El RUT ya está en uso');
     }
@@ -28,7 +28,10 @@ export class UsersService {
     }
     // Contraseña inicial unificada: el RUT sin dígito verificador, con cambio
     // forzado en el primer ingreso (must_change_password).
-    const hashedPassword = await bcrypt.hash(rutSinDV(createUserDto.rut_usuario), 10);
+    const hashedPassword = await bcrypt.hash(
+      rutSinDV(createUserDto.rut_usuario),
+      10,
+    );
 
     return this.usersRepo.registerNewUser({
       ...createUserDto,
@@ -37,13 +40,9 @@ export class UsersService {
     });
   }
 
-
-
   async findAll(): Promise<SafeUsuario[]> {
     return this.usersRepo.findAll();
   }
-
-
 
   async findOne(rut: string): Promise<SafeUsuario> {
     const user = await this.usersRepo.findByRutSafe(rut);
@@ -53,8 +52,6 @@ export class UsersService {
     return user;
   }
 
-
-
   async findByEmail(email: string): Promise<usuario> {
     const user = await this.usersRepo.findByEmail(email);
     if (!user) {
@@ -63,15 +60,19 @@ export class UsersService {
     return user;
   }
 
-
-  async update(rut: string, updateUserDto: UpdateUserDto): Promise<SafeUsuario> {
+  async update(
+    rut: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<SafeUsuario> {
     const user = await this.usersRepo.findByRut(rut);
 
     if (!user) {
       throw new NotFoundException(`Usuario con RUT ${rut} no encontrado`);
     }
     if (updateUserDto.email) {
-      const existingUser = await this.usersRepo.findByEmail(updateUserDto.email);
+      const existingUser = await this.usersRepo.findByEmail(
+        updateUserDto.email,
+      );
       if (existingUser) {
         throw new ConflictException('El email o username ya está en uso');
       }
@@ -80,7 +81,6 @@ export class UsersService {
     // Sincroniza los campos compartidos hacia el estudiante (si existe).
     return this.usersRepo.updateWithEstudianteSync(rut, updateUserDto);
   }
-
 
   async remove(rut: string): Promise<SafeUsuario> {
     const result = await this.usersRepo.delete(rut);
@@ -94,13 +94,10 @@ export class UsersService {
     await this.usersRepo.updateLastLogin(rut);
   }
 
-
   async updateResetToken(rut: string, refreshToken: string): Promise<void> {
     const expireDate = new Date(Date.now() + 15 * 60 * 1000);
     await this.usersRepo.updateResetToken(rut, refreshToken, expireDate);
   }
-
-
 
   async validateUser(rut: string, password: string): Promise<usuario | null> {
     const user = await this.usersRepo.findByRut(rut);
@@ -109,8 +106,6 @@ export class UsersService {
     }
     return null;
   }
-
-
 
   async changePassword(rut: string, newPassword: string): Promise<void> {
     const user = await this.usersRepo.findByRut(rut);
@@ -128,15 +123,21 @@ export class UsersService {
     });
   }
 
-
-  async changeOwnPassword(rut: string, currentPassword: string, newPassword: string): Promise<void> {
+  async changeOwnPassword(
+    rut: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
     const user = await this.usersRepo.findByRut(rut);
 
     if (!user) {
       throw new NotFoundException(`Usuario con RUT ${rut} no encontrado`);
     }
 
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    const isCurrentPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
     if (!isCurrentPasswordValid) {
       throw new BadRequestException('La contraseña actual es incorrecta');
     }

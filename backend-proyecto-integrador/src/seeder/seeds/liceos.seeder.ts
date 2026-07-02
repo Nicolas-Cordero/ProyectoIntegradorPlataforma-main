@@ -1,10 +1,8 @@
 import { prisma } from '../prisma-client';
-import { liceosData } from "../data";
+import { liceosData } from '../data';
 
 export async function liceosSeeder() {
-
   for (const liceo of liceosData) {
-
     await prisma.liceo.upsert({
       where: {
         rbd: liceo.rbd,

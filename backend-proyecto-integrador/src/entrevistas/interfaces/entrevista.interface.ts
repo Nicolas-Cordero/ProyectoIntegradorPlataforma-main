@@ -12,9 +12,6 @@
 //   contexto: string;
 // }
 
-
-
-
 // // Interfaces para Etiquetas
 // export interface EtiquetaInput {
 //   nombre_etiqueta: string;

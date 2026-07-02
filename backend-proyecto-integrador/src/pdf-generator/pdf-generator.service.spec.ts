@@ -2,20 +2,22 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { PdfGeneratorService } from './pdf-generator.service';
 import { Generators } from './interfaces';
-import { PdfAcademicoGenerator }    from './services/pdf-academico.service';
-import { PdfEntrevistaGenerator }   from './services/pdf-entrevista.service';
-import { PdfSemestreGenerator }     from './services/pdf-semestre.service';
+import { PdfAcademicoGenerator } from './services/pdf-academico.service';
+import { PdfEntrevistaGenerator } from './services/pdf-entrevista.service';
+import { PdfEntrevistaResumenGenerator } from './services/pdf-entrevista-resumen.service';
+import { PdfSemestreGenerator } from './services/pdf-semestre.service';
 import { PdfEstadisticasGenerator } from './services/pdf-estadisticas.service';
-import { PdfAcuerdoGenerator }      from './services/pdf-acuerdo.service';
+import { PdfAcuerdoGenerator } from './services/pdf-acuerdo.service';
 import type { CreatePdfAcademicoDto } from './dto';
 
 const FAKE_BUFFER = Buffer.from('fake-pdf');
 
-const mockAcademico    = { pdfGenerate: jest.fn() };
-const mockEntrevista   = { pdfGenerate: jest.fn() };
-const mockSemestre     = { pdfGenerate: jest.fn() };
+const mockAcademico = { pdfGenerate: jest.fn() };
+const mockEntrevista = { pdfGenerate: jest.fn() };
+const mockEntrevistaResumen = { pdfGenerate: jest.fn() };
+const mockSemestre = { pdfGenerate: jest.fn() };
 const mockEstadisticas = { pdfGenerate: jest.fn() };
-const mockAcuerdo      = { pdfGenerate: jest.fn() };
+const mockAcuerdo = { pdfGenerate: jest.fn() };
 
 describe('PdfGeneratorService', () => {
   let service: PdfGeneratorService;
@@ -27,11 +29,15 @@ describe('PdfGeneratorService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PdfGeneratorService,
-        { provide: PdfAcademicoGenerator,    useValue: mockAcademico    },
-        { provide: PdfEntrevistaGenerator,   useValue: mockEntrevista   },
-        { provide: PdfSemestreGenerator,     useValue: mockSemestre     },
+        { provide: PdfAcademicoGenerator, useValue: mockAcademico },
+        { provide: PdfEntrevistaGenerator, useValue: mockEntrevista },
+        {
+          provide: PdfEntrevistaResumenGenerator,
+          useValue: mockEntrevistaResumen,
+        },
+        { provide: PdfSemestreGenerator, useValue: mockSemestre },
         { provide: PdfEstadisticasGenerator, useValue: mockEstadisticas },
-        { provide: PdfAcuerdoGenerator,      useValue: mockAcuerdo      },
+        { provide: PdfAcuerdoGenerator, useValue: mockAcuerdo },
       ],
     }).compile();
 
@@ -41,9 +47,17 @@ describe('PdfGeneratorService', () => {
   it('Debe recibir un generator y devolver un buffer con el pdf asociado a dicho generator', async () => {
     const dto: CreatePdfAcademicoDto = {
       nombreEstudiante: 'Ana García',
-      rutEstudiante:    '9.876.543-2',
-      carrera:  { nombre: 'Medicina', duracion_sem: 12 },
-      resumen:  { semFinalizados: 4, totalRamos: 30, ramosAprobados: 25, ramosReprobados: 3, ramosCursando: 2, ramosEliminados: 0, promedioGeneral: 5.8 },
+      rutEstudiante: '9.876.543-2',
+      carrera: { nombre: 'Medicina', duracion_sem: 12 },
+      resumen: {
+        semFinalizados: 4,
+        totalRamos: 30,
+        ramosAprobados: 25,
+        ramosReprobados: 3,
+        ramosCursando: 2,
+        ramosEliminados: 0,
+        promedioGeneral: 5.8,
+      },
       semestres: [],
     };
 

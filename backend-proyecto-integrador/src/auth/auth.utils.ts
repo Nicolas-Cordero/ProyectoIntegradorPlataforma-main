@@ -1,11 +1,14 @@
 /**
-   * Genera el template HTML para el email de recuperación
-   * @param code Código de verificación
-   * @param expirationMinutes Minutos de expiración
-   * @returns HTML del email
-   */
-const getPasswordResetEmailTemplate = (code: string, expirationMinutes: number): string => {
-    return `
+ * Genera el template HTML para el email de recuperación
+ * @param code Código de verificación
+ * @param expirationMinutes Minutos de expiración
+ * @returns HTML del email
+ */
+const getPasswordResetEmailTemplate = (
+  code: string,
+  expirationMinutes: number,
+): string => {
+  return `
         <!DOCTYPE html>
         <html lang="es">
         <head>
@@ -143,16 +146,14 @@ const getPasswordResetEmailTemplate = (code: string, expirationMinutes: number):
         </body>
         </html>
         `;
-}
-
+};
 
 /**
-   * Genera el template HTML para el email de codigo de cambio de contraseña
-   * @returns HTML del email
-   */
+ * Genera el template HTML para el email de codigo de cambio de contraseña
+ * @returns HTML del email
+ */
 const getPasswordChangeTemplate = (): string => {
-        
-    return `
+  return `
             <!DOCTYPE html>
             <html lang="es">
             <head>
@@ -181,13 +182,10 @@ const getPasswordChangeTemplate = (): string => {
             </div>
             </body>
             </html>
-        `
-}
-
-export const Recuperation_Mail = {
-    PASSWORD_RESET_EMAIL: getPasswordResetEmailTemplate,
-    PASSWORD_CHANGE_EMAIL: getPasswordChangeTemplate
-
+        `;
 };
 
-
+export const Recuperation_Mail = {
+  PASSWORD_RESET_EMAIL: getPasswordResetEmailTemplate,
+  PASSWORD_CHANGE_EMAIL: getPasswordChangeTemplate,
+};

@@ -3,10 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Recuperation_Mail } from '../auth.utils';
 import { Transporter } from 'nodemailer';
+import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 @Injectable()
 export class EmailService {
-  private transporter!: Transporter;
+  private transporter!: Transporter<SMTPTransport.SentMessageInfo>;
   private readonly logger = new Logger(EmailService.name);
 
   constructor(private configService: ConfigService) {
@@ -35,7 +36,7 @@ export class EmailService {
 
     this.transporter = nodemailer.createTransport(emailConfig);
 
-    this.verifyConnection();
+    void this.verifyConnection();
   }
 
   private async verifyConnection(): Promise<void> {
@@ -55,7 +56,8 @@ export class EmailService {
   }
 
   async sendPasswordResetEmail(email: string, code: string): Promise<void> {
-    const expirationMinutes = this.configService.get<number>('email.resetCodeExpiration') || 15;
+    const expirationMinutes =
+      this.configService.get<number>('email.resetCodeExpiration') || 15;
 
     const mailOptions = {
       from: this.senderHeader,

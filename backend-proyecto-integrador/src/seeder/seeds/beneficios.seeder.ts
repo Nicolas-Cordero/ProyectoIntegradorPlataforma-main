@@ -1,10 +1,8 @@
 import { prisma } from '../prisma-client';
-import { beneficiosData } from "../data";
+import { beneficiosData } from '../data';
 
 export async function beneficiosSeeder() {
-
   for (const beneficio of beneficiosData) {
-
     await prisma.beneficio.upsert({
       where: {
         nombre: beneficio.nombre,

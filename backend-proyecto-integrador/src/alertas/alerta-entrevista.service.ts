@@ -31,7 +31,9 @@ export class AlertaEntrevistaService {
     const ultima = [...entrevistas].sort(
       (a, b) => b.fecha_hora.getTime() - a.fecha_hora.getTime(),
     )[0];
-    const dias = Math.floor((Date.now() - ultima.fecha_hora.getTime()) / MS_POR_DIA);
+    const dias = Math.floor(
+      (Date.now() - ultima.fecha_hora.getTime()) / MS_POR_DIA,
+    );
 
     if (dias > DIAS_LIMITE) {
       return {

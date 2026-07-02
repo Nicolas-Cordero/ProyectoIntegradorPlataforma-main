@@ -23,7 +23,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const message =
       typeof exceptionResponse === 'string'
         ? exceptionResponse
-        : (exceptionResponse as any).message || 'Error';
+        : (exceptionResponse as { message?: string }).message || 'Error';
 
     const errorResponse = {
       statusCode: status,
@@ -33,17 +33,32 @@ export class HttpExceptionFilter implements ExceptionFilter {
       message,
     };
 
-    this.logger.error(`${request.method} ${request.url}`, JSON.stringify(errorResponse));
+    this.logger.error(
+      `${request.method} ${request.url}`,
+      JSON.stringify(errorResponse),
+    );
     response.status(status).json(errorResponse);
   }
 }
 
 const PRISMA_MESSAGES: Record<string, { status: number; message: string }> = {
-  P2002: { status: 409, message: 'Ya existe un registro con ese valor (restricción única)' },
-  P2003: { status: 400, message: 'Referencia inválida: el registro relacionado no existe' },
+  P2002: {
+    status: 409,
+    message: 'Ya existe un registro con ese valor (restricción única)',
+  },
+  P2003: {
+    status: 400,
+    message: 'Referencia inválida: el registro relacionado no existe',
+  },
   P2025: { status: 404, message: 'Registro no encontrado' },
-  P2000: { status: 400, message: 'El valor proporcionado es demasiado largo para el campo' },
-  P2011: { status: 400, message: 'Se recibió un valor nulo en un campo obligatorio' },
+  P2000: {
+    status: 400,
+    message: 'El valor proporcionado es demasiado largo para el campo',
+  },
+  P2011: {
+    status: 400,
+    message: 'Se recibió un valor nulo en un campo obligatorio',
+  },
   P2012: { status: 400, message: 'Falta un campo obligatorio en la solicitud' },
 };
 
@@ -61,7 +76,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const message =
         typeof exceptionResponse === 'string'
           ? exceptionResponse
-          : (exceptionResponse as any).message || 'Error';
+          : (exceptionResponse as { message?: string }).message || 'Error';
       const errorResponse = {
         statusCode: exception.getStatus(),
         timestamp: new Date().toISOString(),
@@ -75,8 +90,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof Prisma.PrismaClientKnownRequestError) {
       const mapped = PRISMA_MESSAGES[exception.code];
       const status = mapped?.status ?? HttpStatus.CONFLICT;
-      const message = mapped?.message ?? `Error de base de datos (${exception.code})`;
-      this.logger.error(`${request.method} ${request.url} — Prisma ${exception.code}`, exception.message);
+      const message =
+        mapped?.message ?? `Error de base de datos (${exception.code})`;
+      this.logger.error(
+        `${request.method} ${request.url} — Prisma ${exception.code}`,
+        exception.message,
+      );
       return response.status(status).json({
         statusCode: status,
         timestamp: new Date().toISOString(),
@@ -87,13 +106,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     if (exception instanceof Prisma.PrismaClientValidationError) {
-      this.logger.error(`${request.method} ${request.url} — Prisma validation`, exception.message);
+      this.logger.error(
+        `${request.method} ${request.url} — Prisma validation`,
+        exception.message,
+      );
       return response.status(HttpStatus.BAD_REQUEST).json({
         statusCode: HttpStatus.BAD_REQUEST,
         timestamp: new Date().toISOString(),
         path: request.url,
         method: request.method,
-        message: 'Datos de entrada inválidos: verifica que los campos numéricos contengan números y los campos requeridos estén completos',
+        message:
+          'Datos de entrada inválidos: verifica que los campos numéricos contengan números y los campos requeridos estén completos',
       });
     }
 

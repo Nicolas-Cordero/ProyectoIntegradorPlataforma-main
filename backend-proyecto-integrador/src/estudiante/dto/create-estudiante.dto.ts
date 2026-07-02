@@ -15,15 +15,14 @@ import {
 import { Type } from 'class-transformer';
 import { Genero } from '@prisma/client';
 
-
-
 export class CreateEstudianteDto {
   // CAMPOS OBLIGATORIOS
   @IsString()
   @IsNotEmpty()
-  @Matches(/^\d{7,8}-[\dkK]$/, { message: 'Formato de RUT inválido. Usa XXXXXXXX-D (ej: 12345678-9)' })
+  @Matches(/^\d{7,8}-[\dkK]$/, {
+    message: 'Formato de RUT inválido. Usa XXXXXXXX-D (ej: 12345678-9)',
+  })
   rut_estudiante!: string;
-
 
   @IsString()
   @IsNotEmpty()
@@ -35,11 +34,9 @@ export class CreateEstudianteDto {
   @MinLength(2)
   apellido!: string;
 
-
   @IsNotEmpty({ message: 'El email es requerido' })
   @IsEmail({}, { message: 'El email debe ser válido' })
   email!: string;
-
 
   @IsNotEmpty({ message: 'El teléfono es requerido' })
   @Matches(/^\+569\s?\d{4}\s?\d{4}$/, {
@@ -47,44 +44,36 @@ export class CreateEstudianteDto {
   })
   telefono!: string;
 
-
   @Type(() => Number)
   @IsInt({ message: 'generacion_id debe ser un número entero' })
   @IsNotEmpty()
   generacion_id!: number;
-
 
   @Type(() => Date)
   @IsDate()
   @IsNotEmpty()
   fecha_nacimiento!: Date;
 
-
   @IsNotEmpty()
   @IsString()
   direccion!: string;
-
 
   @IsEnum(Genero)
   @IsNotEmpty()
   genero!: Genero;
 
-
   @IsString()
   @IsNotEmpty()
   rbd_liceo!: string;
-
 
   @Type(() => Number)
   @IsNumber()
   @IsOptional()
   puntaje_paes?: number;
 
-
   @IsString()
   @IsOptional()
   foto_url?: string;
-
 
   @IsNumber({ maxDecimalPlaces: 1 })
   @Min(1.0)

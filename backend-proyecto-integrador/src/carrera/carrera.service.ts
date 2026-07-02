@@ -12,9 +12,15 @@ export class CarreraService {
     private readonly historialService: HistorialEstadoCarreraService,
   ) {}
 
-  async create(createCarreraDto: CreateCarreraDto, rut_usuario: string): Promise<carrera> {
+  async create(
+    createCarreraDto: CreateCarreraDto,
+    rut_usuario: string,
+  ): Promise<carrera> {
     const carrera = await this.carreraRepo.create(createCarreraDto);
-    await this.historialService.registrarEstadoInicial(carrera.codigo_carrera, rut_usuario);
+    await this.historialService.registrarEstadoInicial(
+      carrera.codigo_carrera,
+      rut_usuario,
+    );
     return carrera;
   }
 
@@ -28,7 +34,10 @@ export class CarreraService {
     return carrera;
   }
 
-  update(codigo_carrera: number, updateCarreraDto: UpdateCarreraDto): Promise<carrera> {
+  update(
+    codigo_carrera: number,
+    updateCarreraDto: UpdateCarreraDto,
+  ): Promise<carrera> {
     return this.carreraRepo.update(codigo_carrera, updateCarreraDto);
   }
 

@@ -52,7 +52,9 @@ describe('EntrevistasService', () => {
   describe('resolveSemestreId', () => {
     it('1 de enero debe resolverse como PRIMER_SEMESTRE', async () => {
       // Arrange
-      mockPrisma.semestre.upsert.mockResolvedValue(makeSemestre(1, 2026, 'PRIMER_SEMESTRE'));
+      mockPrisma.semestre.upsert.mockResolvedValue(
+        makeSemestre(1, 2026, 'PRIMER_SEMESTRE'),
+      );
 
       // Act
       const id = await service.resolveSemestreId(new Date(2026, 0, 1));
@@ -61,7 +63,10 @@ describe('EntrevistasService', () => {
       expect(mockPrisma.semestre.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { year_semestre: { year: 2026, semestre: 'PRIMER_SEMESTRE' } },
-          create: expect.objectContaining({ tipo: TipoSemestre.REGULAR, semestre: 'PRIMER_SEMESTRE' }),
+          create: expect.objectContaining({
+            tipo: TipoSemestre.REGULAR,
+            semestre: 'PRIMER_SEMESTRE',
+          }),
         }),
       );
       expect(id).toBe(1);
@@ -69,7 +74,9 @@ describe('EntrevistasService', () => {
 
     it('30 de junio debe resolverse como PRIMER_SEMESTRE', async () => {
       // Arrange
-      mockPrisma.semestre.upsert.mockResolvedValue(makeSemestre(2, 2026, 'PRIMER_SEMESTRE'));
+      mockPrisma.semestre.upsert.mockResolvedValue(
+        makeSemestre(2, 2026, 'PRIMER_SEMESTRE'),
+      );
 
       // Act
       const id = await service.resolveSemestreId(new Date(2026, 5, 30));
@@ -85,7 +92,9 @@ describe('EntrevistasService', () => {
 
     it('1 de julio debe resolverse como SEGUNDO_SEMESTRE', async () => {
       // Arrange
-      mockPrisma.semestre.upsert.mockResolvedValue(makeSemestre(3, 2026, 'SEGUNDO_SEMESTRE'));
+      mockPrisma.semestre.upsert.mockResolvedValue(
+        makeSemestre(3, 2026, 'SEGUNDO_SEMESTRE'),
+      );
 
       // Act
       const id = await service.resolveSemestreId(new Date(2026, 6, 1));
@@ -93,8 +102,13 @@ describe('EntrevistasService', () => {
       // Assert
       expect(mockPrisma.semestre.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { year_semestre: { year: 2026, semestre: 'SEGUNDO_SEMESTRE' } },
-          create: expect.objectContaining({ tipo: TipoSemestre.REGULAR, semestre: 'SEGUNDO_SEMESTRE' }),
+          where: {
+            year_semestre: { year: 2026, semestre: 'SEGUNDO_SEMESTRE' },
+          },
+          create: expect.objectContaining({
+            tipo: TipoSemestre.REGULAR,
+            semestre: 'SEGUNDO_SEMESTRE',
+          }),
         }),
       );
       expect(id).toBe(3);
@@ -102,7 +116,9 @@ describe('EntrevistasService', () => {
 
     it('31 de diciembre debe resolverse como SEGUNDO_SEMESTRE', async () => {
       // Arrange
-      mockPrisma.semestre.upsert.mockResolvedValue(makeSemestre(4, 2026, 'SEGUNDO_SEMESTRE'));
+      mockPrisma.semestre.upsert.mockResolvedValue(
+        makeSemestre(4, 2026, 'SEGUNDO_SEMESTRE'),
+      );
 
       // Act
       const id = await service.resolveSemestreId(new Date(2026, 11, 31));
@@ -110,7 +126,9 @@ describe('EntrevistasService', () => {
       // Assert
       expect(mockPrisma.semestre.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { year_semestre: { year: 2026, semestre: 'SEGUNDO_SEMESTRE' } },
+          where: {
+            year_semestre: { year: 2026, semestre: 'SEGUNDO_SEMESTRE' },
+          },
         }),
       );
       expect(id).toBe(4);
@@ -118,7 +136,9 @@ describe('EntrevistasService', () => {
 
     it('si el semestre no existe, upsert lo crea con tipo REGULAR', async () => {
       // Arrange — upsert devuelve el recién creado
-      mockPrisma.semestre.upsert.mockResolvedValue(makeSemestre(99, 2099, 'PRIMER_SEMESTRE'));
+      mockPrisma.semestre.upsert.mockResolvedValue(
+        makeSemestre(99, 2099, 'PRIMER_SEMESTRE'),
+      );
 
       // Act
       const id = await service.resolveSemestreId(new Date(2099, 2, 15));
@@ -126,7 +146,11 @@ describe('EntrevistasService', () => {
       // Assert
       expect(mockPrisma.semestre.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          create: { year: 2099, semestre: 'PRIMER_SEMESTRE', tipo: TipoSemestre.REGULAR },
+          create: {
+            year: 2099,
+            semestre: 'PRIMER_SEMESTRE',
+            tipo: TipoSemestre.REGULAR,
+          },
         }),
       );
       expect(id).toBe(99);
@@ -139,8 +163,13 @@ describe('EntrevistasService', () => {
     it('usa la fecha_hora recibida y calcula el semestre_id correspondiente', async () => {
       // Arrange
       const fecha = new Date(2026, 2, 10); // marzo → PRIMER_SEMESTRE
-      mockPrisma.semestre.upsert.mockResolvedValue(makeSemestre(5, 2026, 'PRIMER_SEMESTRE'));
-      mockRepo.create.mockResolvedValue({ id: 1, rut_estudiante: '12345678-9' });
+      mockPrisma.semestre.upsert.mockResolvedValue(
+        makeSemestre(5, 2026, 'PRIMER_SEMESTRE'),
+      );
+      mockRepo.create.mockResolvedValue({
+        id: 1,
+        rut_estudiante: '12345678-9',
+      });
 
       // Act
       await service.create(
@@ -165,11 +194,19 @@ describe('EntrevistasService', () => {
       jest.useFakeTimers();
       jest.setSystemTime(ahora);
 
-      mockPrisma.semestre.upsert.mockResolvedValue(makeSemestre(6, 2026, 'SEGUNDO_SEMESTRE'));
-      mockRepo.create.mockResolvedValue({ id: 2, rut_estudiante: '12345678-9' });
+      mockPrisma.semestre.upsert.mockResolvedValue(
+        makeSemestre(6, 2026, 'SEGUNDO_SEMESTRE'),
+      );
+      mockRepo.create.mockResolvedValue({
+        id: 2,
+        rut_estudiante: '12345678-9',
+      });
 
       // Act
-      await service.create({ rut_estudiante: '12345678-9', duracion_s: 1800 }, '98765432-1');
+      await service.create(
+        { rut_estudiante: '12345678-9', duracion_s: 1800 },
+        '98765432-1',
+      );
 
       // Assert
       expect(mockRepo.create).toHaveBeenCalledWith(
@@ -182,7 +219,9 @@ describe('EntrevistasService', () => {
 
     it('crea comentarios anidados cuando se envían', async () => {
       // Arrange
-      mockPrisma.semestre.upsert.mockResolvedValue(makeSemestre(5, 2026, 'PRIMER_SEMESTRE'));
+      mockPrisma.semestre.upsert.mockResolvedValue(
+        makeSemestre(5, 2026, 'PRIMER_SEMESTRE'),
+      );
       mockRepo.create.mockResolvedValue({ id: 3 });
 
       const comentarios = [
@@ -204,7 +243,9 @@ describe('EntrevistasService', () => {
 
     it('crea sin comentarios si el arreglo viene vacío', async () => {
       // Arrange
-      mockPrisma.semestre.upsert.mockResolvedValue(makeSemestre(5, 2026, 'PRIMER_SEMESTRE'));
+      mockPrisma.semestre.upsert.mockResolvedValue(
+        makeSemestre(5, 2026, 'PRIMER_SEMESTRE'),
+      );
       mockRepo.create.mockResolvedValue({ id: 4 });
 
       // Act
@@ -226,7 +267,9 @@ describe('EntrevistasService', () => {
     it('recalcula semestre_id cuando se actualiza fecha_hora', async () => {
       // Arrange
       const nuevaFecha = new Date(2026, 9, 1); // octubre → SEGUNDO_SEMESTRE
-      mockPrisma.semestre.upsert.mockResolvedValue(makeSemestre(7, 2026, 'SEGUNDO_SEMESTRE'));
+      mockPrisma.semestre.upsert.mockResolvedValue(
+        makeSemestre(7, 2026, 'SEGUNDO_SEMESTRE'),
+      );
       mockRepo.update.mockResolvedValue({ id: 1 });
 
       // Act
@@ -235,10 +278,13 @@ describe('EntrevistasService', () => {
       // Assert
       expect(mockPrisma.semestre.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { year_semestre: { year: 2026, semestre: 'SEGUNDO_SEMESTRE' } },
+          where: {
+            year_semestre: { year: 2026, semestre: 'SEGUNDO_SEMESTRE' },
+          },
         }),
       );
-      expect(mockRepo.update).toHaveBeenCalledWith(1,
+      expect(mockRepo.update).toHaveBeenCalledWith(
+        1,
         expect.objectContaining({ semestre_id: 7 }),
       );
     });
@@ -252,7 +298,8 @@ describe('EntrevistasService', () => {
 
       // Assert
       expect(mockPrisma.semestre.upsert).not.toHaveBeenCalled();
-      expect(mockRepo.update).toHaveBeenCalledWith(1,
+      expect(mockRepo.update).toHaveBeenCalledWith(
+        1,
         expect.objectContaining({ semestre_id: undefined }),
       );
     });
@@ -260,14 +307,17 @@ describe('EntrevistasService', () => {
     it('cambia el semestre al cruzar el límite de julio al editar fecha_hora', async () => {
       // Arrange — entrevista originalmente en junio (PRIMER) → se mueve a julio (SEGUNDO)
       const fechaJulio = new Date(2026, 6, 15);
-      mockPrisma.semestre.upsert.mockResolvedValue(makeSemestre(8, 2026, 'SEGUNDO_SEMESTRE'));
+      mockPrisma.semestre.upsert.mockResolvedValue(
+        makeSemestre(8, 2026, 'SEGUNDO_SEMESTRE'),
+      );
       mockRepo.update.mockResolvedValue({ id: 1 });
 
       // Act
       await service.updateEntrevista(1, { fecha_hora: fechaJulio });
 
       // Assert
-      expect(mockRepo.update).toHaveBeenCalledWith(1,
+      expect(mockRepo.update).toHaveBeenCalledWith(
+        1,
         expect.objectContaining({ semestre_id: 8 }),
       );
     });

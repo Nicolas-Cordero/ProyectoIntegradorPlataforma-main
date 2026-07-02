@@ -3,7 +3,6 @@ import { Type } from 'class-transformer';
 import { TipoBeneficio } from '@prisma/client';
 import { Beneficios } from '../beneficios.enum';
 
-
 export class CreateBeneficioDto {
   @IsEnum(Beneficios)
   @IsNotEmpty()
@@ -13,7 +12,7 @@ export class CreateBeneficioDto {
   @IsNotEmpty()
   tipo!: TipoBeneficio;
 
-  @Type(()=>Number)
+  @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
   monto!: number;
@@ -25,5 +24,4 @@ export class CreateBeneficioDto {
   @IsString()
   @IsNotEmpty()
   descripcion!: string;
-
 }

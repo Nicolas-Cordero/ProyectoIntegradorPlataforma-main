@@ -7,5 +7,5 @@ export interface ObservacionesFamiliares {
   madre: Observacion[];
   padre: Observacion[];
   hermanos: Observacion[];
-  general: Observacion[]; 
+  general: Observacion[];
 }

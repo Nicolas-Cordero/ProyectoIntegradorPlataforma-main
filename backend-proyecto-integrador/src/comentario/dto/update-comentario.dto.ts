@@ -1,6 +1,5 @@
-import { PartialType, PickType } from "@nestjs/mapped-types";
-import { IsNotEmpty, IsString } from "class-validator";
-import { CreateComentarioDto } from "./create-comentario.dto";
+import { PartialType, PickType } from '@nestjs/mapped-types';
+import { CreateComentarioDto } from './create-comentario.dto';
 
 //Corresponderia a "cambiar comentario por topico"
 //se debe poder agregar topicos a una entrevista
@@ -8,8 +7,5 @@ import { CreateComentarioDto } from "./create-comentario.dto";
 //todo debe quedar registrado en el audit log???
 //donde registramos que algo fue actualizado
 export class UpdateComentarioDto extends PartialType(
-  PickType(CreateComentarioDto,
-    [
-      'texto'
-    ])){
-}
+  PickType(CreateComentarioDto, ['texto']),
+) {}

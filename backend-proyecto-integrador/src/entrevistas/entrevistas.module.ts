@@ -5,13 +5,8 @@ import { AuthModule } from '../auth/auth.module';
 import { EntrevistaRepository } from './entrevista.repository';
 
 @Module({
-  imports: [
-    AuthModule,
-  ],
-  providers: [
-    EntrevistasService,
-    EntrevistaRepository,
-  ],
+  imports: [AuthModule],
+  providers: [EntrevistasService, EntrevistaRepository],
   controllers: [EntrevistasController],
   exports: [EntrevistasService],
 })

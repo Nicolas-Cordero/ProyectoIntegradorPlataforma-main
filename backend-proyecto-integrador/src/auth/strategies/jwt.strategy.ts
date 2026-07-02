@@ -17,7 +17,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       // Acepta el token desde la cookie HTTP-only (web) o desde el header
       // Authorization: Bearer (app móvil).
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (req: Request) => req?.cookies?.access_token ?? null,
+        (req: Request) =>
+          (req.cookies?.access_token as string | undefined) ?? null,
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
@@ -26,7 +27,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
-
     const user = await this.userRepo.findByRut(payload.sub);
 
     if (!user) {

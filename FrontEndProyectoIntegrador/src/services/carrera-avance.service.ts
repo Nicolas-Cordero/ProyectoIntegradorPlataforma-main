@@ -10,6 +10,7 @@ export interface CarreraAvanceDto {
   codigo_universidad: number;
   via_acceso: ViaAcceso;
   estado: import('../types').EstadoEstudiante;
+  anio_ingreso: number;
 }
 
 export interface CreateCarreraAvanceDto {
@@ -18,6 +19,7 @@ export interface CreateCarreraAvanceDto {
   duracion_sem: number;
   codigo_universidad: number;
   via_acceso: ViaAcceso;
+  anio_ingreso: number;
 }
 
 class CarreraAvanceService extends BaseHttpClient {

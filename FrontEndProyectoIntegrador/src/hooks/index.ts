@@ -5,7 +5,5 @@
 
 export { useAuth } from './useAuth';
 export { useEstudiantes } from './useEstudiantes';
-export { useWorkspaceTabs } from './useWorkspaceTabs';
 export { useSnackbar } from './useSnackbar';
 export { useFormValidation } from './useFormValidation';
-export type { Tab, WorkspaceState } from './useWorkspaceTabs';

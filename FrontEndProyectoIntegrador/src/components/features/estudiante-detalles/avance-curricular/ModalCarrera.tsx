@@ -9,6 +9,7 @@ export interface FormCarrera {
   universidad_nombre: string;
   duracion_sem: string;
   via_acceso: ViaAcceso;
+  anio_ingreso: string;
 }
 
 interface ModalCarreraProps {
@@ -119,6 +120,13 @@ export function ModalCarrera({
           valor={form.duracion_sem}
           onChange={v => setForm(f => ({ ...f, duracion_sem: v }))}
           placeholder="Ej: 10"
+        />
+        <Input
+          etiqueta="Año de ingreso"
+          tipo="number"
+          valor={form.anio_ingreso}
+          onChange={v => setForm(f => ({ ...f, anio_ingreso: v }))}
+          placeholder={`Si se deja vacío, se usa ${new Date().getFullYear()}`}
         />
         <Select
           etiqueta="Vía de acceso"

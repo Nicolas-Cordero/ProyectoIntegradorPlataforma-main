@@ -34,7 +34,6 @@ const EstudianteDesempenoAcademico = lazy(() => import('./pages/EstudianteSectio
 const EstudianteDesempenoSemestral = lazy(() => import('./pages/EstudianteSection/EstudianteDesempenoSemestral'));
 const EstudianteAvanceCurricular = lazy(() => import('./pages/EstudianteSection/EstudianteAvanceCurricular'));
 const EstudianteEntrevistas = lazy(() => import('./pages/EstudianteSection/EstudianteEntrevistas'));
-const EntrevistaWorkspace = lazy(() => import('./pages/EstudianteSection/EntrevistaWorkspace').then(m => ({ default: m.EntrevistaWorkspace })));
 const UserProfile = lazy(() => import('./pages/UserProfile').then(m => ({ default: m.UserProfile })));
 const UserManagement = lazy(() => import('./pages/UserManagement'));
 const DebugPermissions = lazy(() => import('./pages/DebugPermissions'));
@@ -92,7 +91,6 @@ function AppRoutes() {
           <Route path="avance-curricular" element={<EstudianteAvanceCurricular />} />
           <Route path="entrevistas" element={<EstudianteEntrevistas />} />
         </Route>
-        <Route path="/entrevista/:id" element={<EntrevistaWorkspace />} />
         <Route path="/estadisticas"   element={withLayout(<EstadisticasPage />)} />
         <Route path="/admin/usuarios" element={withLayout(<AdminRoute><UserManagement /></AdminRoute>)} />
         <Route path="/admin/acuerdo-compromiso" element={withLayout(<AdminRoute><AcuerdoCompromiso /></AdminRoute>)} />

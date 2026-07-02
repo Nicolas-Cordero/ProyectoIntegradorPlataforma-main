@@ -48,7 +48,7 @@ export default function EstudianteAvanceCurricular() {
   const [cargandoUniversidades, setCargandoUniversidades] = useState(false);
   const [busquedaUniv, setBusquedaUniv] = useState('');
   const [formCarrera, setFormCarrera] = useState<FormCarrera>({
-    nombre: '', codigo_universidad: null, universidad_nombre: '', duracion_sem: '8', via_acceso: 'REGULAR' as ViaAcceso,
+    nombre: '', codigo_universidad: null, universidad_nombre: '', duracion_sem: '8', via_acceso: 'REGULAR' as ViaAcceso, anio_ingreso: '',
   });
   const [errCarrera, setErrCarrera] = useState('');
   const [guardandoCarrera, setGuardandoCarrera] = useState(false);
@@ -180,7 +180,7 @@ export default function EstudianteAvanceCurricular() {
 
   // ── Carrera: crear ────────────────────────────────────────────────────────
   const abrirModalCarrera = () => {
-    setFormCarrera({ nombre: '', codigo_universidad: null, universidad_nombre: '', duracion_sem: '8', via_acceso: 'REGULAR' });
+    setFormCarrera({ nombre: '', codigo_universidad: null, universidad_nombre: '', duracion_sem: '8', via_acceso: 'REGULAR', anio_ingreso: '' });
     setBusquedaUniv('');
     setErrCarrera('');
     if (universidades.length === 0) {
@@ -199,6 +199,13 @@ export default function EstudianteAvanceCurricular() {
     const dur = parseInt(formCarrera.duracion_sem, 10);
     if (isNaN(dur) || dur < 1)            { setErrCarrera('La duración debe ser al menos 1 semestre'); return; }
 
+    const anioActual = new Date().getFullYear();
+    const anio_ingreso = formCarrera.anio_ingreso.trim() ? parseInt(formCarrera.anio_ingreso, 10) : anioActual;
+    if (isNaN(anio_ingreso) || anio_ingreso < 1990 || anio_ingreso > 2100) {
+      setErrCarrera('El año de ingreso debe estar entre 1990 y 2100');
+      return;
+    }
+
     setGuardandoCarrera(true);
     setErrCarrera('');
     try {
@@ -208,6 +215,7 @@ export default function EstudianteAvanceCurricular() {
         duracion_sem:       dur,
         codigo_universidad: formCarrera.codigo_universidad,
         via_acceso:         formCarrera.via_acceso,
+        anio_ingreso,
       };
       const nueva = await carreraAvanceService.create(payload);
       setCarreras(cs => [...cs, { ...nueva, semestres: [], cargando: false, error: null, historial: [], historialCargando: true }]);

@@ -104,6 +104,12 @@ export interface Familiar {
 
 // ============================================
 
+export interface Universidad {
+  codigo_universidad: number;
+  nombre: string;
+  comuna: string;
+}
+
 export interface Carrera {
   codigo_carrera: number;
   nombre: string;
@@ -112,6 +118,9 @@ export interface Carrera {
   codigo_universidad: number;
   via_acceso: 'ESPECIAL' | 'REGULAR' | 'PACE';
   estado: EstadoEstudiante;
+  anio_ingreso: number;
+  // Solo viene poblado desde /complete (findEstudianteByRutComplete incluye la relación).
+  universidad?: Universidad;
 }
 
 // ============================================

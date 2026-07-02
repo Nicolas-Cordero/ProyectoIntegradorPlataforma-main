@@ -154,7 +154,7 @@ export default function GeneracionViewSimple() {
     loadStudents();
   }, [loadStudents]);
 
-  const estados = [...new Set(students.map((s) => s.estado || 'ACTIVO'))];
+  const estados = [...new Set(students.map((s) => s.estado))];
 
   const filteredAndSortedStudents = useMemo(() => {
     const alertasSet = new Set(alertasRuts);
@@ -163,7 +163,7 @@ export default function GeneracionViewSimple() {
       const nombre = student.nombre || '';
       const apellido = student.apellido || '';
       const rut = student.rut_estudiante || '';
-      const estado = student.estado || 'ACTIVO';
+      const estado = student.estado;
 
       const matchesSearch =
         nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||

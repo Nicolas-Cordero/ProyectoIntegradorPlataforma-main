@@ -53,7 +53,6 @@ export default function EstudiantePerfil() {
       direccion:        estudiante.direccion,
       genero:           estudiante.genero,
       rbd_liceo:        estudiante.rbd_liceo,
-      puntaje_paes:     estudiante.puntaje_paes,
       promedios_media:  parseFloat(normalizarDecimal(estudiante.promedios_media)) || 0,
     });
     setSaveError('');
@@ -241,12 +240,6 @@ export default function EstudiantePerfil() {
             tipo="number"
             valor={editForm.promedios_media?.toString() ?? ''}
             onChange={(v) => setEditForm(f => ({ ...f, promedios_media: parseFloat(normalizarDecimal(v)) || 0 }))}
-          />
-          <Input
-            etiqueta="Puntaje PAES"
-            tipo="number"
-            valor={editForm.puntaje_paes?.toString() ?? ''}
-            onChange={(v) => setEditForm(f => ({ ...f, puntaje_paes: v ? Number(v) : undefined }))}
           />
         </div>
       </Modal>

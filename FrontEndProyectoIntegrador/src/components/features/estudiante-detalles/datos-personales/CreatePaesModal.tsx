@@ -51,15 +51,18 @@ export function CreatePaesModal({ open, rutEstudiante, onClose, onSuccess }: Cre
     setLoading(true);
     setError('');
     try {
+      // Las pruebas opcionales se registran siempre en 0 si se dejan vacías —
+      // nunca se omiten. El acordeón interpreta <150 (bajo el puntaje mínimo
+      // real de la PAES) como "no especificado", sin necesitar null.
       const dto: CreatePaesDto = {
         rut_estudiante: rutEstudiante,
         lenguaje: Number(form.lenguaje),
         matematicas: Number(form.matematicas),
         nem: Number(form.nem),
         ranking: Number(form.ranking),
-        ...(form.matematicas2 ? { matematicas2: Number(form.matematicas2) } : {}),
-        ...(form.ciencias ? { ciencias: Number(form.ciencias) } : {}),
-        ...(form.historia ? { historia: Number(form.historia) } : {}),
+        matematicas2: form.matematicas2 ? Number(form.matematicas2) : 0,
+        ciencias: form.ciencias ? Number(form.ciencias) : 0,
+        historia: form.historia ? Number(form.historia) : 0,
       };
       const result = await paesService.createPaes(dto);
       onSuccess(result);

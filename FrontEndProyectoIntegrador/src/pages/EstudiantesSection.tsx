@@ -13,8 +13,6 @@ import type { UIStudent } from './GeneracionSection/GeneracionView';
 const SORT_OPTIONS: { label: string; field: keyof UIStudent; dir: 'asc' | 'desc' }[] = [
   { label: 'Nombre A→Z', field: 'apellido', dir: 'asc' },
   { label: 'Nombre Z→A', field: 'apellido', dir: 'desc' },
-  { label: 'Promedio mayor a menor', field: 'promedio', dir: 'desc' },
-  { label: 'Promedio menor a mayor', field: 'promedio', dir: 'asc' },
   { label: 'Entrevista más reciente', field: 'ultimaEntrevista', dir: 'desc' },
   { label: 'Entrevista más antigua', field: 'ultimaEntrevista', dir: 'asc' },
 ];
@@ -64,7 +62,6 @@ export const EstudiantesSection: React.FC = () => {
         if (!studentId) {
           return {
             ...student,
-            promedio: typeof student.promedios_media === 'number' ? student.promedios_media : undefined,
             totalEntrevistasAno: 0,
           };
         }
@@ -89,7 +86,6 @@ export const EstudiantesSection: React.FC = () => {
 
         return {
           ...student,
-          promedio: typeof student.promedios_media === 'number' ? student.promedios_media : undefined,
           ultimaEntrevista,
           totalEntrevistasAno,
         };

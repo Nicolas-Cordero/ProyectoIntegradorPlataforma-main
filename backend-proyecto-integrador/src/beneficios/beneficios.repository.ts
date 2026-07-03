@@ -79,21 +79,4 @@ export class BeneficiosRepository {
     }
   }
 
-  async deleteBeneficioByID(id: number): Promise<beneficio> {
-    try {
-      return await this.prisma.beneficio.delete({
-        where: {
-          codigo_beneficio: id,
-        },
-      });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2025'
-      ) {
-        throw new NotFoundException(`Beneficio ${id} no encontrado`);
-      }
-      throw error;
-    }
-  }
 }

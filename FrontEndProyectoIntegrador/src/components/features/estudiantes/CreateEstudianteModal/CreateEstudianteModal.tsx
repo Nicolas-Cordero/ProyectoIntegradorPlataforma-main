@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Divider, Typography } from '@mui/material';
 import { Modal, Input, Select, Alert, Button } from '../../../ui';
-import { estudianteService, liceoService } from '../../../../services';
+import { estudianteService } from '../../../../services';
 import { normalizarRut, normalizarTelefono, esTelefonoValido } from '../../../../utils/validators';
-import type { Generacion, Genero, Liceo } from '../../../../types';
+import { LiceoSelector } from '../LiceoSelector';
+import type { Generacion, Genero } from '../../../../types';
 
 interface Props {
   open: boolean;
@@ -57,16 +58,13 @@ export const CreateEstudianteModal: React.FC<Props> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [generaciones, setGeneraciones] = useState<Generacion[]>([]);
-  const [liceos, setLiceos] = useState<Liceo[]>([]);
-  const [liceoSearch, setLiceoSearch] = useState('');
 
-  // Carga generaciones y liceos al abrir
+  // Carga generaciones al abrir
   useEffect(() => {
     if (!open) return;
     if (generacionId === undefined) {
       estudianteService.getGenerations().then(setGeneraciones).catch(() => {});
     }
-    liceoService.getAll().then(setLiceos).catch(() => {});
   }, [open, generacionId]);
 
   // Resetea el form al abrir
@@ -74,7 +72,6 @@ export const CreateEstudianteModal: React.FC<Props> = ({
     if (open) {
       setForm({ ...EMPTY, generacion_id: generacionId ? String(generacionId) : '' });
       setError('');
-      setLiceoSearch('');
     }
   }, [open, generacionId]);
 
@@ -265,62 +262,7 @@ export const CreateEstudianteModal: React.FC<Props> = ({
         )}
 
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-          {/* Selector de liceo con búsqueda */}
-          <div>
-            <label className={LABEL_CLASS}>Liceo *</label>
-            <input
-              type="text"
-              value={liceoSearch}
-              onChange={(e) => {
-                setLiceoSearch(e.target.value);
-                // Si el usuario escribe algo distinto al liceo seleccionado, limpiar la selección
-                const seleccionado = liceos.find((l) => l.rbd === form.rbd_liceo);
-                if (seleccionado && e.target.value !== `${seleccionado.nombre} (${seleccionado.rbd})`) {
-                  set('rbd_liceo')('');
-                }
-              }}
-              placeholder="Buscar liceo por nombre o RBD..."
-              disabled={loading}
-              className={INPUT_CLASS}
-            />
-            {/* Dropdown de opciones filtradas */}
-            {liceoSearch && !form.rbd_liceo && (() => {
-              const lower = liceoSearch.toLowerCase();
-              const opciones = liceos.filter(
-                (l) =>
-                  l.nombre.toLowerCase().includes(lower) ||
-                  l.rbd.toLowerCase().includes(lower) ||
-                  (l.comuna ?? '').toLowerCase().includes(lower)
-              ).slice(0, 8);
-              if (opciones.length === 0) return null;
-              return (
-                <div className="border border-gray-200 rounded-lg mt-1 bg-white shadow-lg z-10 max-h-48 overflow-y-auto">
-                  {opciones.map((l) => (
-                    <button
-                      key={l.rbd}
-                      type="button"
-                      onClick={() => {
-                        set('rbd_liceo')(l.rbd);
-                        setLiceoSearch(`${l.nombre} (${l.rbd})`);
-                      }}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-[#65B39B]/10 transition-colors border-b border-gray-100 last:border-0"
-                    >
-                      <span className="font-medium text-gray-800">{l.nombre}</span>
-                      <span className="text-gray-400 text-xs ml-2">RBD: {l.rbd}</span>
-                      {l.comuna && (
-                        <span className="text-gray-400 text-xs ml-1">— {l.comuna}</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              );
-            })()}
-            {form.rbd_liceo && (
-              <p className="text-xs text-[#65B39B] mt-1 font-medium">
-                ✓ RBD seleccionado: {form.rbd_liceo}
-              </p>
-            )}
-          </div>
+          <LiceoSelector value={form.rbd_liceo} onChange={set('rbd_liceo')} disabled={loading} />
 
           <Input
             etiqueta="Dirección *"

@@ -153,7 +153,7 @@ export const UserManagement: React.FC = () => {
       confirmColor: 'error',
       onConfirm: async () => {
         await userService.delete(userId);
-        setSnackbar({ open: true, message: 'Usuario eliminado exitosamente', severity: 'success' });
+        setSnackbar({ open: true, message: 'Usuario desactivado exitosamente', severity: 'success' });
         await loadUsers();
       },
     });

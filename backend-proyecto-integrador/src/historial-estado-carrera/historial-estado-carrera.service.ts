@@ -3,18 +3,25 @@ import { EstadoEstudiante, historial_estado_carrera } from '@prisma/client';
 import { HistorialEstadoCarreraRepository } from './historial-estado-carrera.repository';
 import { CreateHistorialEstadoCarreraDto } from './dto';
 
-function contarSemestres(start: Date, end: Date): number {
-  let count = 0;
-  for (let year = start.getFullYear(); year <= end.getFullYear(); year++) {
-    const s1Start = new Date(year, 0, 1);
-    const s1End = new Date(year, 5, 30);
-    const s2Start = new Date(year, 6, 1);
-    const s2End = new Date(year, 11, 31);
-    if (start <= s1End && end >= s1Start) count++;
-    if (start <= s2End && end >= s2Start) count++;
-  }
-  return count;
+// Duración de referencia de "un semestre": mitad de un año calendario promedio
+// (considera años bisiestos). No se usan los bordes exactos de semestre
+// (1-ene/30-jun, 1-jul/31-dic) porque lo que se mide acá es tiempo acumulado
+// suspendido, no en qué semestre calendario cayó ese tiempo.
+const DIAS_POR_SEMESTRE = 365.25 / 2;
+const MS_POR_DIA = 1000 * 60 * 60 * 24;
+
+function diasEntre(start: Date, end: Date): number {
+  return Math.max(0, (end.getTime() - start.getTime()) / MS_POR_DIA);
 }
+
+// Estados en los que la carrera no avanza activamente. Un estudiante eliminado
+// o retirado que luego vuelve a estar activo debe contar ese tiempo como
+// suspendido igual que si el estado hubiese sido SUSPENDIDO explícitamente.
+const ESTADOS_FUERA_DE_CARRERA: EstadoEstudiante[] = [
+  EstadoEstudiante.SUSPENDIDO,
+  EstadoEstudiante.RETIRADO,
+  EstadoEstudiante.ELIMINADO,
+];
 
 export function calcularSemestresSupendidosFromHistorial(
   historial: Pick<historial_estado_carrera, 'estado_nuevo' | 'created_at'>[],
@@ -24,15 +31,10 @@ export function calcularSemestresSupendidosFromHistorial(
   let suspensionStart: Date | null = null;
 
   for (const h of historial) {
-    if (
-      h.estado_nuevo === EstadoEstudiante.SUSPENDIDO &&
-      suspensionStart === null
-    ) {
+    const fueraDeCarrera = ESTADOS_FUERA_DE_CARRERA.includes(h.estado_nuevo);
+    if (fueraDeCarrera && suspensionStart === null) {
       suspensionStart = h.created_at;
-    } else if (
-      h.estado_nuevo !== EstadoEstudiante.SUSPENDIDO &&
-      suspensionStart !== null
-    ) {
+    } else if (!fueraDeCarrera && suspensionStart !== null) {
       intervals.push({ start: suspensionStart, end: h.created_at });
       suspensionStart = null;
     }
@@ -42,10 +44,14 @@ export function calcularSemestresSupendidosFromHistorial(
     intervals.push({ start: suspensionStart, end: hoje });
   }
 
-  return intervals.reduce(
-    (total, { start, end }) => total + contarSemestres(start, end),
+  // Suma el tiempo total fuera de carrera (aunque esté repartido en varios
+  // periodos separados) y solo cuenta semestres completos ya transcurridos.
+  const totalDiasSuspendido = intervals.reduce(
+    (total, { start, end }) => total + diasEntre(start, end),
     0,
   );
+
+  return Math.floor(totalDiasSuspendido / DIAS_POR_SEMESTRE);
 }
 
 @Injectable()

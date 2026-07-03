@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
+import { Prisma, familiar } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { familiar } from '@prisma/client';
 import { CreateFamiliarDto, UpdateFamiliarDto } from './dto';
 
 @Injectable()
@@ -23,11 +23,23 @@ export class FamiliarRepository {
   }
 
   async remove(id_familiar: number) {
-    return this.prisma.familiar.delete({
-      where: {
-        id: id_familiar,
-      },
-    });
+    try {
+      return await this.prisma.familiar.delete({
+        where: {
+          id: id_familiar,
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2003'
+      ) {
+        throw new ConflictException(
+          'No se puede eliminar: este familiar está registrado como contacto de emergencia. Quítalo de esa asignación primero.',
+        );
+      }
+      throw error;
+    }
   }
 
   async findFamiliar(id_familiar: number): Promise<familiar | null> {

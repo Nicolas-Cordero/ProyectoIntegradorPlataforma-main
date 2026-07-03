@@ -51,11 +51,18 @@ export class EntrevistaRepository {
   async update(
     id_entrevista: number,
     data: EntrevistaUpdateData,
-  ): Promise<entrevista> {
+  ): Promise<EntrevistaConDetalle> {
     return this.prisma.entrevista.update({
       where: { id: id_entrevista },
       data,
-    });
+      include: {
+        entrevistador: { select: { nombre: true, apellido: true } },
+        semestre: {
+          select: { semestre_id: true, year: true, semestre: true, tipo: true },
+        },
+        comentarios: true,
+      },
+    }) as Promise<EntrevistaConDetalle>;
   }
 
   // comentarios eliminados explícitamente antes del delete porque la relación

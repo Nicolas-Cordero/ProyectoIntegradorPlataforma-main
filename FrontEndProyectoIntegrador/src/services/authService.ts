@@ -92,7 +92,10 @@ class AuthService {
       credentials: 'include',
       body: JSON.stringify({ email }),
     });
-    if (!response.ok) throw new Error('Error al enviar código de recuperación');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Error al enviar código de recuperación');
+    }
   }
 
   async verifyResetCode(email: string, code: string): Promise<boolean> {
@@ -102,7 +105,10 @@ class AuthService {
       credentials: 'include',
       body: JSON.stringify({ email, code }),
     });
-    const result = await response.json();
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.message || 'Error al verificar el código');
+    }
     return result.valid;
   }
 
@@ -113,7 +119,10 @@ class AuthService {
       credentials: 'include',
       body: JSON.stringify({ email, code, newPassword }),
     });
-    if (!response.ok) throw new Error('Error al restablecer contraseña');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Error al restablecer contraseña');
+    }
   }
 }
 

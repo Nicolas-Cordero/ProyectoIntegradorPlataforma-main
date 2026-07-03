@@ -21,7 +21,6 @@ const SELECT_CLASS =
 export type UIStudent = Estudiante & {
   ultimaEntrevista?: string;
   totalEntrevistasAno?: number;
-  promedio?: number;
 };
 
 export default function GeneracionViewSimple() {
@@ -69,14 +68,6 @@ export default function GeneracionViewSimple() {
       .catch(() => setAlertasRuts([]));
   }, [año]);
 
-  const normalizeNumber = (value?: number | string | null) => {
-    if (value === null || value === undefined) return undefined;
-    if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
-    const cleaned = String(value).replace(',', '.').trim();
-    const num = Number(cleaned);
-    return Number.isFinite(num) ? num : undefined;
-  };
-
   const enrichStudentsWithStats = useCallback(async (rawStudents: Estudiante[]): Promise<UIStudent[]> => {
     const currentYear = new Date().getFullYear();
 
@@ -87,7 +78,6 @@ export default function GeneracionViewSimple() {
         if (!studentId) {
           return {
             ...student,
-            promedio: normalizeNumber(student.promedios_media),
             totalEntrevistasAno: 0,
           };
         }
@@ -112,7 +102,6 @@ export default function GeneracionViewSimple() {
 
         return {
           ...student,
-          promedio: normalizeNumber(student.promedios_media),
           ultimaEntrevista,
           totalEntrevistasAno,
         };

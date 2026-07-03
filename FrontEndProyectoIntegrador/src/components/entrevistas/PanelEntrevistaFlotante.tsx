@@ -108,6 +108,9 @@ export function PanelEntrevistaFlotante() {
 
   const [mostrandoAgregar, setMostrandoAgregar] = useState(false);
   const [mostrandoFinalizar, setMostrandoFinalizar] = useState(false);
+  // Tópico del comentario que se está editando actualmente (solo uno a la vez,
+  // y no puede coincidir con estar agregando uno nuevo).
+  const [editandoTopico, setEditandoTopico] = useState<Topico | null>(null);
 
   // Cierra el form de agregar cuando ya no quedan tópicos disponibles
   useEffect(() => {
@@ -142,6 +145,14 @@ export function PanelEntrevistaFlotante() {
       setMostrandoAgregar(false);
     },
     [agregarComentario]
+  );
+
+  const handleGuardarEdicion = useCallback(
+    (topico: Topico, texto: string) => {
+      editarComentario(topico, texto);
+      setEditandoTopico(null);
+    },
+    [editarComentario]
   );
 
   const handleFinalizar = useCallback(
@@ -188,7 +199,7 @@ export function PanelEntrevistaFlotante() {
   return (
     <>
       <div className="fixed bottom-4 right-4 z-50 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
-           style={{ width: '460px', maxHeight: '80vh' }}>
+           style={{ width: '600px', maxHeight: '88vh' }}>
         {/* Encabezado */}
         <div className="bg-[#2D4A3E] text-white px-4 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex-1 min-w-0">
@@ -230,7 +241,11 @@ export function PanelEntrevistaFlotante() {
                 key={c.topico}
                 topico={c.topico}
                 texto={c.texto}
-                onEditar={editarComentario}
+                editando={editandoTopico === c.topico}
+                puedeEditar={!mostrandoAgregar && (editandoTopico === null || editandoTopico === c.topico)}
+                onIniciarEdicion={() => setEditandoTopico(c.topico)}
+                onCancelarEdicion={() => setEditandoTopico(null)}
+                onGuardarEdicion={(texto) => handleGuardarEdicion(c.topico, texto)}
                 onEliminar={eliminarComentario}
               />
             ))
@@ -250,9 +265,13 @@ export function PanelEntrevistaFlotante() {
           {!mostrandoAgregar && (
             <button
               onClick={() => setMostrandoAgregar(true)}
-              disabled={!puedeAgregarMas}
+              disabled={!puedeAgregarMas || editandoTopico !== null}
               className="flex-1 text-base border border-[#65B39B] text-[#65B39B] rounded-lg py-2 hover:bg-[#65B39B]/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              title={!puedeAgregarMas ? 'Ya se usaron todos los tópicos' : undefined}
+              title={
+                editandoTopico !== null
+                  ? 'Termina de editar el comentario en curso antes de agregar uno nuevo'
+                  : !puedeAgregarMas ? 'Ya se usaron todos los tópicos' : undefined
+              }
             >
               + Comentario
             </button>

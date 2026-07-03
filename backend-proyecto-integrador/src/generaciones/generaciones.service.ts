@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
   ConflictException,
@@ -47,8 +48,10 @@ export class GeneracionesService {
     return this.generacionesRepo.update(id, dto);
   }
 
-  async remove(id: number): Promise<generacion> {
-    await this.getById(id);
-    return this.generacionesRepo.delete(id);
+  // Una generación agrupa a potencialmente muchos estudiantes; no se puede
+  // eliminar bajo ninguna circunstancia (ni vacía), para evitar que un
+  // borrado accidental arrastre estudiantes completos vía cascada.
+  remove(): never {
+    throw new ForbiddenException('Las generaciones no se pueden eliminar.');
   }
 }

@@ -66,7 +66,7 @@ export const PasswordRecoveryModal: React.FC<PasswordRecoveryModalProps> = ({
       setStep('verify');
     } catch (error: unknown) {
       logger.error('❌ Error solicitando recuperación:', error);
-      setError('Error al solicitar recuperación. Verifica tu email.');
+      setError(error instanceof Error ? error.message : 'Error al solicitar recuperación. Verifica tu email.');
     } finally {
       setLoading(false);
     }
@@ -95,7 +95,7 @@ export const PasswordRecoveryModal: React.FC<PasswordRecoveryModalProps> = ({
       }
     } catch (error: unknown) {
       logger.error('❌ Error verificando código:', error);
-      setError('Error al verificar el código. Intenta de nuevo.');
+      setError(error instanceof Error ? error.message : 'Error al verificar el código. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -134,7 +134,7 @@ export const PasswordRecoveryModal: React.FC<PasswordRecoveryModalProps> = ({
 
     } catch (error: unknown) {
       logger.error('❌ Error restableciendo contraseña:', error);
-      setError('Error al restablecer la contraseña. Intenta de nuevo.');
+      setError(error instanceof Error ? error.message : 'Error al restablecer la contraseña. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }

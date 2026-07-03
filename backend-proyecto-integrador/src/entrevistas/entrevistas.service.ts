@@ -77,7 +77,7 @@ export class EntrevistasService {
   async updateEntrevista(
     id_entrevista: number,
     updateEntrevistaDto: UpdateEntrevistaDto,
-  ): Promise<entrevista> {
+  ): Promise<EntrevistaConDetalle> {
     let semestre_id: number | undefined;
     if (updateEntrevistaDto.fecha_hora) {
       semestre_id = await this.resolveSemestreId(

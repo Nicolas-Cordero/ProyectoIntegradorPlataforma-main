@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { semestre } from '@prisma/client';
 import { CreateSemestreDto } from './dto/create-semestre.dto';
 import { SemestreRepository } from './semestre.repository';
@@ -19,8 +19,13 @@ export class SemestreService {
     return this.semestreRepository.findOne(id);
   }
 
-  remove(id: number) {
-    return this.semestreRepository.remove(id);
+  // Un semestre es un concepto de calendario compartido por ramos y
+  // entrevistas de potencialmente muchos estudiantes distintos, y por
+  // semestre_carrera de muchas carreras. No se puede eliminar bajo ninguna
+  // circunstancia — evita que un borrado accidental arrastre datos
+  // académicos de estudiantes no relacionados con la acción.
+  remove(): never {
+    throw new ForbiddenException('Los semestres no se pueden eliminar.');
   }
 
   linkCarrera(semestre_id: number, codigo_carrera: number): Promise<void> {

@@ -64,7 +64,7 @@ export class SemestreController {
 
   @Delete(':id')
   @Roles(UserRol.ADMIN)
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.semestreService.remove(id);
+  remove() {
+    return this.semestreService.remove();
   }
 }

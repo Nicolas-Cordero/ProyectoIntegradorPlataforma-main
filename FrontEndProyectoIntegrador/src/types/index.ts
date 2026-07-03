@@ -127,6 +127,13 @@ export interface Carrera {
 
 export type EstadoRamo = 'APROBADO' | 'REPROBADO' | 'CURSANDO' | 'ELIMINADO';
 
+export interface RamoSemestre {
+  semestre_id: number;
+  year: number;
+  semestre: 'PRIMER_SEMESTRE' | 'SEGUNDO_SEMESTRE' | 'INVIERNO' | 'VERANO';
+  tipo: 'REGULAR' | 'RECUPERATIVO';
+}
+
 export interface Ramo {
   id: number;
   semestre_id: number;
@@ -137,6 +144,8 @@ export interface Ramo {
   comentario: string;
   intento: number;
   nota_final?: number;
+  // Solo viene poblado desde /complete (findEstudianteByRutComplete incluye la relación).
+  semestre?: RamoSemestre;
 }
 
 // ============================================

@@ -49,7 +49,7 @@ export class BeneficiosController {
 
   //lo remueve
   @Delete(':id')
-  removeBeneficio(@Param('id', ParseIntPipe) id: number) {
-    return this.beneficiosService.removeBeneficio(id);
+  removeBeneficio() {
+    return this.beneficiosService.removeBeneficio();
   }
 }

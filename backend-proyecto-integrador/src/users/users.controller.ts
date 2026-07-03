@@ -61,7 +61,7 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('rut') rut: string): Promise<{ message: string }> {
     await this.usersService.remove(rut);
-    return { message: 'Usuario eliminado exitosamente' };
+    return { message: 'Usuario desactivado exitosamente' };
   }
 
   @Patch(':rut/password')

@@ -36,10 +36,4 @@ export class GeneracionesRepository {
       data,
     });
   }
-
-  async delete(id: number): Promise<generacion> {
-    return this.prisma.generacion.delete({
-      where: { id },
-    });
-  }
 }

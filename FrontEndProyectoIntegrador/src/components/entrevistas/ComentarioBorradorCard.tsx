@@ -5,24 +5,30 @@ import type { Topico } from '../../types';
 interface Props {
   topico: Topico;
   texto: string;
-  onEditar: (topico: Topico, texto: string) => void;
+  editando: boolean;
+  // false mientras se agrega un comentario nuevo o se edita otro distinto a este.
+  puedeEditar: boolean;
+  onIniciarEdicion: () => void;
+  onCancelarEdicion: () => void;
+  onGuardarEdicion: (texto: string) => void;
   onEliminar: (topico: Topico) => void;
 }
 
-export function ComentarioBorradorCard({ topico, texto, onEditar, onEliminar }: Props) {
-  const [editando, setEditando] = useState(false);
+export function ComentarioBorradorCard({
+  topico, texto, editando, puedeEditar,
+  onIniciarEdicion, onCancelarEdicion, onGuardarEdicion, onEliminar,
+}: Props) {
   const [draft, setDraft] = useState(texto);
 
   function confirmarEdicion() {
     if (draft.trim()) {
-      onEditar(topico, draft.trim());
+      onGuardarEdicion(draft.trim());
     }
-    setEditando(false);
   }
 
   function cancelarEdicion() {
     setDraft(texto);
-    setEditando(false);
+    onCancelarEdicion();
   }
 
   return (
@@ -34,9 +40,10 @@ export function ComentarioBorradorCard({ topico, texto, onEditar, onEliminar }: 
         <div className="flex gap-1">
           {!editando && (
             <button
-              onClick={() => { setDraft(texto); setEditando(true); }}
-              className="text-gray-400 hover:text-gray-600 p-1.5 rounded hover:bg-gray-200 transition-colors"
-              title="Editar comentario"
+              onClick={() => { setDraft(texto); onIniciarEdicion(); }}
+              disabled={!puedeEditar}
+              className="text-gray-400 hover:text-gray-600 p-1.5 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              title={puedeEditar ? 'Editar comentario' : 'Termina la edición o el comentario en curso antes de editar otro'}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H8v-2.414A2 2 0 018.586 12.586z" />
@@ -55,7 +62,7 @@ export function ComentarioBorradorCard({ topico, texto, onEditar, onEliminar }: 
         </div>
       </div>
 
-      {editando ? (
+      {editando && (
         <div className="mt-1 space-y-2">
           <textarea
             className="w-full text-base border border-gray-300 rounded p-2 resize-none focus:outline-none focus:ring-1 focus:ring-[#65B39B]"
@@ -80,8 +87,6 @@ export function ComentarioBorradorCard({ topico, texto, onEditar, onEliminar }: 
             </button>
           </div>
         </div>
-      ) : (
-        <p className="text-base text-gray-700 whitespace-pre-wrap">{texto}</p>
       )}
     </div>
   );

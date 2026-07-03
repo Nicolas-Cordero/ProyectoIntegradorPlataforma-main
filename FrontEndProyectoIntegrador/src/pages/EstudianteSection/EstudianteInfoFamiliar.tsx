@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { familiarService } from '../../services';
 import type { CreateFamiliarDto, UpdateFamiliarDto } from '../../services/familiar.service';
 import { Modal, Input, Select, Alert } from '../../components/ui';
+import { esTelefonoValido, normalizarTelefono } from '../../utils/validators';
 import { useConfirmDialog } from '../../components/ui';
 import { useAuthContext } from '../../context/AuthContext';
 import PermissionService from '../../services/permissionService';
@@ -85,13 +86,18 @@ export default function EstudianteInfoFamiliar() {
       setError('Nombre y teléfono son obligatorios');
       return;
     }
+    if (!esTelefonoValido(form.telefono)) {
+      setError('Teléfono inválido. Ej: 912345678 · 56912345678 · +569 1234 5678');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
+      const telefono = normalizarTelefono(form.telefono);
       if (editingId !== null) {
         const update: UpdateFamiliarDto = {
           nombre: form.nombre,
-          telefono: form.telefono,
+          telefono,
           parentesco: form.parentesco,
           observacion: form.observacion || undefined,
           es_contacto_emergencia: form.es_contacto_emergencia,
@@ -101,7 +107,7 @@ export default function EstudianteInfoFamiliar() {
         const create: CreateFamiliarDto = {
           rut_estudiante: estudiante.rut_estudiante,
           nombre: form.nombre,
-          telefono: form.telefono,
+          telefono,
           parentesco: form.parentesco,
           observacion: form.observacion || undefined,
           es_contacto_emergencia: form.es_contacto_emergencia,
@@ -222,7 +228,8 @@ export default function EstudianteInfoFamiliar() {
             tipo="tel"
             valor={form.telefono}
             onChange={(v) => setForm(f => ({ ...f, telefono: v }))}
-            placeholder="+569 xxxx xxxx"
+            placeholder="912345678"
+            ayuda="Acepta: 912345678 · 56912345678 · +569 1234 5678"
           />
           <Select
             etiqueta="Parentesco"

@@ -3,18 +3,42 @@ import { useOutletContext } from 'react-router-dom';
 import { Avatar } from '@mui/material';
 import { Edit as EditIcon } from '@mui/icons-material';
 import { Modal, Input, Select, Alert, Button } from '../../components/ui';
-import { estudianteService, alertasService } from '../../services';
+import { estudianteService, alertasService, entrevistaService } from '../../services';
 import type { Alerta } from '../../services';
 import type { EstudianteOutletContext } from './EstudianteDetail';
-import type { Genero } from '../../types';
+import type { Genero, Ramo } from '../../types';
 import type { UpdateEstudianteDto } from '../../services/estudiante.service';
+import { LiceoSelector } from '../../components/features/estudiantes';
 import { FotoPerfilModal } from '../../components/features/estudiante-detalles/FotoPerfilModal';
+import { BACKEND_TO_UI, ORDEN_SEMESTRE, semLabel } from '../../components/features/estudiante-detalles/avance-curricular';
+import { esTelefonoValido, normalizarTelefono } from '../../utils/validators';
+import { formatDate } from '../../utils/dateUtils';
 import userSvg from '../../assets/icons/user.svg';
 
 // Normaliza coma decimal a punto antes de cualquier operación numérica (Bug 10)
 function normalizarDecimal(v: string | number | undefined | null): string {
   if (v === null || v === undefined) return '';
   return String(v).replace(',', '.');
+}
+
+// Último semestre con al menos un ramo registrado, sin importar la carrera.
+function calcularUltimoSemestre(ramos: Ramo[] | undefined): string {
+  if (!ramos || ramos.length === 0) return '—';
+
+  let mejor: { year: number; tipo: 'REGULAR' | 'RECUPERATIVO'; codigo: keyof typeof ORDEN_SEMESTRE } | null = null;
+  for (const r of ramos) {
+    if (!r.semestre) continue;
+    const codigo = BACKEND_TO_UI[r.semestre.semestre];
+    const esMasReciente =
+      !mejor ||
+      r.semestre.year > mejor.year ||
+      (r.semestre.year === mejor.year && ORDEN_SEMESTRE[codigo] > ORDEN_SEMESTRE[mejor.codigo]);
+    if (esMasReciente) {
+      mejor = { year: r.semestre.year, tipo: r.semestre.tipo, codigo };
+    }
+  }
+
+  return mejor ? semLabel(mejor.year, mejor.tipo, mejor.codigo) : '—';
 }
 
 export default function EstudiantePerfil() {
@@ -24,6 +48,14 @@ export default function EstudiantePerfil() {
   const [fotoModalOpen, setFotoModalOpen] = useState(false);
 
   const [alertas, setAlertas] = useState<Alerta[]>([]);
+  const [ultimaEntrevistaFecha, setUltimaEntrevistaFecha] = useState<string | null>(null);
+
+  // Carrera seleccionada para mostrar en "Información General" — por defecto
+  // la primera ACTIVA, o si no hay ninguna, la primera de la lista.
+  const carreras = estudiante.carreras ?? [];
+  const [carreraSeleccionadaId, setCarreraSeleccionadaId] = useState<number | null>(
+    () => (carreras.find(c => c.estado === 'ACTIVO') ?? carreras[0])?.codigo_carrera ?? null
+  );
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editForm, setEditForm] = useState<Partial<UpdateEstudianteDto>>({});
@@ -39,6 +71,20 @@ export default function EstudiantePerfil() {
       .then(setAlertas)
       .catch(() => setAlertas([]));
   }, [estudiante.rut_estudiante]);
+
+  // Entrevistas: mismo permiso que la pestaña "Entrevistas" (solo Admin/Tutor).
+  useEffect(() => {
+    if (!canEdit) { setUltimaEntrevistaFecha(null); return; }
+    entrevistaService.getByEstudiante(estudiante.rut_estudiante)
+      .then((entrevistas) => {
+        if (!entrevistas || entrevistas.length === 0) { setUltimaEntrevistaFecha(null); return; }
+        const masReciente = entrevistas.reduce((max, e) =>
+          new Date(e.fecha_hora).getTime() > new Date(max.fecha_hora).getTime() ? e : max
+        );
+        setUltimaEntrevistaFecha(String(masReciente.fecha_hora));
+      })
+      .catch(() => setUltimaEntrevistaFecha(null));
+  }, [estudiante.rut_estudiante, canEdit]);
 
   const openEditModal = () => {
     // Bug 10 fix: normalizar promedios_media (puede llegar con coma decimal del backend)
@@ -60,12 +106,18 @@ export default function EstudiantePerfil() {
   };
 
   const handleSave = async () => {
+    if (editForm.telefono !== undefined && !esTelefonoValido(editForm.telefono)) {
+      setSaveError('Teléfono inválido. Ej: 912345678 · 56912345678 · +569 1234 5678');
+      return;
+    }
+
     setSaving(true);
     setSaveError('');
     try {
       // Bug 10 fix: asegurar punto decimal antes de enviar
       const payload = {
         ...editForm,
+        telefono: editForm.telefono !== undefined ? normalizarTelefono(editForm.telefono) : undefined,
         promedios_media: editForm.promedios_media !== undefined
           ? parseFloat(normalizarDecimal(editForm.promedios_media))
           : undefined,
@@ -80,20 +132,22 @@ export default function EstudiantePerfil() {
     }
   };
 
-  //Incluir el estado de la carrera.
-  const carreraActual = estudiante.carreras?.[0] ?? null;
-
-  const infoFields = [
+  const infoFieldsAntesCarrera = [
     { label: 'Nombre Completo', value: `${estudiante.nombre} ${estudiante.apellido}` },
     { label: 'RUT',             value: estudiante.rut_estudiante },
     { label: 'Correo',          value: estudiante.email },
     { label: 'Teléfono',        value: estudiante.telefono },
     { label: 'Liceo',           value: liceo?.nombre ?? `RBD: ${estudiante.rbd_liceo}` },
     { label: 'Generación',      value: generacion ? `${generacion.año}${generacion.descripcion ? ` — ${generacion.descripcion}` : ''}` : `ID: ${estudiante.generacion_id ?? '—'}` },
-    { label: 'Carrera',         value: carreraActual?.nombre ?? 'Sin carrera' },
-    // Bug 8 fix: etiqueta clara para distinguir del estado académico
-    { label: 'Estado en sistema', value: estudiante.estado },
   ];
+  const infoFieldsDespuesCarrera = [
+    {
+      label: 'Última entrevista',
+      value: ultimaEntrevistaFecha ? formatDate(ultimaEntrevistaFecha) : (canEdit ? 'Sin entrevistas' : '—'),
+    },
+  ];
+
+  const ultimoSemestre = calcularUltimoSemestre(estudiante.ramos);
 
   return (
     <div>
@@ -138,10 +192,38 @@ export default function EstudiantePerfil() {
               )}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {infoFields.map(field => (
+              {infoFieldsAntesCarrera.map(field => (
                 <div key={field.label}>
                   <p className="text-xs text-gray-500 uppercase tracking-wide">{field.label}</p>
                   {/* Bug 6 fix: ?? en lugar de || para que 0 no sea falsy */}
+                  <p className="font-semibold text-gray-800 mt-0.5">{field.value ?? 'No especificado'}</p>
+                </div>
+              ))}
+
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Carrera</p>
+                {carreras.length === 0 ? (
+                  <p className="font-semibold text-gray-800 mt-0.5">Sin carrera</p>
+                ) : carreras.length === 1 ? (
+                  <p className="font-semibold text-gray-800 mt-0.5">{carreras[0].nombre}</p>
+                ) : (
+                  <select
+                    value={carreraSeleccionadaId ?? ''}
+                    onChange={(e) => setCarreraSeleccionadaId(Number(e.target.value))}
+                    className="font-semibold text-gray-800 mt-0.5 w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B]/30"
+                  >
+                    {carreras.map(c => (
+                      <option key={c.codigo_carrera} value={c.codigo_carrera}>
+                        {c.nombre}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {infoFieldsDespuesCarrera.map(field => (
+                <div key={field.label}>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">{field.label}</p>
                   <p className="font-semibold text-gray-800 mt-0.5">{field.value ?? 'No especificado'}</p>
                 </div>
               ))}
@@ -177,9 +259,8 @@ export default function EstudiantePerfil() {
             </p>
           </div>
           <div>
-            <p className="text-gray-400 text-xs mb-0.5">Semestre actual</p>
-            {/* TODO: obtener desde periodoAcademicoService */}
-            <p className="font-bold text-gray-800">—</p>
+            <p className="text-gray-400 text-xs mb-0.5">Último semestre</p>
+            <p className="font-bold text-gray-800">{ultimoSemestre}</p>
           </div>
           <div>
             <p className="text-gray-400 text-xs mb-0.5">Beneficios</p>
@@ -221,7 +302,7 @@ export default function EstudiantePerfil() {
           <Input etiqueta="Nombre"     valor={editForm.nombre ?? ''}    onChange={(v) => setEditForm(f => ({ ...f, nombre: v }))} />
           <Input etiqueta="Apellido"   valor={editForm.apellido ?? ''}  onChange={(v) => setEditForm(f => ({ ...f, apellido: v }))} />
           <Input etiqueta="Correo"     tipo="email" valor={editForm.email ?? ''}   onChange={(v) => setEditForm(f => ({ ...f, email: v }))} />
-          <Input etiqueta="Teléfono"   tipo="tel"   valor={editForm.telefono ?? ''} onChange={(v) => setEditForm(f => ({ ...f, telefono: v }))} placeholder="+569 xxxx xxxx" />
+          <Input etiqueta="Teléfono"   tipo="tel"   valor={editForm.telefono ?? ''} onChange={(v) => setEditForm(f => ({ ...f, telefono: v }))} placeholder="912345678" ayuda="Acepta: 912345678 · 56912345678 · +569 1234 5678" />
           <Input etiqueta="Fecha de nacimiento" tipo="date" valor={editForm.fecha_nacimiento ?? ''} onChange={(v) => setEditForm(f => ({ ...f, fecha_nacimiento: v }))} />
           <Input etiqueta="Dirección"  valor={editForm.direccion ?? ''} onChange={(v) => setEditForm(f => ({ ...f, direccion: v }))} />
           <Select
@@ -234,7 +315,12 @@ export default function EstudiantePerfil() {
               { valor: 'NO_BINARIO', etiqueta: 'No binario' },
             ]}
           />
-          <Input etiqueta="RBD Liceo" valor={editForm.rbd_liceo ?? ''} onChange={(v) => setEditForm(f => ({ ...f, rbd_liceo: v }))} />
+          <LiceoSelector
+            value={editForm.rbd_liceo ?? ''}
+            onChange={(rbd) => setEditForm(f => ({ ...f, rbd_liceo: rbd }))}
+            disabled={saving}
+            liceoInicial={liceo}
+          />
           <Input
             etiqueta="Promedio media"
             tipo="number"

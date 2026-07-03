@@ -90,7 +90,10 @@ export function HistorialEstadoSeccion({ carrera, canEdit, onEstadoCambiado }: H
               </tr>
             </thead>
             <tbody>
-              {carrera.historial.map(h => {
+              {/* El backend devuelve el historial en orden cronológico ascendente
+                  (lo necesita el cálculo de semestres suspendidos); se invierte
+                  aquí solo para mostrar los cambios más recientes primero. */}
+              {[...carrera.historial].reverse().map(h => {
                 const chipNuevo = ESTADO_CARRERA_CHIP[h.estado_nuevo];
                 return (
                   <tr key={h.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">

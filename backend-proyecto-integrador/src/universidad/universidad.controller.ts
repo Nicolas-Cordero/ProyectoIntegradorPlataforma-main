@@ -55,7 +55,7 @@ export class UniversidadController {
 
   @Delete(':id_universidad')
   @Roles(UserRol.ADMIN)
-  remove(@Param('id_universidad', ParseIntPipe) id_universidad: number) {
-    return this.universidadService.remove(id_universidad);
+  remove() {
+    return this.universidadService.remove();
   }
 }

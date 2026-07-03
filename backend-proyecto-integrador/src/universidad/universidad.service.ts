@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { CreateUniversidadDto } from './dto/create-universidad.dto';
 import { UpdateUniversidadDto } from './dto/update-universidad.dto';
 import { UniversidadRepository } from './universidad.repository';
@@ -39,8 +39,9 @@ export class UniversidadService {
     return this.universidadRepo.update(id_universidad, updateUniversidadDto);
   }
 
-  remove(id_universidad: number): Promise<universidad> {
-    //Las universidades son independientes, pero no tiene sentido eliminar ninguna.
-    return this.universidadRepo.remove(id_universidad);
+  // Una universidad es referenciada por carreras de potencialmente muchos
+  // estudiantes distintos; no se puede eliminar bajo ninguna circunstancia.
+  remove(): never {
+    throw new ForbiddenException('Las universidades no se pueden eliminar.');
   }
 }

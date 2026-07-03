@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { CreateLiceoDto, UpdateLiceoDto } from './dto';
 import { LiceoRepository } from './liceo.repository';
 import { liceo } from '@prisma/client';
@@ -27,8 +27,10 @@ export class LiceoService {
     return this.liceoRepo.update(rbd_liceo, updateLiceoDto);
   }
 
-  remove(rbd_liceo: string) {
-    //liceo es independiente.
-    return this.liceoRepo.remove(rbd_liceo);
+  // Un liceo es referenciado por potencialmente muchos estudiantes; no se
+  // puede eliminar bajo ninguna circunstancia, para evitar que un borrado
+  // accidental arrastre estudiantes completos vía cascada.
+  remove(): never {
+    throw new ForbiddenException('Los liceos no se pueden eliminar.');
   }
 }

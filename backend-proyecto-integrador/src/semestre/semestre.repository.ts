@@ -1,8 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { Prisma, semestre } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSemestreDto } from './dto/create-semestre.dto';
@@ -42,20 +38,6 @@ export class SemestreRepository {
     semestre: string,
   ): Promise<semestre | null> {
     return this.prisma.semestre.findFirst({ where: { year, semestre } });
-  }
-
-  async remove(id: number): Promise<semestre> {
-    try {
-      return await this.prisma.semestre.delete({ where: { semestre_id: id } });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2025'
-      ) {
-        throw new NotFoundException(`Semestre con id ${id} no encontrado.`);
-      }
-      throw error;
-    }
   }
 
   async linkCarrera(

@@ -5,7 +5,6 @@ import type { Estudiante } from '../../../types';
 type UIStudent = Estudiante & {
   ultimaEntrevista?: string;
   totalEntrevistasAno?: number;
-  promedio?: number;
 };
 
 interface StudentsTableProps {
@@ -37,19 +36,6 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
     return sortDirection === 'asc' ? '↑' : '↓';
   };
 
-  const getPromedioInfo = (promedio: number | undefined) => {
-    const rawValue = typeof promedio === 'number' ? promedio : undefined;
-    const value = rawValue !== undefined && Number.isFinite(rawValue) ? rawValue : undefined;
-
-    if (value === undefined) {
-      return { value: undefined, colorClass: 'text-[var(--color-coral-dark)]' };
-    }
-
-    if (value >= 6.0) return { value, colorClass: 'text-[var(--color-turquoise)]' };
-    if (value >= 5.5) return { value, colorClass: 'text-[var(--color-orange)]' };
-    return { value, colorClass: 'text-[var(--color-coral-dark)]' };
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <table className="w-full border-collapse text-sm">
@@ -73,12 +59,6 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
             >
               Estado {getSortIcon('estado')}
             </th>
-            <th
-              onClick={() => onSort('promedios_media')}
-              className="py-4 px-3 text-center font-bold cursor-pointer border-b-2 border-gray-300 text-gray-700 hover:bg-gray-300 transition-colors"
-            >
-              Promedio {getSortIcon('promedios_media')}
-            </th>
             <th className="py-4 px-3 text-center font-bold border-b-2 border-gray-300 text-gray-700 min-w-[120px]">
               Última Entrevista
             </th>
@@ -95,8 +75,6 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
         </thead>
         <tbody>
           {students.map((student, index) => {
-            const promedioDisplay = student.promedio ?? (typeof student.promedios_media === 'number' ? student.promedios_media : undefined);
-            const { value: promedioValor, colorClass: promedioColor } = getPromedioInfo(promedioDisplay);
             const tieneAlerta = alertasSet.has(student.rut_estudiante);
 
             return (
@@ -128,9 +106,6 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
                   >
                     {student.estado || 'Activo'}
                   </span>
-                </td>
-                <td className={`py-3 px-3 border-b border-gray-300 text-center font-bold ${promedioColor}`}>
-                  {promedioValor !== undefined ? promedioValor.toFixed(1) : 'N/A'}
                 </td>
                 <td className="py-3 px-3 border-b border-gray-300 text-center text-sm">
                   <DateLabel fecha={student.ultimaEntrevista} modo="chileno" />

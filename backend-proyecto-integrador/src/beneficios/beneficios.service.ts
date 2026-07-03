@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
   ConflictException,
@@ -41,9 +42,13 @@ export class BeneficiosService {
     return await this.beneficioRepo.updateBeneficioByID(id, updateDto);
   }
 
-  async removeBeneficio(id: number): Promise<beneficio> {
-    //al remover un beneficio no se estan eliminando las asociaciones a ese beneficio
-    return this.beneficioRepo.deleteBeneficioByID(id);
+  // Un tipo de beneficio del catálogo es referenciado por beneficio_estudiante,
+  // registro histórico real de ayuda financiera recibida por estudiantes. No
+  // se puede eliminar bajo ninguna circunstancia.
+  removeBeneficio(): never {
+    throw new ForbiddenException(
+      'Los beneficios del catálogo no se pueden eliminar.',
+    );
   }
 
   // === BENEFICIO ESTUDIANTE ===

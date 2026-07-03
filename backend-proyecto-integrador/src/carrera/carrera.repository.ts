@@ -25,11 +25,19 @@ export class CarreraRepository {
     });
   }
 
+  // Cascada manual: ramo, semestre_carrera e historial_estado_carrera le
+  // pertenecen exclusivamente a la carrera (no tienen sentido sin ella), así
+  // que se eliminan junto con ella en la misma transacción.
   async remove(id_carrera: number): Promise<carrera> {
-    return this.prisma.carrera.delete({
-      where: {
-        codigo_carrera: id_carrera,
-      },
+    return this.prisma.$transaction(async (tx) => {
+      await tx.ramo.deleteMany({ where: { codigo_carrera: id_carrera } });
+      await tx.semestre_carrera.deleteMany({
+        where: { codigo_carrera: id_carrera },
+      });
+      await tx.historial_estado_carrera.deleteMany({
+        where: { codigo_carrera: id_carrera },
+      });
+      return tx.carrera.delete({ where: { codigo_carrera: id_carrera } });
     });
   }
 

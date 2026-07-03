@@ -50,7 +50,7 @@ export class GeneracionesController {
 
   @Delete(':id')
   @Roles(UserRol.ADMIN)
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.generacionesService.remove(id);
+  remove() {
+    return this.generacionesService.remove();
   }
 }

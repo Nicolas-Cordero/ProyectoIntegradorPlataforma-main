@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import type { UpdateEstudianteDto } from '../../../../services/estudiante.service';
+import { esTelefonoValido, normalizarTelefono } from '../../../../utils/validators';
 
 type FieldType = 'text' | 'email' | 'tel' | 'number' | 'date' | 'select';
 
@@ -18,6 +19,7 @@ export function InlineField({ label, value, fieldKey, type = 'text', options, ed
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [displayOverride, setDisplayOverride] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | HTMLSelectElement>(null);
 
   const baseValue = displayOverride ?? (value !== null && value !== undefined ? String(value) : 'No especificado');
@@ -25,19 +27,32 @@ export function InlineField({ label, value, fieldKey, type = 'text', options, ed
   const startEdit = () => {
     if (!editable || readOnly || !fieldKey) return;
     setDraft(value !== null && value !== undefined ? String(value) : '');
+    setError(null);
     setEditing(true);
     setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 0);
   };
 
   const save = async () => {
     if (!fieldKey || !onSave) { setEditing(false); return; }
-    const ok = await onSave(fieldKey, draft);
-    if (ok) setDisplayOverride(draft || 'No especificado');
+
+    let valueToSave = draft;
+    if (type === 'tel') {
+      if (!esTelefonoValido(draft)) {
+        setError('Teléfono inválido. Ej: 912345678 · 56912345678 · +569 1234 5678');
+        return;
+      }
+      valueToSave = normalizarTelefono(draft);
+    }
+
+    setError(null);
+    const ok = await onSave(fieldKey, valueToSave);
+    if (ok) setDisplayOverride(valueToSave || 'No especificado');
     setEditing(false);
   };
 
   const cancel = () => {
     setEditing(false);
+    setError(null);
     setDraft('');
   };
 
@@ -50,28 +65,32 @@ export function InlineField({ label, value, fieldKey, type = 'text', options, ed
     <div className="py-3 grid grid-cols-[210px_1fr] gap-4 items-center border-b border-gray-50 last:border-0 group">
       <span className="text-sm text-gray-500 uppercase tracking-wide font-medium">{label}</span>
       {editing && fieldKey ? (
-        options ? (
-          <select
-            ref={inputRef as React.RefObject<HTMLSelectElement>}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={save}
-            onKeyDown={onKeyDown}
-            className="text-base border-2 border-[#65B39B] rounded-md px-2 py-1.5 focus:outline-none w-full max-w-xs"
-          >
-            {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-        ) : (
-          <input
-            ref={inputRef as React.RefObject<HTMLInputElement>}
-            type={type}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={save}
-            onKeyDown={onKeyDown}
-            className="text-base border-2 border-[#65B39B] rounded-md px-2 py-1.5 focus:outline-none w-full max-w-xs"
-          />
-        )
+        <div>
+          {options ? (
+            <select
+              ref={inputRef as React.RefObject<HTMLSelectElement>}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={save}
+              onKeyDown={onKeyDown}
+              className="text-base border-2 border-[#65B39B] rounded-md px-2 py-1.5 focus:outline-none w-full max-w-xs"
+            >
+              {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          ) : (
+            <input
+              ref={inputRef as React.RefObject<HTMLInputElement>}
+              type={type}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={save}
+              onKeyDown={onKeyDown}
+              placeholder={type === 'tel' ? '912345678 · +569 xxxx xxxx' : undefined}
+              className="text-base border-2 border-[#65B39B] rounded-md px-2 py-1.5 focus:outline-none w-full max-w-xs"
+            />
+          )}
+          {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+        </div>
       ) : (
         <span
           onDoubleClick={startEdit}

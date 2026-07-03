@@ -28,14 +28,6 @@ export class UniversidadRepository {
     });
   }
 
-  async remove(id_universidad: number): Promise<universidad> {
-    return this.prisma.universidad.delete({
-      where: {
-        codigo_universidad: id_universidad,
-      },
-    });
-  }
-
   async findAll(): Promise<universidad[]> {
     return this.prisma.universidad.findMany();
   }

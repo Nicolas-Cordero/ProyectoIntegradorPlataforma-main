@@ -49,7 +49,9 @@ export class EstudianteRepository {
         carreras: { include: { universidad: true } },
         familiares: true,
         beneficios: true,
-        ramos: true,
+        // include semestre: el frontend necesita year/tipo/semestre para
+        // calcular el último semestre cursado (perfil del estudiante).
+        ramos: { include: { semestre: true } },
         contactos_emergencia: true,
       },
     });
@@ -199,23 +201,47 @@ export class EstudianteRepository {
     });
   }
 
-  async remove(rut_estudiante: string) {
-    return this.prisma.estudiante.delete({
-      where: {
-        rut_estudiante: rut_estudiante,
-      },
-    });
-  }
-
   /**
-   * Elimina el estudiante e inhabilita su usuario de login (activo = false),
-   * conservando la cuenta para auditoría.
+   * Elimina el estudiante y todo lo que le pertenece exclusivamente
+   * (familiares, beneficios asignados, carreras con sus ramos/vínculos a
+   * semestre/historial de estado, ramos sueltos, entrevistas con sus
+   * comentarios, y su registro PAES), e inhabilita su usuario de login
+   * (activo = false) conservando la cuenta para auditoría.
+   * `firma_acuerdo` no se maneja acá porque ya tiene onDelete: Cascade.
    */
   async removeWithUserDisable(rut_estudiante: string): Promise<estudiante> {
     return this.prisma.$transaction(async (tx) => {
+      const carreras = await tx.carrera.findMany({
+        where: { rut_estudiante },
+        select: { codigo_carrera: true },
+      });
+      const codigosCarrera = carreras.map((c) => c.codigo_carrera);
+
+      await tx.ramo.deleteMany({ where: { rut_estudiante } });
+      if (codigosCarrera.length > 0) {
+        await tx.semestre_carrera.deleteMany({
+          where: { codigo_carrera: { in: codigosCarrera } },
+        });
+        await tx.historial_estado_carrera.deleteMany({
+          where: { codigo_carrera: { in: codigosCarrera } },
+        });
+      }
+      await tx.carrera.deleteMany({ where: { rut_estudiante } });
+
+      await tx.comentario.deleteMany({
+        where: { entrevista: { rut_estudiante } },
+      });
+      await tx.entrevista.deleteMany({ where: { rut_estudiante } });
+
+      await tx.familiar.deleteMany({ where: { rut_estudiante } });
+      await tx.contacto_emergencia.deleteMany({ where: { rut_estudiante } });
+      await tx.beneficio_estudiante.deleteMany({ where: { rut_estudiante } });
+      await tx.paes.deleteMany({ where: { rut_estudiante } });
+
       const estudiante = await tx.estudiante.delete({
         where: { rut_estudiante },
       });
+
       const usuario = await tx.usuario.findUnique({
         where: { rut_usuario: rut_estudiante },
       });

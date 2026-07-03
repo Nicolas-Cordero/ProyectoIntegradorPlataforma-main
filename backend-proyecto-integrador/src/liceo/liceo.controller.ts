@@ -46,7 +46,7 @@ export class LiceoController {
 
   @Delete(':rbd_liceo')
   @Roles(UserRol.ADMIN)
-  remove(@Param('rbd_liceo') rbd_liceo: string) {
-    return this.liceoService.remove(rbd_liceo);
+  remove() {
+    return this.liceoService.remove();
   }
 }

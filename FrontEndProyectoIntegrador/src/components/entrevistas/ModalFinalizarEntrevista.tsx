@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, CircularProgress, Alert,
 } from '@mui/material';
+import { DuracionHmsInput } from './DuracionHmsInput';
 
 interface Props {
   abierto: boolean;
@@ -26,21 +27,23 @@ export function ModalFinalizarEntrevista({
   errorEnvio,
 }: Props) {
   const [fechaHoraRaw, setFechaHoraRaw] = useState('');
-  const [duracionRaw, setDuracionRaw] = useState('');
+  const [duracionS, setDuracionS] = useState(0);
   const [resumen, setResumen] = useState('');
 
-  // Calcula segundos transcurridos desde horaInicio hasta ahora como fallback
-  function calcularDuracion(): number {
-    if (duracionRaw.trim() !== '') {
-      const n = parseInt(duracionRaw, 10);
-      if (!isNaN(n) && n >= 0) return n;
+  // Al abrir el modal, precarga la duración con el tiempo transcurrido desde horaInicio.
+  useEffect(() => {
+    if (abierto) {
+      setDuracionS(Math.max(0, Math.floor((Date.now() - horaInicio.getTime()) / 1000)));
     }
-    return Math.max(0, Math.floor((Date.now() - horaInicio.getTime()) / 1000));
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [abierto]);
 
   async function handleConfirmar() {
-    const fechaHora = fechaHoraRaw ? new Date(fechaHoraRaw) : undefined;
-    const duracionS = calcularDuracion();
+    let fechaHora: Date | undefined;
+    if (fechaHoraRaw) {
+      const [year, month, day] = fechaHoraRaw.split('-').map(Number);
+      fechaHora = new Date(year, month - 1, day); // hora local 00:00, sin salto de día por UTC
+    }
     await onConfirmar({ fechaHora, duracionS, resumen: resumen.trim() || undefined });
   }
 
@@ -65,10 +68,10 @@ export function ModalFinalizarEntrevista({
 
         <div>
           <label className="block text-base font-medium text-gray-600 mb-1">
-            Fecha y hora de inicio <span className="text-gray-400 font-normal">(opcional — si se deja vacío se usa la hora en que se abrió el panel)</span>
+            Fecha de la entrevista <span className="text-gray-400 font-normal">· opcional, si se deja vacío se usa la hora en que se abrió el panel</span>
           </label>
           <input
-            type="datetime-local"
+            type="date"
             value={fechaHoraRaw}
             onChange={(e) => setFechaHoraRaw(e.target.value)}
             className="w-full border border-gray-300 rounded px-3 py-2 text-base focus:outline-none focus:ring-1 focus:ring-[#65B39B]"
@@ -76,23 +79,15 @@ export function ModalFinalizarEntrevista({
           />
         </div>
 
-        <div>
-          <label className="block text-base font-medium text-gray-600 mb-1">
-            Duración (segundos) <span className="text-gray-400 font-normal">(opcional — si se deja vacío se calcula automáticamente)</span>
-          </label>
-          <input
-            type="number"
-            min={0}
-            value={duracionRaw}
-            onChange={(e) => setDuracionRaw(e.target.value)}
-            placeholder={`${calcularDuracion()} s (calculado)`}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-base focus:outline-none focus:ring-1 focus:ring-[#65B39B]"
-            disabled={enviando}
-          />
-        </div>
+        <DuracionHmsInput
+          etiqueta="Duración · precargada con el tiempo transcurrido, ajústala si es necesario"
+          totalSegundos={duracionS}
+          onChange={setDuracionS}
+          disabled={enviando}
+        />
 
         <TextField
-          label="Resumen (opcional)"
+          label="Resumen · opcional"
           value={resumen}
           onChange={(e) => setResumen(e.target.value)}
           multiline

@@ -63,7 +63,13 @@ export function ComentarioEditable({
   }
 
   return (
-    <div className="border border-gray-100 rounded-lg p-3">
+    <div
+      className={`border rounded-lg p-3 transition-colors ${
+        editando
+          ? 'border-[#65B39B]/50 bg-[#65B39B]/5 shadow-sm'
+          : 'border-gray-300'
+      }`}
+    >
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-sm font-semibold text-[#3a7a6b] uppercase tracking-wide">
           {TOPICO_LABELS[comentario.topico]}

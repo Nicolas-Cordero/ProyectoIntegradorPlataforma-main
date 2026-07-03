@@ -145,18 +145,32 @@ export class UsersRepository {
     });
   }
 
+  // Excluye usuarios desactivados (ver `delete`, que ahora desactiva en vez
+  // de borrar) — la vista de gestión de usuarios solo debe listar activos.
   async findAll(): Promise<SafeUsuario[]> {
-    return this.prisma.usuario.findMany({ omit: OMIT_SENSITIVE });
+    return this.prisma.usuario.findMany({
+      where: { activo: true },
+      omit: OMIT_SENSITIVE,
+    });
   }
 
+  /**
+   * "Eliminar" un usuario es en realidad desactivarlo (activo = false) en vez
+   * de borrar la fila: entrevista.rut_entrevistador e
+   * historial_estado_carrera.rut_usuario dependen de este usuario, y son
+   * historial de ESTUDIANTES (no del usuario) — no deben desaparecer porque
+   * se dio de baja a un miembro del staff. `activo = false` ya bloquea el
+   * login y la validación de JWT (ver auth.service/jwt.strategy). Las
+   * sesiones activas (refresh_token) sí se revocan.
+   */
   async delete(rut_usuario: string): Promise<SafeUsuario> {
-    await this.prisma.audit_log.deleteMany({
-      where: { rut_usuario },
-    });
-
-    return this.prisma.usuario.delete({
-      where: { rut_usuario },
-      omit: OMIT_SENSITIVE,
+    return this.prisma.$transaction(async (tx) => {
+      await tx.refresh_token.deleteMany({ where: { rut_usuario } });
+      return tx.usuario.update({
+        where: { rut_usuario },
+        data: { activo: false },
+        omit: OMIT_SENSITIVE,
+      });
     });
   }
 }

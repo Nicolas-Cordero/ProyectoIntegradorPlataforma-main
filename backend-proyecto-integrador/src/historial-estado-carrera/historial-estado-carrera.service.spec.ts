@@ -137,7 +137,7 @@ describe('HistorialEstadoCarreraService', () => {
       expect(result).toBe(0);
     });
 
-    it('Si el estudiante suspende y retoma, debe contar los semestres correctamente', async () => {
+    it('Una suspensión breve (menos de un semestre) no debe sumar ningún semestre', async () => {
       mockRepository.findByCarrera.mockResolvedValue([
         {
           estado_nuevo: EstadoEstudiante.ACTIVO,
@@ -148,17 +148,38 @@ describe('HistorialEstadoCarreraService', () => {
           created_at: new Date('2024-03-01'),
         },
         {
+          // ~2 meses suspendido: muy por debajo de un semestre (~6 meses)
           estado_nuevo: EstadoEstudiante.ACTIVO,
-          created_at: new Date('2024-08-15'),
+          created_at: new Date('2024-05-01'),
         },
       ]);
 
-      // Mar 2024 – Aug 2024 solapa con S1-2024 (ene–jun) y S2-2024 (jul–dic)
       const result = await service.getSemestresSupendidos(1);
-      expect(result).toBe(2);
+      expect(result).toBe(0);
     });
 
-    it('Si el estudiante esta actualmente suspendido, debe contar los semestres hasta hoy', async () => {
+    it('Una suspensión que supera la duración de un semestre debe sumar 1', async () => {
+      mockRepository.findByCarrera.mockResolvedValue([
+        {
+          estado_nuevo: EstadoEstudiante.ACTIVO,
+          created_at: new Date('2024-01-15'),
+        },
+        {
+          estado_nuevo: EstadoEstudiante.SUSPENDIDO,
+          created_at: new Date('2024-01-15'),
+        },
+        {
+          // 244 días suspendido (> 182.625 días de un semestre) → 1
+          estado_nuevo: EstadoEstudiante.ACTIVO,
+          created_at: new Date('2024-09-15'),
+        },
+      ]);
+
+      const result = await service.getSemestresSupendidos(1);
+      expect(result).toBe(1);
+    });
+
+    it('Si el estudiante esta actualmente suspendido, debe contar el tiempo hasta hoy', async () => {
       jest.useFakeTimers().setSystemTime(new Date('2026-06-30'));
 
       mockRepository.findByCarrera.mockResolvedValue([
@@ -167,19 +188,92 @@ describe('HistorialEstadoCarreraService', () => {
           created_at: new Date('2025-03-01'),
         },
         {
+          // 364 días suspendido hasta "hoy" (> 182.625) → 1
           estado_nuevo: EstadoEstudiante.SUSPENDIDO,
           created_at: new Date('2025-07-01'),
         },
       ]);
 
-      // Jul 2025 – Jun 2026 solapa con S2-2025 y S1-2026
       const result = await service.getSemestresSupendidos(1);
-      expect(result).toBe(2);
+      expect(result).toBe(1);
 
       jest.useRealTimers();
     });
 
-    it('Si el estudiante suspende, retoma y suspende de nuevo, debe sumar ambos periodos', async () => {
+    it('Dos suspensiones separadas que ninguna llega sola a un semestre, pero suman más de uno, deben contar 1', async () => {
+      mockRepository.findByCarrera.mockResolvedValue([
+        {
+          estado_nuevo: EstadoEstudiante.ACTIVO,
+          created_at: new Date('2024-01-01'),
+        },
+        {
+          // Primer periodo: Mar–Jun 2024 (~3 meses, 92 días)
+          estado_nuevo: EstadoEstudiante.SUSPENDIDO,
+          created_at: new Date('2024-03-01'),
+        },
+        {
+          estado_nuevo: EstadoEstudiante.ACTIVO,
+          created_at: new Date('2024-06-01'),
+        },
+        {
+          // Segundo periodo: Ago–Dic 2024 (~4 meses, 122 días)
+          estado_nuevo: EstadoEstudiante.SUSPENDIDO,
+          created_at: new Date('2024-08-01'),
+        },
+        {
+          // Total acumulado: 214 días (> 182.625) → 1, aunque ningún tramo
+          // individual llegó a los ~183 días de un semestre
+          estado_nuevo: EstadoEstudiante.ACTIVO,
+          created_at: new Date('2024-12-01'),
+        },
+      ]);
+
+      const result = await service.getSemestresSupendidos(1);
+      expect(result).toBe(1);
+    });
+
+    it('Si el estudiante es retirado y luego vuelve a estar activo, ese tiempo cuenta igual que SUSPENDIDO', async () => {
+      mockRepository.findByCarrera.mockResolvedValue([
+        {
+          estado_nuevo: EstadoEstudiante.ACTIVO,
+          created_at: new Date('2024-01-15'),
+        },
+        {
+          estado_nuevo: EstadoEstudiante.RETIRADO,
+          created_at: new Date('2024-01-15'),
+        },
+        {
+          // Mismos 244 días que el caso SUSPENDIDO → 1
+          estado_nuevo: EstadoEstudiante.ACTIVO,
+          created_at: new Date('2024-09-15'),
+        },
+      ]);
+
+      const result = await service.getSemestresSupendidos(1);
+      expect(result).toBe(1);
+    });
+
+    it('Si el estudiante es eliminado y luego vuelve a estar activo, ese tiempo cuenta igual que SUSPENDIDO', async () => {
+      mockRepository.findByCarrera.mockResolvedValue([
+        {
+          estado_nuevo: EstadoEstudiante.ACTIVO,
+          created_at: new Date('2024-01-15'),
+        },
+        {
+          estado_nuevo: EstadoEstudiante.ELIMINADO,
+          created_at: new Date('2024-01-15'),
+        },
+        {
+          estado_nuevo: EstadoEstudiante.ACTIVO,
+          created_at: new Date('2024-09-15'),
+        },
+      ]);
+
+      const result = await service.getSemestresSupendidos(1);
+      expect(result).toBe(1);
+    });
+
+    it('SUSPENDIDO seguido de RETIRADO debe tratarse como un único periodo continuo fuera de la carrera', async () => {
       mockRepository.findByCarrera.mockResolvedValue([
         {
           estado_nuevo: EstadoEstudiante.ACTIVO,
@@ -187,26 +281,83 @@ describe('HistorialEstadoCarreraService', () => {
         },
         {
           estado_nuevo: EstadoEstudiante.SUSPENDIDO,
-          created_at: new Date('2024-03-01'),
+          created_at: new Date('2024-01-15'),
         },
         {
+          estado_nuevo: EstadoEstudiante.RETIRADO,
+          created_at: new Date('2024-05-01'),
+        },
+        {
+          // El intervalo completo (15-ene a 15-sep, 244 días) cuenta como uno
+          // solo, sin cortarse en la transición SUSPENDIDO → RETIRADO
           estado_nuevo: EstadoEstudiante.ACTIVO,
-          created_at: new Date('2024-04-01'),
-        },
-        {
-          estado_nuevo: EstadoEstudiante.SUSPENDIDO,
-          created_at: new Date('2024-08-01'),
-        },
-        {
-          estado_nuevo: EstadoEstudiante.ACTIVO,
-          created_at: new Date('2024-09-01'),
+          created_at: new Date('2024-09-15'),
         },
       ]);
 
-      // Primera suspensión [Mar–Abr 2024]: solo S1-2024 → 1
-      // Segunda suspensión [Ago–Sep 2024]: solo S2-2024 → 1
       const result = await service.getSemestresSupendidos(1);
-      expect(result).toBe(2);
+      expect(result).toBe(1);
+    });
+
+    it('EGRESADO y TITULADO no deben contar como suspendido', async () => {
+      mockRepository.findByCarrera.mockResolvedValue([
+        {
+          estado_nuevo: EstadoEstudiante.ACTIVO,
+          created_at: new Date('2024-01-15'),
+        },
+        {
+          estado_nuevo: EstadoEstudiante.EGRESADO,
+          created_at: new Date('2024-06-01'),
+        },
+        {
+          estado_nuevo: EstadoEstudiante.TITULADO,
+          created_at: new Date('2024-12-01'),
+        },
+      ]);
+
+      const result = await service.getSemestresSupendidos(1);
+      expect(result).toBe(0);
+    });
+
+    it('Si se selecciona SUSPENDIDO y se corrige a ACTIVO minutos después, no debe sumar nada', async () => {
+      mockRepository.findByCarrera.mockResolvedValue([
+        {
+          estado_nuevo: EstadoEstudiante.ACTIVO,
+          created_at: new Date('2024-01-15'),
+        },
+        {
+          estado_nuevo: EstadoEstudiante.SUSPENDIDO,
+          created_at: new Date('2024-03-01T10:00:00'),
+        },
+        {
+          estado_nuevo: EstadoEstudiante.ACTIVO,
+          created_at: new Date('2024-03-01T10:05:00'),
+        },
+      ]);
+
+      const result = await service.getSemestresSupendidos(1);
+      expect(result).toBe(0);
+    });
+
+    it('Una suspensión breve que cruza la medianoche tampoco debe sumar nada', async () => {
+      mockRepository.findByCarrera.mockResolvedValue([
+        {
+          estado_nuevo: EstadoEstudiante.ACTIVO,
+          created_at: new Date('2024-01-15'),
+        },
+        {
+          estado_nuevo: EstadoEstudiante.SUSPENDIDO,
+          created_at: new Date('2024-03-01T23:00:00'),
+        },
+        {
+          // Solo 2 horas de duración real, aunque cruce a otro día calendario
+          estado_nuevo: EstadoEstudiante.ACTIVO,
+          created_at: new Date('2024-03-02T01:00:00'),
+        },
+      ]);
+
+      const result = await service.getSemestresSupendidos(1);
+      expect(result).toBe(0);
     });
   });
 });

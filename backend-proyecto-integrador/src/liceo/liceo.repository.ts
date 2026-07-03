@@ -22,14 +22,6 @@ export class LiceoRepository {
     });
   }
 
-  async remove(rbd: string): Promise<liceo> {
-    return this.prisma.liceo.delete({
-      where: {
-        rbd: rbd,
-      },
-    });
-  }
-
   async findAll(): Promise<liceo[]> {
     return this.prisma.liceo.findMany();
   }

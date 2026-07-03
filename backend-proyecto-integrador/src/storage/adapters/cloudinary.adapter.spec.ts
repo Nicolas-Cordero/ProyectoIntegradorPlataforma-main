@@ -136,7 +136,7 @@ describe('CloudinaryAdapter', () => {
       (options: any, callback: any) => {
         callback(null, {
           secure_url: 'https://res.cloudinary.com/notas.pdf',
-          public_id: 'usuarios/calculo',
+          public_id: 'usuarios/calculo.pdf',
         });
         return { end: jest.fn() }; // simula el stream
       },
@@ -146,14 +146,16 @@ describe('CloudinaryAdapter', () => {
 
     expect(resultado).toEqual({
       url: 'https://res.cloudinary.com/notas.pdf',
-      publicId: 'usuarios/calculo',
+      publicId: 'usuarios/calculo.pdf',
     });
 
-    // La carpeta destino se prefija con folders.files.
+    // La carpeta destino se prefija con folders.files y el public_id termina
+    // en .pdf (móvil necesita la extensión para abrir el archivo).
     expect(mockCloudinary.uploader.upload_stream).toHaveBeenCalledWith(
       expect.objectContaining({
         resource_type: 'raw',
         folder: 'archivos/notas',
+        public_id: expect.stringMatching(/\.pdf$/),
       }),
       expect.any(Function),
     );

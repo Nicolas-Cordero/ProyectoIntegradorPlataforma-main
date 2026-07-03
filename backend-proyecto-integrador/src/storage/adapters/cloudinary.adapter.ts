@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Injectable, Inject } from '@nestjs/common';
 import {
   v2 as CloudinaryType,
@@ -52,7 +53,16 @@ export class CloudinaryAdapter extends StorageService {
       : this.cloudinary.folders.files;
     return new Promise((resolve, reject) => {
       const stream = this.cloudinary.uploader.upload_stream(
-        { resource_type: 'raw', folder: targetFolder },
+        {
+          resource_type: 'raw',
+          folder: targetFolder,
+          // Sin public_id explícito, Cloudinary genera un id aleatorio SIN
+          // extensión y el secure_url termina sin `.pdf`. Los navegadores de
+          // escritorio olfatean el contenido, pero móvil depende de la
+          // extensión y no puede abrir el archivo. Forzamos que el id (y por
+          // ende la URL) termine en `.pdf`.
+          public_id: `${randomUUID()}.pdf`,
+        },
         (
           error: UploadApiErrorResponse | undefined,
           result?: UploadApiResponse,
@@ -60,6 +70,9 @@ export class CloudinaryAdapter extends StorageService {
           if (error) return reject(new Error(error.message));
           if (!result)
             return reject(new Error('Cloudinary no devolvió un resultado'));
+          // OJO: la entrega pública de PDF/ZIP requiere tener habilitado
+          // "Allow delivery of PDF and ZIP files" en la consola de Cloudinary
+          // (Settings → Security); sin eso, estas URLs devuelven 401.
           resolve({ url: result.secure_url, publicId: result.public_id });
         },
       );

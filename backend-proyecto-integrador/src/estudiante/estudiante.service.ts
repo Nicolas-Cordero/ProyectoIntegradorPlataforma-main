@@ -78,7 +78,10 @@ export class EstudianteService {
   }
 
   async findAll(soloActivos = false) {
-    if (soloActivos) return this.estudianteRepo.findBecariosActivos();
+    if (soloActivos) {
+      const becarios = await this.estudianteRepo.findBecariosActivos();
+      return this.enrichConEstado(becarios);
+    }
     const estudiantes = await this.estudianteRepo.findAllEstudiantes();
     return this.enrichConEstado(estudiantes);
   }

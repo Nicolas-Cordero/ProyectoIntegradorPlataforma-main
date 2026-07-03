@@ -86,11 +86,18 @@ export class EstudianteRepository {
    * Lista solo los estudiantes ACTIVOS con los datos mínimos necesarios para
    * la vista de becarios: generación, liceo y carrera con universidad, todo en
    * una sola query sin N+1.
+   *
+   * El filtro replica la regla de `EstudianteService.derivarEstado`: un
+   * estudiante es ACTIVO si tiene alguna carrera ACTIVA **o si aún no tiene
+   * carreras registradas** (estado por defecto).
    */
   async findBecariosActivos() {
     return this.prisma.estudiante.findMany({
       where: {
-        carreras: { some: { estado: EstadoEstudiante.ACTIVO } },
+        OR: [
+          { carreras: { some: { estado: EstadoEstudiante.ACTIVO } } },
+          { carreras: { none: {} } },
+        ],
       },
       include: {
         generacion_rel: { select: { id: true, año: true } },

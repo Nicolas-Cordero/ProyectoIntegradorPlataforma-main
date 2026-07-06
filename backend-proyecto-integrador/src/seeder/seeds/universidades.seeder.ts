@@ -6,7 +6,10 @@ export async function universidadesSeeder() {
   for (const universidad of universidadesData) {
     await prisma.universidad.upsert({
       where: {
-        nombre: universidad.nombre,
+        nombre_comuna: {
+          nombre: universidad.nombre,
+          comuna: universidad.comuna,
+        },
       },
       update: {},
       create: {

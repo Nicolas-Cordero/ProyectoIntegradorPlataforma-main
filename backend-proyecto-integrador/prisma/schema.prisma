@@ -137,10 +137,12 @@ model refresh_token {
 
 model universidad {
   codigo_universidad Int    @id @default(autoincrement())
-  nombre             String @unique
+  nombre             String
   comuna             String
 
   carreras carrera[]
+
+  @@unique([nombre, comuna])
 }
 
 

@@ -276,7 +276,7 @@ model beneficio_estudiante {
   rut_estudiante   String
   estado           EstadoBeneficio
   inicio           DateTime
-  fin              DateTime
+  fin              DateTime?
 
   beneficio  beneficio  @relation(fields: [codigo_beneficio], references: [codigo_beneficio])
   estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])

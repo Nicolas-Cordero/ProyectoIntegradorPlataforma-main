@@ -62,11 +62,10 @@ export function BeneficioCard({ asignacion, beneficio, canEdit, onEliminar }: Be
           <span>
             <span className="font-medium text-gray-700">Desde: </span>{fmtFecha(asignacion.inicio)}
           </span>
-          {asignacion.fin && (
-            <span>
-              <span className="font-medium text-gray-700">Hasta: </span>{fmtFecha(asignacion.fin)}
-            </span>
-          )}
+          <span>
+            <span className="font-medium text-gray-700">Hasta: </span>
+            {asignacion.fin ? fmtFecha(asignacion.fin) : 'Sin especificar'}
+          </span>
         </div>
       </div>
 

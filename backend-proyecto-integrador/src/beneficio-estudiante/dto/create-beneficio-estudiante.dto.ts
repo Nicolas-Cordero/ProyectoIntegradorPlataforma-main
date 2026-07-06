@@ -26,8 +26,8 @@ export class CreateBeneficioEstudianteDto {
 
   @Type(() => Date)
   @IsDate()
-  @IsNotEmpty()
-  fin!: Date;
+  @IsOptional()
+  fin?: Date;
 
   @IsEnum(EstadoBeneficio)
   @IsOptional()

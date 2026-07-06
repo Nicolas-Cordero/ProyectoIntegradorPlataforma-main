@@ -72,7 +72,7 @@ export default function EstudianteDatosPersonales() {
       confirmColor: 'error',
       onConfirm: async () => {
         try {
-          await beneficiosService.deleteBeneficioEstudiante(codigo_beneficio);
+          await beneficiosService.deleteBeneficioEstudiante(codigo_beneficio, estudiante.rut_estudiante);
           setBeneficiosEstudiante(prev => prev.filter(b => b.codigo_beneficio !== codigo_beneficio));
         } catch (e: unknown) {
           setSaveError(e instanceof Error ? e.message : 'Error al quitar el beneficio');

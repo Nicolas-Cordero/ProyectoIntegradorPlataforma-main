@@ -70,7 +70,7 @@ export function ModalAsignarBeneficio({
         rut_estudiante:   rutEstudiante,
         estado,
         inicio,
-        fin: fin || inicio,
+        fin: fin || null,
       });
       onAsignado(nueva);
       handleCerrar();

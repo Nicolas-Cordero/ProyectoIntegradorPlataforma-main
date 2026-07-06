@@ -1,4 +1,4 @@
-import { Modal, Input, Select, Alert } from '../../../ui';
+import { Modal, Input, Select, Textarea, Alert } from '../../../ui';
 import type { EstadoRamoAvance } from '../../../../services/ramo-avance.service';
 import { ESTADO_RAMO_OPTS } from './constants';
 
@@ -51,18 +51,21 @@ export function ModalRamo({ abierto, esEdicion, onCerrar, form, setForm, error, 
           onChange={v => setForm(f => ({ ...f, nombre: v }))}
           placeholder="Ej: Cálculo I"
         />
-        <Select
-          etiqueta="Estado"
-          valor={form.estado}
-          onChange={v => setForm(f => ({ ...f, estado: v as EstadoRamoAvance }))}
-          opciones={ESTADO_RAMO_OPTS.map(o => ({ valor: o.valor, etiqueta: o.etiqueta }))}
-        />
+        <div className="pb-2">
+          <Select
+            etiqueta="Estado"
+            valor={form.estado}
+            onChange={v => setForm(f => ({ ...f, estado: v as EstadoRamoAvance }))}
+            opciones={ESTADO_RAMO_OPTS.map(o => ({ valor: o.valor, etiqueta: o.etiqueta }))}
+          />
+        </div>
         <Input
           etiqueta="Intento"
           tipo="number"
           valor={form.intento}
           onChange={v => setForm(f => ({ ...f, intento: v }))}
-          ayuda="Número de veces que se ha cursado este ramo"
+          ayuda="Número de veces que se ha cursado este ramo (máximo 20)"
+          inputProps={{ min: 1, max: 20 }}
         />
         <Input
           etiqueta="Nota final (opcional)"
@@ -74,11 +77,12 @@ export function ModalRamo({ abierto, esEdicion, onCerrar, form, setForm, error, 
           inputProps={{ step: 0.1, min: 1, max: 7 }}
           deshabilitado={form.estado === 'ELIMINADO'}
         />
-        <Input
+        <Textarea
           etiqueta="Comentario (opcional)"
           valor={form.comentario}
           onChange={v => setForm(f => ({ ...f, comentario: v }))}
           placeholder="Observaciones sobre el ramo"
+          filas={3}
         />
       </div>
     </Modal>

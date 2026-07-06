@@ -66,7 +66,11 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
       
     } catch (error: unknown) {
       logger.error('❌ Error en login:', error);
-      setError('Credenciales incorrectas. Por favor, verifica tus datos.');
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Credenciales incorrectas. Por favor, verifica tus datos.',
+      );
     } finally {
       setLoading(false);
     }

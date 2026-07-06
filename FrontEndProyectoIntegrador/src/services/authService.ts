@@ -19,8 +19,8 @@ class AuthService {
     });
 
     if (!response.ok) {
-      if (response.status === 401) throw new Error('Credenciales inválidas');
-      throw new Error(`Error del servidor: ${response.status}`);
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.message || `Error del servidor: ${response.status}`);
     }
 
     const user: Usuario = await response.json();

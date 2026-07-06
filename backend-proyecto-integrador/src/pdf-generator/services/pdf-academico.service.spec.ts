@@ -1,57 +1,62 @@
 import { PdfAcademicoGenerator } from './pdf-academico.service';
 import { PdfPrinterProvider } from '../providers/pdf-printer.provider';
+import { PrismaService } from '../../prisma/prisma.service';
 import type { CreatePdfAcademicoDto } from '../dto';
 
 const FAKE_BUFFER = Buffer.from('pdf-academico');
 
 const mockPrinter = { createPdf: jest.fn() };
-
-const dtoValido: CreatePdfAcademicoDto = {
-  nombreEstudiante: 'Ana García',
-  rutEstudiante: '9.876.543-2',
-  carrera: { nombre: 'Medicina', duracion_sem: 12 },
-  resumen: {
-    semFinalizados: 4,
-    totalRamos: 30,
-    ramosAprobados: 25,
-    ramosReprobados: 3,
-    ramosCursando: 2,
-    ramosEliminados: 0,
-    promedioGeneral: 5.8,
-  },
-  semestres: [
-    {
-      year: 2022,
-      tipo: 'REGULAR',
-      codigo: '1',
-      estado: 'CERRADO',
-      totalRamos: 6,
-      aprobados: 6,
-      reprobados: 0,
-      eliminados: 0,
-    },
-    {
-      year: 2022,
-      tipo: 'REGULAR',
-      codigo: '2',
-      estado: 'CERRADO',
-      totalRamos: 6,
-      aprobados: 5,
-      reprobados: 1,
-      eliminados: 0,
-    },
-    {
-      year: 2023,
-      tipo: 'REGULAR',
-      codigo: '1',
-      estado: 'EN_CURSO',
-      totalRamos: 6,
-      aprobados: 0,
-      reprobados: 0,
-      eliminados: 0,
-    },
-  ],
+const mockPrisma = {
+  carrera: { findUnique: jest.fn() },
+  ramo: { findMany: jest.fn() },
+  historial_estado_carrera: { findMany: jest.fn() },
 };
+
+const dtoValido: CreatePdfAcademicoDto = { codigo_carrera: 1 };
+
+const carreraFake = {
+  codigo_carrera: 1,
+  nombre: 'Medicina',
+  duracion_sem: 12,
+  estudiante: {
+    nombre: 'Ana',
+    apellido: 'García',
+    rut_estudiante: '9876543-2',
+  },
+};
+
+const ramosFake = [
+  {
+    estado: 'APROBADO',
+    nota_final: 6.0,
+    semestre: {
+      semestre_id: 1,
+      year: 2022,
+      semestre: 'PRIMER_SEMESTRE',
+      tipo: 'REGULAR',
+    },
+  },
+  {
+    estado: 'REPROBADO',
+    nota_final: 3.5,
+    semestre: {
+      semestre_id: 1,
+      year: 2022,
+      semestre: 'PRIMER_SEMESTRE',
+      tipo: 'REGULAR',
+    },
+  },
+  {
+    estado: 'CURSANDO',
+    nota_final: null,
+    semestre: {
+      semestre_id: 2,
+      year: 2022,
+      semestre: 'SEGUNDO_SEMESTRE',
+      tipo: 'REGULAR',
+    },
+  },
+];
 
 describe('PdfAcademicoGenerator', () => {
   let service: PdfAcademicoGenerator;
@@ -59,8 +64,12 @@ describe('PdfAcademicoGenerator', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPrinter.createPdf.mockResolvedValue(FAKE_BUFFER);
+    mockPrisma.carrera.findUnique.mockResolvedValue(carreraFake);
+    mockPrisma.ramo.findMany.mockResolvedValue(ramosFake);
+    mockPrisma.historial_estado_carrera.findMany.mockResolvedValue([]);
     service = new PdfAcademicoGenerator(
       mockPrinter as unknown as PdfPrinterProvider,
+      mockPrisma as unknown as PrismaService,
     );
   });
 
@@ -90,5 +99,10 @@ describe('PdfAcademicoGenerator', () => {
     const [docDefinition] = mockPrinter.createPdf.mock.calls[0];
     const contenidoStr = JSON.stringify(docDefinition.content);
     expect(contenidoStr).toContain('Ana García');
+  });
+
+  it('debe lanzar una excepción si la carrera no existe', async () => {
+    mockPrisma.carrera.findUnique.mockResolvedValue(null);
+    await expect(service.pdfGenerate(dtoValido)).rejects.toThrow();
   });
 });

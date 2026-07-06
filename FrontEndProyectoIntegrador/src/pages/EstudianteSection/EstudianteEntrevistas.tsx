@@ -40,7 +40,7 @@ export default function EstudianteEntrevistas() {
       await descargarPdf(
         '/pdf-generator/entrevista-resumen',
         { rut_estudiante: rutEstudiante, nombre_estudiante: nombreEstudiante },
-        'resumen-entrevistas.pdf',
+        `resumen-entrevistas-${rutEstudiante}.pdf`,
       );
     } catch {
       showError('Error al generar el informe resumen');

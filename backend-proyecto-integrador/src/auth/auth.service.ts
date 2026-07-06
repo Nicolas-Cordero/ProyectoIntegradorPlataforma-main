@@ -1,6 +1,7 @@
 import {
   Injectable,
   UnauthorizedException,
+  ForbiddenException,
   ConflictException,
 } from '@nestjs/common';
 import { LoginDto, RegisterDto } from './dto/create-auth.dto';
@@ -14,7 +15,7 @@ import { AUTH_MESSAGES } from './constants/auth.constants';
 import * as bcrypt from 'bcrypt';
 
 import { UsersRepository } from '../users';
-import { usuario } from '@prisma/client';
+import { usuario, UserRol } from '@prisma/client';
 import { RecoveryService } from './services/recovery.service';
 import { rutSinDV } from '../common/rut.util';
 
@@ -152,6 +153,18 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException(AUTH_MESSAGES.INVALID_CREDENTIALS);
+    }
+
+    // La app móvil es exclusiva para becarios; la web de gestión es exclusiva
+    // para el resto de los roles (admin, tutor, visita).
+    const esMovil = loginDto.client === 'mobile';
+    const esEstudiante = user.rol === UserRol.ESTUDIANTE;
+
+    if (esMovil && !esEstudiante) {
+      throw new ForbiddenException(AUTH_MESSAGES.MOBILE_RESTRICTED_TO_STUDENTS);
+    }
+    if (!esMovil && esEstudiante) {
+      throw new ForbiddenException(AUTH_MESSAGES.WEB_RESTRICTED_TO_STAFF);
     }
 
     return user;

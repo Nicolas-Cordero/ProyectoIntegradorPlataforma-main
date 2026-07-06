@@ -62,7 +62,7 @@ export const PasswordRecoveryModal: React.FC<PasswordRecoveryModalProps> = ({
     try {
       logger.log('📧 Solicitando recuperación de contraseña para:', email);
       await authService.requestPasswordReset(email);
-      setMessage('Se ha enviado un código de recuperación a tu email');
+      setMessage('Si el correo está registrado, recibirás un código de recuperación en unos minutos.');
       setStep('verify');
     } catch (error: unknown) {
       logger.error('❌ Error solicitando recuperación:', error);

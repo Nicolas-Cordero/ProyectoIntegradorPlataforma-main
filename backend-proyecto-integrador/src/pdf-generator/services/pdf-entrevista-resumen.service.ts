@@ -15,12 +15,6 @@ const TOPICO_LABELS: Record<Topico, string> = {
   ACTS_EXTRA: 'Actividades extracurriculares',
 };
 
-function formatSemestre(semestre: string, year: number): string {
-  return semestre === 'PRIMER_SEMESTRE'
-    ? `1er Semestre ${year}`
-    : `2do Semestre ${year}`;
-}
-
 @Injectable()
 export class PdfEntrevistaResumenGenerator
   implements IPdfGenerator<CreatePdfEntrevistaResumenDto>
@@ -34,10 +28,10 @@ export class PdfEntrevistaResumenGenerator
     const entrevistas = await this.prisma.entrevista.findMany({
       where: { rut_estudiante: dto.rut_estudiante },
       include: {
-        semestre: { select: { year: true, semestre: true } },
+        entrevistador: { select: { nombre: true, apellido: true } },
         comentarios: true,
       },
-      orderBy: { fecha_hora: 'desc' },
+      orderBy: { fecha_hora: 'asc' },
     });
 
     const totalEntrevistas = entrevistas.length;
@@ -47,15 +41,6 @@ export class PdfEntrevistaResumenGenerator
     for (const e of entrevistas) {
       const yr = new Date(e.fecha_hora).getFullYear();
       porAno[yr] = (porAno[yr] ?? 0) + 1;
-    }
-
-    // Conteos por semestre
-    const porSemestre: Record<string, number> = {};
-    for (const e of entrevistas) {
-      const label = e.semestre
-        ? formatSemestre(e.semestre.semestre, e.semestre.year)
-        : `${new Date(e.fecha_hora).getFullYear()}`;
-      porSemestre[label] = (porSemestre[label] ?? 0) + 1;
     }
 
     // Conteos de comentarios por tópico (sumando todas las entrevistas)
@@ -95,23 +80,22 @@ export class PdfEntrevistaResumenGenerator
       topicoPrincipal = topicosMasComentados.join(', ');
     }
 
-    // Sección de fechas de celebración
+    // Sección de fechas de celebración: N° - Fecha - Entrevistador
     const fechasSection: Content =
       totalEntrevistas > 0
         ? InformeBuilder.tableBuilder(
-            ['N°', 'Fecha', 'Semestre'],
+            ['N°', 'Fecha', 'Entrevistador'],
             entrevistas.map((e, i) => [
               String(i + 1),
               new Date(e.fecha_hora).toLocaleDateString('es-CL'),
-              e.semestre
-                ? formatSemestre(e.semestre.semestre, e.semestre.year)
-                : '—',
+              `${e.entrevistador.nombre} ${e.entrevistador.apellido}`,
             ]),
             [30, '*', '*'],
+            ['center', 'left', 'left'],
           )
         : { text: 'Sin entrevistas registradas.', style: 'parrafo' };
 
-    // Sección de resúmenes individuales
+    // Sección de resúmenes individuales: "Entrevista n° X - fecha - entrevistador"
     const resumenesContent: Content[] =
       totalEntrevistas === 0
         ? [
@@ -122,7 +106,10 @@ export class PdfEntrevistaResumenGenerator
           ]
         : entrevistas.flatMap<Content>((e, i) => [
             {
-              text: `${i + 1}. ${new Date(e.fecha_hora).toLocaleDateString('es-CL')}`,
+              text:
+                `Entrevista n° ${i + 1} - ` +
+                `${new Date(e.fecha_hora).toLocaleDateString('es-CL')} - ` +
+                `${e.entrevistador.nombre} ${e.entrevistador.apellido}`,
               bold: true,
               fontSize: 11,
               margin: [0, 6, 0, 2] as [number, number, number, number],
@@ -134,9 +121,10 @@ export class PdfEntrevistaResumenGenerator
     const comentariosSection: Content =
       totalComentarios > 0
         ? InformeBuilder.tableBuilder(
-            ['Tópico', 'Comentarios'],
+            ['Tópico', 'N° de comentarios'],
             TOPICOS_ORDEN.map((t) => [TOPICO_LABELS[t], String(porTopico[t])]),
-            ['*', 80],
+            ['*', 120],
+            ['left', 'right'],
           )
         : { text: 'Sin comentarios registrados.', style: 'parrafo' };
 
@@ -144,26 +132,23 @@ export class PdfEntrevistaResumenGenerator
       content: [
         InformeBuilder.headerBuilder('Resumen de Entrevistas'),
 
-        {
-          text: `Estudiante: ${dto.nombre_estudiante} (${dto.rut_estudiante})`,
-          fontSize: 12,
-          margin: [0, 0, 0, 16] as [number, number, number, number],
-        },
+        InformeBuilder.paragrafBuilder(
+          `En este documento se presenta un resumen ejecutivo de todas las ` +
+            `entrevistas realizadas al estudiante ${dto.nombre_estudiante} ` +
+            `(RUT ${dto.rut_estudiante}), en el marco del proceso de acompañamiento ` +
+            `de la Fundación Carmen Goudie.`,
+        ),
 
         {
           text: 'Resumen general',
           style: 'header',
-          margin: [0, 0, 0, 6] as [number, number, number, number],
+          margin: [0, 8, 0, 6] as [number, number, number, number],
         },
-        InformeBuilder.tableBuilder(
-          ['Indicador', 'Valor'],
-          [
-            ['Total de entrevistas', String(totalEntrevistas)],
-            ['Total de comentarios', String(totalComentarios)],
-            ['Tópico más comentado', topicoPrincipal],
-          ],
-          ['*', '*'],
-        ),
+        InformeBuilder.fieldListBuilder([
+          ['Total de entrevistas', String(totalEntrevistas)],
+          ['Total de comentarios', String(totalComentarios)],
+          ['Tópico más comentado', topicoPrincipal],
+        ]),
 
         {
           text: 'Entrevistas por año',
@@ -172,24 +157,12 @@ export class PdfEntrevistaResumenGenerator
         },
         totalEntrevistas > 0
           ? InformeBuilder.tableBuilder(
-              ['Año', 'Entrevistas'],
+              ['Año', 'N° de entrevistas'],
               Object.entries(porAno)
-                .sort(([a], [b]) => Number(b) - Number(a))
+                .sort(([a], [b]) => Number(a) - Number(b))
                 .map(([yr, cnt]) => [yr, String(cnt)]),
               [100, '*'],
-            )
-          : ({ text: 'Sin datos.', style: 'parrafo' } as Content),
-
-        {
-          text: 'Entrevistas por semestre',
-          style: 'header',
-          margin: [0, 16, 0, 6] as [number, number, number, number],
-        },
-        totalEntrevistas > 0
-          ? InformeBuilder.tableBuilder(
-              ['Semestre', 'Entrevistas'],
-              Object.entries(porSemestre).map(([s, cnt]) => [s, String(cnt)]),
-              ['*', 80],
+              ['left', 'right'],
             )
           : ({ text: 'Sin datos.', style: 'parrafo' } as Content),
 

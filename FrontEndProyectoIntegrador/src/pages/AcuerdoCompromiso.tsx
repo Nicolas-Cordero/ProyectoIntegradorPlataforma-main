@@ -15,6 +15,7 @@ import { useConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useSnackbar } from '../hooks/useSnackbar';
 import { acuerdoService } from '../services';
 import type { AcuerdoResponse, DocumentoCompromiso } from '../services/acuerdo.service';
+import { descargarPdf } from '../utils/pdfDownload';
 
 // ── Modelo interno (ergonómico para la UI) ──────────────────────────────────────
 // El backend entrega/recibe el documento como { titulo, subtitulo, abstract,
@@ -92,7 +93,7 @@ const formatVersionLabel = (createdAt: string): string =>
 // ── Página ────────────────────────────────────────────────────────────────────
 
 export function AcuerdoCompromiso() {
-  const { showSuccess, showError, showInfo, SnackbarComponent } = useSnackbar();
+  const { showSuccess, showError, SnackbarComponent } = useSnackbar();
   const { showConfirm, ConfirmDialog } = useConfirmDialog();
 
   // Todas las versiones (filas de `acuerdo`) y la seleccionada. `versionId` es a la
@@ -106,6 +107,7 @@ export function AcuerdoCompromiso() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [descargandoPdf, setDescargandoPdf] = useState(false);
 
   // Edición global del acuerdo completo. `borrador` es una copia profunda editable
   // que se confirma al guardar y se descarta al cancelar.
@@ -309,12 +311,31 @@ export function AcuerdoCompromiso() {
     }
   };
 
-  const descargarPDF = () => {
-    // TODO: solicitar el PDF al backend (endpoint de generación de PDF del acuerdo).
-    // La generación de PDF se centralizará en el backend, ya que varias vistas del
-    // sistema necesitan exportar documentos. Por ahora es solo un placeholder.
-    console.log('Descargar PDF del acuerdo (placeholder):', { versionId });
-    showInfo('La descarga en PDF estará disponible próximamente.');
+  const descargarPDF = async () => {
+    if (!acuerdo || versionId === null) return;
+
+    const versionActual = versiones.find((v) => v.id === versionId);
+    setDescargandoPdf(true);
+    try {
+      await descargarPdf(
+        '/pdf-generator/acuerdo',
+        {
+          titulo: acuerdo.titulo,
+          subtitulo: acuerdo.subtitulo,
+          abstract: acuerdo.abstract,
+          topicos: acuerdo.topicos.map((t) => ({
+            nombre: t.nombre.trim() || 'Sin título',
+            puntos: t.puntos.map((p) => p.texto.trim()).filter((texto) => texto.length > 0),
+          })),
+          version: versionActual ? formatVersionLabel(versionActual.createdAt) : 'Vigente',
+        },
+        'acuerdo-compromiso.pdf',
+      );
+    } catch (e) {
+      showError(e instanceof Error ? e.message : 'No se pudo generar el PDF del acuerdo.');
+    } finally {
+      setDescargandoPdf(false);
+    }
   };
 
   // Carga inicial: todavía no hay un acuerdo disponible (cargando o falló la carga).
@@ -406,10 +427,10 @@ export function AcuerdoCompromiso() {
             variante="secondary"
             tamano="sm"
             onClick={descargarPDF}
-            deshabilitado={editando}
+            deshabilitado={editando || descargandoPdf}
             startIcon={<PdfIcon style={{ fontSize: 18 }} />}
           >
-            Descargar PDF
+            {descargandoPdf ? 'Generando…' : 'Descargar PDF'}
           </Button>
 
           {editando ? (

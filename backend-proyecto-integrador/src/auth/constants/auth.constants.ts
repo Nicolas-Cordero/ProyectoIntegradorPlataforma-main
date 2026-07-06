@@ -20,6 +20,8 @@ export const AUTH_MESSAGES = {
   EXPIRED_REFRESH_TOKEN: 'Refresh token inválido o expirado',
   UNAUTHORIZED_USER: 'Usuario no autorizado o inactivo',
   LOGOUT_SUCCESS: 'Sesión cerrada exitosamente',
+  MOBILE_RESTRICTED_TO_STUDENTS: 'Esta aplicación es exclusiva para becarios.',
+  WEB_RESTRICTED_TO_STAFF: 'Debes ingresar desde la aplicación móvil.',
 
   //Register
   RUT_ALREADY_EXISTS: 'Esta persona ya es usuaria',

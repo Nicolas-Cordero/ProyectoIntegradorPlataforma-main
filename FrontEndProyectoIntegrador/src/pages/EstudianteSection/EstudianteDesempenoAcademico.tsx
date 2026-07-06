@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { School as SchoolIcon } from '@mui/icons-material';
+import { School as SchoolIcon, PictureAsPdf as PdfIcon } from '@mui/icons-material';
 import { Select, Alert, Spinner } from '../../components/ui';
 import type { EstudianteOutletContext } from './EstudianteDetail';
 import { carreraAvanceService, ramoAvanceService, historialEstadoCarreraService } from '../../services';
+import { descargarPdf } from '../../utils/pdfDownload';
+import { useSnackbar } from '../../hooks/useSnackbar';
 import type { CarreraAvanceDto } from '../../services/carrera-avance.service';
 import type { BackendSemestre, TipoSemestre } from '../../services/semestre-avance.service';
 import type { RamoAvanceDto, EstadoRamoAvance } from '../../services/ramo-avance.service';
@@ -107,6 +109,9 @@ export default function EstudianteDesempenoAcademico() {
   const [semSupendidos, setSemSupendidos] = useState<number | null>(null);
   const [cargandoSemSusp, setCargandoSemSusp] = useState(false);
 
+  const [descargandoPdf, setDescargandoPdf] = useState(false);
+  const { showError, SnackbarComponent } = useSnackbar();
+
   // ── Carga inicial de carreras ─────────────────────────────────────────────
   useEffect(() => {
     let cancelado = false;
@@ -167,6 +172,22 @@ export default function EstudianteDesempenoAcademico() {
 
   const pct = (n: number) => totalRamos > 0 ? `${((n / totalRamos) * 100).toFixed(1)} %` : '—';
 
+  async function handleDescargarPdf() {
+    if (carreraSel === null) return;
+    setDescargandoPdf(true);
+    try {
+      await descargarPdf(
+        '/pdf-generator/academico',
+        { codigo_carrera: carreraSel },
+        `informe-academico-${rut}.pdf`,
+      );
+    } catch {
+      showError('Error al generar el informe PDF');
+    } finally {
+      setDescargandoPdf(false);
+    }
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
 
   if (cargandoCarreras) {
@@ -178,14 +199,26 @@ export default function EstudianteDesempenoAcademico() {
       {errorCarreras && <div className="mb-4"><Alert tipo="error" mensaje={errorCarreras} /></div>}
 
       {/* Cabecera */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Desempeño Académico</h2>
-        <p className="text-base font-medium text-gray-600 mt-1.5">
-          Resumen general del rendimiento a lo largo de la carrera{' '}
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-sm font-semibold bg-gray-100 text-gray-500 rounded-full border border-gray-200 align-middle">
-            solo lectura
-          </span>
-        </p>
+      <div className="mb-6 flex items-start justify-between flex-wrap gap-3">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">Desempeño Académico</h2>
+          <p className="text-base font-medium text-gray-600 mt-1.5">
+            Resumen general del rendimiento a lo largo de la carrera{' '}
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-sm font-semibold bg-gray-100 text-gray-500 rounded-full border border-gray-200 align-middle">
+              solo lectura
+            </span>
+          </p>
+        </div>
+        {carreraSel !== null && (
+          <button
+            onClick={handleDescargarPdf}
+            disabled={descargandoPdf}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-[#3a7a6b] border border-[#65B39B]/40 rounded-lg hover:bg-[#65B39B]/10 disabled:opacity-50 transition-colors"
+          >
+            <PdfIcon sx={{ fontSize: 18 }} />
+            {descargandoPdf ? 'Generando…' : 'Descargar informe académico'}
+          </button>
+        )}
       </div>
 
       {/* Estado vacío: sin carreras */}
@@ -400,6 +433,7 @@ export default function EstudianteDesempenoAcademico() {
           )}
         </>
       )}
+      <SnackbarComponent />
     </div>
   );
 }

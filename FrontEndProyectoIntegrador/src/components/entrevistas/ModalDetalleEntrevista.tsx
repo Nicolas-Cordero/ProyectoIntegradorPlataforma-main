@@ -119,7 +119,7 @@ export function ModalDetalleEntrevista({
       await descargarPdf(
         '/pdf-generator/entrevista',
         { id_entrevista: entrevista.id },
-        'informe-entrevista.pdf',
+        `informe-entrevista-${entrevista.rut_estudiante}.pdf`,
       );
     } catch {
       showError('Error al generar el informe PDF');

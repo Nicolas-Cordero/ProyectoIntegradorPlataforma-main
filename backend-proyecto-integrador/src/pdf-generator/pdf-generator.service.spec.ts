@@ -45,21 +45,7 @@ describe('PdfGeneratorService', () => {
   });
 
   it('Debe recibir un generator y devolver un buffer con el pdf asociado a dicho generator', async () => {
-    const dto: CreatePdfAcademicoDto = {
-      nombreEstudiante: 'Ana García',
-      rutEstudiante: '9.876.543-2',
-      carrera: { nombre: 'Medicina', duracion_sem: 12 },
-      resumen: {
-        semFinalizados: 4,
-        totalRamos: 30,
-        ramosAprobados: 25,
-        ramosReprobados: 3,
-        ramosCursando: 2,
-        ramosEliminados: 0,
-        promedioGeneral: 5.8,
-      },
-      semestres: [],
-    };
+    const dto: CreatePdfAcademicoDto = { codigo_carrera: 1 };
 
     const resultado = await service.pdfGenerate(dto, Generators.ACADEMICO);
 

@@ -7,12 +7,15 @@ import {
   CheckCircle as CheckCircleIcon,
   ExitToApp as RetiradoIcon,
   NewReleases as NuevosIcon,
+  PictureAsPdf as PdfIcon,
 } from '@mui/icons-material';
 import { TypingText } from '../components/common/TypingText';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { ErrorMessage } from '../components/ui/ErrorMessage';
 import { useEstudiantes } from '../hooks/useEstudiantes';
 import { estudianteService } from '../services';
+import { descargarPdf } from '../utils/pdfDownload';
+import { useSnackbar } from '../hooks/useSnackbar';
 import type { Generacion, EstadoEstudiante, Genero } from '../types';
 import {
   EstadoPieChart,
@@ -68,6 +71,19 @@ export function EstadisticasPage() {
   const { estudiantes, loading, error, refresh } = useEstudiantes();
   const [generaciones, setGeneraciones] = useState<Generacion[]>([]);
   const [filtro, setFiltro] = useState<Filtro>('ACTIVOS');
+  const [descargandoPdf, setDescargandoPdf] = useState(false);
+  const { showError, SnackbarComponent } = useSnackbar();
+
+  async function handleDescargarInforme() {
+    setDescargandoPdf(true);
+    try {
+      await descargarPdf('/pdf-generator/estadisticas', {}, 'informe-general-becarios.pdf');
+    } catch {
+      showError('Error al generar el informe general de becarios');
+    } finally {
+      setDescargandoPdf(false);
+    }
+  }
 
   useEffect(() => {
     estudianteService.getGenerations()
@@ -206,19 +222,31 @@ export function EstadisticasPage() {
         >
           <div className="absolute -top-10 -right-10 w-[200px] h-[200px] rounded-full bg-white/5 pointer-events-none" />
           <div className="absolute -bottom-[60px] -left-5 w-[250px] h-[250px] rounded-full bg-white/[0.04] pointer-events-none" />
-          <div className="flex items-center gap-4 mb-2">
-            <TrendingIcon style={{ fontSize: 36 }} />
-            <TypingText
-              component="h1"
-              text="Estadísticas"
-              startDelayMs={0}
-              charDelayMs={1}
-              sx={{ fontSize: { xs: '1.8rem', md: '2.4rem' }, fontWeight: 800, m: 0 }}
-            />
+          <div className="flex items-start justify-between flex-wrap gap-4">
+            <div>
+              <div className="flex items-center gap-4 mb-2">
+                <TrendingIcon style={{ fontSize: 36 }} />
+                <TypingText
+                  component="h1"
+                  text="Estadísticas"
+                  startDelayMs={0}
+                  charDelayMs={1}
+                  sx={{ fontSize: { xs: '1.8rem', md: '2.4rem' }, fontWeight: 800, m: 0 }}
+                />
+              </div>
+              <p className="text-white/85 text-base">
+                Programa de becas · Fundación Carmen Goudie · datos en vivo
+              </p>
+            </div>
+            <button
+              onClick={handleDescargarInforme}
+              disabled={descargandoPdf}
+              className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-white bg-white/15 border border-white/40 rounded-lg hover:bg-white/25 disabled:opacity-50 transition-colors shrink-0"
+            >
+              <PdfIcon sx={{ fontSize: 18 }} />
+              {descargandoPdf ? 'Generando…' : 'Descargar informe general de becarios'}
+            </button>
           </div>
-          <p className="text-white/85 text-base">
-            Programa de becas · Fundación Carmen Goudie · datos en vivo
-          </p>
         </div>
 
         {isEmpty ? (
@@ -420,6 +448,7 @@ export function EstadisticasPage() {
           </>
         )}
       </div>
+      <SnackbarComponent />
     </div>
   );
 }

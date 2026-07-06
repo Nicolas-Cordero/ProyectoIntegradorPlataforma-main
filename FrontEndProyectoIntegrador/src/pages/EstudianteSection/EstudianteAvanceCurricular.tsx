@@ -395,7 +395,7 @@ export default function EstudianteAvanceCurricular() {
     if (!modalRamo) return;
     if (!formRamo.nombre.trim()) { setErrRamo('El nombre del ramo es requerido'); return; }
     const intento = parseInt(formRamo.intento, 10);
-    if (isNaN(intento) || intento < 1) { setErrRamo('El intento debe ser un número mayor a 0'); return; }
+    if (isNaN(intento) || intento < 1 || intento > 20) { setErrRamo('El intento debe ser un número entre 1 y 20'); return; }
 
     let notaFinal: number | null = null;
     if (formRamo.estado !== 'ELIMINADO' && formRamo.nota_final.trim() !== '') {

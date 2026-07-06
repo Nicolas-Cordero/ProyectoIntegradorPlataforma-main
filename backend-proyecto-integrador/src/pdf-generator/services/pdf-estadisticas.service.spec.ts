@@ -1,53 +1,147 @@
 import { PdfEstadisticasGenerator } from './pdf-estadisticas.service';
 import { PdfPrinterProvider } from '../providers/pdf-printer.provider';
+import { PrismaService } from '../../prisma/prisma.service';
 import type { CreatePdfEstadisticasDto } from '../dto';
 
 const FAKE_BUFFER = Buffer.from('pdf-estadisticas');
 
 const mockPrinter = { createPdf: jest.fn() };
+const mockPrisma = { estudiante: { findMany: jest.fn() } };
 
-const dtoValido: CreatePdfEstadisticasDto = {
-  kpis: {
-    total: 120,
-    activos: 80,
-    titulados: 15,
-    egresados: 10,
-    retirados: 15,
-    tasaDesercion: 12.5,
-    nuevos: 25,
-    nuevosAño: 2024,
-  },
-  estadoData: [
-    { label: 'Estudiando', count: 80, pct: 66.7 },
-    { label: 'Retirado/a', count: 15, pct: 12.5 },
-  ],
-  generoData: [
-    { label: 'Femenino', count: 65, pct: 54.2 },
-    { label: 'Masculino', count: 55, pct: 45.8 },
-  ],
-  porGeneracion: [
-    { año: 2020, count: 30 },
-    { año: 2021, count: 25 },
-    { año: 2022, count: 28 },
-    { año: 2023, count: 25 },
-    { año: 2024, count: 12 },
-  ],
-  cohorteData: {
-    estados: ['ACTIVO', 'TITULADO', 'RETIRADO'],
-    rows: [
-      {
-        año: 2020,
-        total: 30,
-        counts: { ACTIVO: 15, TITULADO: 10, RETIRADO: 5 },
-      },
-      {
-        año: 2021,
-        total: 25,
-        counts: { ACTIVO: 20, TITULADO: 2, RETIRADO: 3 },
-      },
+function carrera(overrides: Record<string, unknown> = {}) {
+  return {
+    codigo_carrera: 1,
+    nombre: 'Ingeniería Civil Industrial',
+    duracion_sem: 10,
+    anio_ingreso: 2015,
+    estado: 'ACTIVO',
+    universidad: { nombre: 'Universidad de La Serena', comuna: 'La Serena' },
+    historial_estados: [],
+    ...overrides,
+  };
+}
+
+const AÑO_ACTUAL = new Date().getFullYear();
+
+// Un becario por cada "situación académica" posible, más un caso de cambio
+// de carrera (Elena) para probar la regla de la Tabla de cambios de carrera.
+const estudiantesFake = [
+  {
+    rut_estudiante: '1-1',
+    nombre: 'Ana',
+    apellido: 'Titulada',
+    genero: 'FEMENINO',
+    generacion_rel: { año: 2012 },
+    liceo: { nombre: 'Liceo A', comuna: 'La Serena', especialidad: 'Científico Humanista' },
+    carreras: [
+      carrera({
+        codigo_carrera: 1,
+        anio_ingreso: 2013,
+        estado: 'TITULADO',
+        historial_estados: [{ estado_nuevo: 'TITULADO', created_at: new Date('2018-07-15') }],
+      }),
     ],
   },
-};
+  {
+    rut_estudiante: '2-2',
+    nombre: 'Bruno',
+    apellido: 'Egresado',
+    genero: 'MASCULINO',
+    generacion_rel: { año: 2013 },
+    liceo: { nombre: 'Liceo B', comuna: 'Coquimbo', especialidad: 'Técnico Profesional' },
+    carreras: [
+      carrera({
+        codigo_carrera: 2,
+        anio_ingreso: 2014,
+        estado: 'EGRESADO',
+        historial_estados: [{ estado_nuevo: 'EGRESADO', created_at: new Date('2019-12-01') }],
+      }),
+    ],
+  },
+  {
+    rut_estudiante: '3-3',
+    nombre: 'Carla',
+    apellido: 'Estudiante',
+    genero: 'FEMENINO',
+    generacion_rel: { año: 2019 },
+    liceo: { nombre: 'Liceo A', comuna: 'La Serena', especialidad: 'Científico Humanista' },
+    carreras: [carrera({ codigo_carrera: 3, anio_ingreso: 2021, estado: 'ACTIVO' })],
+  },
+  {
+    rut_estudiante: '4-4',
+    nombre: 'Diego',
+    apellido: 'Suspendido',
+    genero: 'MASCULINO',
+    generacion_rel: { año: 2018 },
+    liceo: { nombre: 'Liceo C', comuna: 'Vicuña', especialidad: 'Técnico Profesional' },
+    carreras: [
+      carrera({
+        codigo_carrera: 4,
+        anio_ingreso: 2019,
+        estado: 'SUSPENDIDO',
+        historial_estados: [{ estado_nuevo: 'SUSPENDIDO', created_at: new Date('2022-03-01') }],
+      }),
+    ],
+  },
+  {
+    rut_estudiante: '5-5',
+    nombre: 'Elena',
+    apellido: 'Cambio',
+    genero: 'FEMENINO',
+    generacion_rel: { año: 2016 },
+    liceo: { nombre: 'Liceo B', comuna: 'Coquimbo', especialidad: 'Técnico Profesional' },
+    carreras: [
+      carrera({
+        codigo_carrera: 5,
+        anio_ingreso: 2017,
+        estado: 'RETIRADO',
+        historial_estados: [{ estado_nuevo: 'RETIRADO', created_at: new Date('2018-05-01') }],
+      }),
+      carrera({
+        codigo_carrera: 6,
+        anio_ingreso: 2019,
+        estado: 'ACTIVO',
+        nombre: 'Derecho',
+      }),
+    ],
+  },
+  {
+    rut_estudiante: '6-6',
+    nombre: 'Franco',
+    apellido: 'Retirado',
+    genero: 'MASCULINO',
+    generacion_rel: { año: 2015 },
+    liceo: { nombre: 'Liceo A', comuna: 'La Serena', especialidad: 'Científico Humanista' },
+    carreras: [
+      carrera({
+        codigo_carrera: 7,
+        anio_ingreso: 2016,
+        estado: 'RETIRADO',
+        historial_estados: [{ estado_nuevo: 'RETIRADO', created_at: new Date('2017-01-01') }],
+      }),
+    ],
+  },
+  {
+    rut_estudiante: '7-7',
+    nombre: 'Gabriela',
+    apellido: 'Media',
+    genero: 'FEMENINO',
+    generacion_rel: { año: AÑO_ACTUAL },
+    liceo: { nombre: 'Liceo C', comuna: 'Vicuña', especialidad: 'Técnico Profesional' },
+    carreras: [],
+  },
+  {
+    rut_estudiante: '8-8',
+    nombre: 'Hugo',
+    apellido: 'NoMatriculado',
+    genero: 'MASCULINO',
+    generacion_rel: { año: AÑO_ACTUAL - 5 },
+    liceo: { nombre: 'Liceo B', comuna: 'Coquimbo', especialidad: 'Técnico Profesional' },
+    carreras: [],
+  },
+];
+
+const dtoValido: CreatePdfEstadisticasDto = {};
 
 describe('PdfEstadisticasGenerator', () => {
   let service: PdfEstadisticasGenerator;
@@ -55,12 +149,14 @@ describe('PdfEstadisticasGenerator', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPrinter.createPdf.mockResolvedValue(FAKE_BUFFER);
+    mockPrisma.estudiante.findMany.mockResolvedValue(estudiantesFake);
     service = new PdfEstadisticasGenerator(
       mockPrinter as unknown as PdfPrinterProvider,
+      mockPrisma as unknown as PrismaService,
     );
   });
 
-  it('debe retornar un Buffer cuando recibe un DTO válido', async () => {
+  it('debe retornar un Buffer', async () => {
     const resultado = await service.pdfGenerate(dtoValido);
     expect(resultado).toBeInstanceOf(Buffer);
   });
@@ -70,25 +166,43 @@ describe('PdfEstadisticasGenerator', () => {
     expect(mockPrinter.createPdf).toHaveBeenCalledTimes(1);
   });
 
-  it('debe incluir los KPIs principales en el contenido del documento', async () => {
+  it('debe incluir las secciones principales del informe', async () => {
     await service.pdfGenerate(dtoValido);
-
     const [docDefinition] = mockPrinter.createPdf.mock.calls[0];
     const contenidoStr = JSON.stringify(docDefinition.content);
-    expect(contenidoStr).toContain('120'); // total histórico
-    expect(contenidoStr).toContain('12,5%'); // tasa de deserción formateada
-    expect(contenidoStr).toContain('Nuevos 2024');
+    expect(contenidoStr).toContain('Estadísticas generales de becarias y becarios');
+    expect(contenidoStr).toContain('Becarias y becarios en estudios superiores');
+    expect(contenidoStr).toContain('Becarias y becarios egresados y titulados');
+    expect(contenidoStr).toContain('Becarias y becarios retirados');
+    expect(contenidoStr).toContain('Trayectoria durante el año en curso');
+    expect(contenidoStr).toContain('Anexo: listado histórico de becarias y becarios');
   });
 
-  it('debe incluir todas las secciones del informe en el content', async () => {
+  it('debe clasificar la situación académica de cada becario en el anexo', async () => {
     await service.pdfGenerate(dtoValido);
-
     const [docDefinition] = mockPrinter.createPdf.mock.calls[0];
     const contenidoStr = JSON.stringify(docDefinition.content);
-    expect(contenidoStr).toContain('Indicadores clave');
-    expect(contenidoStr).toContain('Situación académica actual');
-    expect(contenidoStr).toContain('Composición por género');
-    expect(contenidoStr).toContain('Becarios por generación');
-    expect(contenidoStr).toContain('Estado actual por cohorte');
+    expect(contenidoStr).toContain('Titulada');
+    expect(contenidoStr).toContain('NoMatriculado');
+    expect(contenidoStr).toContain('Cursando enseñanza media');
+    expect(contenidoStr).toContain('No matriculado');
+  });
+
+  it('debe contar el cambio de carrera solo para quien empezó la siguiente carrera después del abandono', async () => {
+    await service.pdfGenerate(dtoValido);
+    const [docDefinition] = mockPrinter.createPdf.mock.calls[0];
+    const contenidoStr = JSON.stringify(docDefinition.content);
+    // De los 5 becarios en educación superior (Ana, Bruno, Carla, Diego, Elena
+    // — Franco queda fuera por retirado), solo Elena cambió de carrera: 1/5 = 20,0%.
+    expect(contenidoStr).toContain('Con cambio de carrera');
+    expect(contenidoStr).toContain('20,0%');
+  });
+
+  it('debe calcular la duración real de las carreras tituladas/egresadas', async () => {
+    await service.pdfGenerate(dtoValido);
+    const [docDefinition] = mockPrinter.createPdf.mock.calls[0];
+    const contenidoStr = JSON.stringify(docDefinition.content);
+    // Ana: ingreso 2013, titulada en 2018/2S -> (2018-2013)*2 + 2 = 12 semestres reales.
+    expect(contenidoStr).toContain('Duración nominal, real y sobreduración');
   });
 });

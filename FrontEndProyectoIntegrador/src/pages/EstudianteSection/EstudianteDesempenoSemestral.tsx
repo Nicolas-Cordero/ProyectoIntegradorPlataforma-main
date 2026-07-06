@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { School as SchoolIcon } from '@mui/icons-material';
+import { School as SchoolIcon, PictureAsPdf as PdfIcon } from '@mui/icons-material';
 import { Select, Alert, Spinner } from '../../components/ui';
 import type { EstudianteOutletContext } from './EstudianteDetail';
 import { carreraAvanceService, ramoAvanceService } from '../../services';
+import { descargarPdf } from '../../utils/pdfDownload';
+import { useSnackbar } from '../../hooks/useSnackbar';
 import type { CarreraAvanceDto } from '../../services/carrera-avance.service';
 import type { BackendSemestre, TipoSemestre } from '../../services/semestre-avance.service';
 import type { RamoAvanceDto, EstadoRamoAvance } from '../../services/ramo-avance.service';
@@ -66,6 +68,7 @@ interface RamoUI {
   estado: EstadoRamoAvance;
   intento: number;
   nota_final: number | null;
+  comentario: string;
 }
 
 interface SemestreUI {
@@ -100,6 +103,7 @@ function agruparSemestres(ramos: RamoAvanceDto[]): SemestreUI[] {
       estado:     r.estado,
       intento:    r.intento,
       nota_final: normalizarNota(r.nota_final),
+      comentario: r.comentario,
     });
   }
 
@@ -184,6 +188,42 @@ export default function EstudianteDesempenoSemestral() {
   const aprobados      = ramosEvaluados.filter(r => r.estado === 'APROBADO').length;
   const reprobados     = ramosEvaluados.filter(r => r.estado === 'REPROBADO').length;
   const eliminados     = (semestreActual?.ramos.length ?? 0) - ramosEvaluados.length;
+
+  const [descargandoUno, setDescargandoUno] = useState(false);
+  const [descargandoTodos, setDescargandoTodos] = useState(false);
+  const { showError, SnackbarComponent } = useSnackbar();
+
+  async function handleDescargarSemestreActual() {
+    if (carreraSel === null || semestreSel === null || semestreActual === null) return;
+    setDescargandoUno(true);
+    try {
+      await descargarPdf(
+        '/pdf-generator/semestre',
+        { codigo_carrera: carreraSel, semestre_id: semestreSel },
+        `informe-semestral-${rut}-${semestreActual.year}-${semestreActual.codigo}.pdf`,
+      );
+    } catch {
+      showError('Error al generar el informe del semestre');
+    } finally {
+      setDescargandoUno(false);
+    }
+  }
+
+  async function handleDescargarTodosLosSemestres() {
+    if (carreraSel === null) return;
+    setDescargandoTodos(true);
+    try {
+      await descargarPdf(
+        '/pdf-generator/semestre',
+        { codigo_carrera: carreraSel },
+        `informe-semestral-completo-${rut}.pdf`,
+      );
+    } catch {
+      showError('Error al generar el informe de todos los semestres');
+    } finally {
+      setDescargandoTodos(false);
+    }
+  }
 
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -271,6 +311,29 @@ export default function EstudianteDesempenoSemestral() {
               )}
           </div>
 
+          {/* Descarga de informes PDF — dos botones bien diferenciados: uno para
+              el semestre elegido arriba, otro para toda la trayectoria de la carrera. */}
+          {semestres.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mb-6">
+              <button
+                onClick={handleDescargarSemestreActual}
+                disabled={descargandoUno || semestreSel === null}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-[#3a7a6b] border border-[#65B39B]/40 rounded-lg hover:bg-[#65B39B]/10 disabled:opacity-50 transition-colors"
+              >
+                <PdfIcon sx={{ fontSize: 18 }} />
+                {descargandoUno ? 'Generando…' : `Descargar informe del semestre seleccionado${semestreActual ? ` (${semLabel(semestreActual.year, semestreActual.tipo, semestreActual.codigo)})` : ''}`}
+              </button>
+              <button
+                onClick={handleDescargarTodosLosSemestres}
+                disabled={descargandoTodos}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              >
+                <PdfIcon sx={{ fontSize: 18 }} />
+                {descargandoTodos ? 'Generando…' : 'Descargar informe de todos los semestres'}
+              </button>
+            </div>
+          )}
+
           {errorSemestres && (
             <div className="mb-4">
               <Alert tipo="error" mensaje={errorSemestres} />
@@ -326,6 +389,9 @@ export default function EstudianteDesempenoSemestral() {
                           {ramo.intento > 1 && (
                             <span className="ml-2 text-sm text-gray-400">{ramo.intento}° intento</span>
                           )}
+                          {ramo.comentario && (
+                            <p className="mt-1 text-sm text-gray-400 italic">{ramo.comentario}</p>
+                          )}
                         </td>
                         <td className={`py-4 px-6 text-center text-xl font-bold tabular-nums ${notaColor(ramo.nota_final)}`}>
                           {ramo.nota_final !== null ? ramo.nota_final.toFixed(1) : '—'}
@@ -371,6 +437,7 @@ export default function EstudianteDesempenoSemestral() {
           )}
         </>
       )}
+      <SnackbarComponent />
     </div>
   );
 }

@@ -22,6 +22,9 @@ export interface SemestreUI {
   tipo: TipoSemestre;
   ramos: RamoUI[];
   soloLocal: boolean;
+  // Cierre explícito (backend, semestre_carrera.cerrado) — nunca derivado del
+  // estado de los ramos. Solo cambia vía la acción de cierre del admin/tutor.
+  cerrado: boolean;
 }
 
 export interface CarreraUI extends CarreraAvanceDto {

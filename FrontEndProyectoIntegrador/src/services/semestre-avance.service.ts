@@ -8,6 +8,9 @@ export interface SemestreDto {
   year: number;
   semestre: BackendSemestre;
   tipo: TipoSemestre;
+  // Cierre explícito del semestre para esta carrera (ver semestre_carrera.cerrado
+  // en el backend). Solo lo cambia la acción de cierre del admin/tutor.
+  cerrado: boolean;
 }
 
 export interface CreateSemestreDto {
@@ -46,6 +49,13 @@ class SemestreAvanceService extends BaseHttpClient {
   unlinkCarrera(semestre_id: number, codigo_carrera: number): Promise<void> {
     return this.request<void>('/semestre/unlink-carrera', {
       method: 'DELETE',
+      body: JSON.stringify({ semestre_id, codigo_carrera }),
+    });
+  }
+
+  cerrarSemestre(semestre_id: number, codigo_carrera: number): Promise<void> {
+    return this.request<void>('/semestre/cerrar', {
+      method: 'POST',
       body: JSON.stringify({ semestre_id, codigo_carrera }),
     });
   }

@@ -10,7 +10,7 @@ import { Alert } from '../../../ui';
 import { Spinner } from '../../../ui';
 import type { EstadoEstudiante } from '../../../../types';
 import type { CarreraUI, RamoUI } from './types';
-import { esCerrado, semLabel } from './constants';
+import { semLabel } from './constants';
 import { SemestreColumna } from './SemestreColumna';
 import { HistorialEstadoSeccion } from './HistorialEstadoSeccion';
 
@@ -45,7 +45,7 @@ export function CarreraAcordeon({
 
   const ultimoSem = carrera.semestres.at(-1) ?? null;
   const carreraActiva = carrera.estado === 'ACTIVO';
-  const puedeAgregarSem = !carrera.cargando && carreraActiva && (!ultimoSem || esCerrado(ultimoSem.ramos));
+  const puedeAgregarSem = !carrera.cargando && carreraActiva && (!ultimoSem || ultimoSem.cerrado);
 
   const tooltipAgregarSem =
     carrera.cargando

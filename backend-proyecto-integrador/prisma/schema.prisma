@@ -186,6 +186,12 @@ model semestre_carrera {
   semestre_id    Int
   codigo_carrera Int
 
+  // Cierre explícito del semestre para esta carrera. Es un flag persistido
+  // a propósito (no derivado del estado de los ramos): solo lo cambia la
+  // acción de cierre del admin/tutor, para que un estudiante no pueda cerrar
+  // el semestre indirectamente cambiando el estado de sus propios ramos.
+  cerrado Boolean @default(false)
+
   semestre semestre @relation(fields: [semestre_id],    references: [semestre_id])
   carrera  carrera  @relation(fields: [codigo_carrera], references: [codigo_carrera])
 

@@ -172,7 +172,8 @@ export const PasswordRecoveryModal: React.FC<PasswordRecoveryModalProps> = ({
         return (
           <Box component="form" onSubmit={handleRequestReset} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             <Typography variant="body2" sx={{ textAlign: 'center', color: '#666', mb: 1 }}>
-              Ingresa tu email para recibir un código de recuperación
+              Ingresa tu email para recibir un código de recuperación. Si no te
+              llega ningún correo, confirma que hayas ingresado correctamente tu email.
             </Typography>
 
             <TextField

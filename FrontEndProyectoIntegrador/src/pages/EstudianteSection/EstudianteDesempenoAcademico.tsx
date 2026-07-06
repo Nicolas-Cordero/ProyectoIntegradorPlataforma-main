@@ -3,11 +3,11 @@ import { useOutletContext } from 'react-router-dom';
 import { School as SchoolIcon, PictureAsPdf as PdfIcon } from '@mui/icons-material';
 import { Select, Alert, Spinner } from '../../components/ui';
 import type { EstudianteOutletContext } from './EstudianteDetail';
-import { carreraAvanceService, ramoAvanceService, historialEstadoCarreraService } from '../../services';
+import { carreraAvanceService, ramoAvanceService, semestreAvanceService, historialEstadoCarreraService } from '../../services';
 import { descargarPdf } from '../../utils/pdfDownload';
 import { useSnackbar } from '../../hooks/useSnackbar';
 import type { CarreraAvanceDto } from '../../services/carrera-avance.service';
-import type { BackendSemestre, TipoSemestre } from '../../services/semestre-avance.service';
+import type { BackendSemestre, TipoSemestre, SemestreDto } from '../../services/semestre-avance.service';
 import type { RamoAvanceDto, EstadoRamoAvance } from '../../services/ramo-avance.service';
 
 // ─── Constantes / helpers de mapeo ────────────────────────────────────────────
@@ -55,18 +55,29 @@ interface SemestreUI {
   codigo: CodigoSemUI;
   tipo: TipoSemestre;
   ramos: RamoUI[];
-}
-
-function esCerrado(sem: SemestreUI): boolean {
-  return sem.ramos.length > 0 && sem.ramos.every(r => r.estado !== 'CURSANDO');
+  // Cierre explícito (backend, semestre_carrera.cerrado) — nunca derivado del
+  // estado de los ramos, para que no dependa de qué haya cambiado el estudiante.
+  cerrado: boolean;
 }
 
 function esAbierto(sem: SemestreUI): boolean {
   return sem.ramos.some(r => r.estado === 'CURSANDO');
 }
 
-function agruparSemestres(ramos: RamoAvanceDto[]): SemestreUI[] {
+function agruparSemestres(ramos: RamoAvanceDto[], linkedSemestres: SemestreDto[]): SemestreUI[] {
   const map = new Map<number, SemestreUI>();
+
+  for (const s of linkedSemestres) {
+    map.set(s.semestre_id, {
+      semestre_id: s.semestre_id,
+      year:        s.year,
+      codigo:      BACKEND_TO_UI[s.semestre],
+      tipo:        s.tipo,
+      ramos:       [],
+      cerrado:     s.cerrado,
+    });
+  }
+
   for (const r of ramos) {
     const { semestre_id, year, semestre, tipo } = r.semestre;
     if (!map.has(semestre_id)) {
@@ -76,6 +87,8 @@ function agruparSemestres(ramos: RamoAvanceDto[]): SemestreUI[] {
         codigo: BACKEND_TO_UI[semestre],
         tipo,
         ramos: [],
+        // Sin fila en semestre_carrera (dato huérfano): no puede estar cerrado.
+        cerrado: false,
       });
     }
     map.get(semestre_id)!.ramos.push({
@@ -135,10 +148,13 @@ export default function EstudianteDesempenoAcademico() {
     setCargandoSemestres(true);
     setErrorSemestres(null);
     setSemestres([]);
-    ramoAvanceService.getByCarrera(carreraSel)
-      .then(ramos => {
+    Promise.all([
+      ramoAvanceService.getByCarrera(carreraSel),
+      semestreAvanceService.getByCarrera(carreraSel),
+    ])
+      .then(([ramos, linkedSemestres]) => {
         if (cancelado) return;
-        setSemestres(agruparSemestres(ramos));
+        setSemestres(agruparSemestres(ramos, linkedSemestres));
       })
       .catch(() => { if (!cancelado) setErrorSemestres('No se pudieron cargar los datos de la carrera.'); })
       .finally(() => { if (!cancelado) setCargandoSemestres(false); });
@@ -162,7 +178,7 @@ export default function EstudianteDesempenoAcademico() {
   const carreraActual   = carreras.find(c => c.codigo_carrera === carreraSel) ?? null;
   const todosRamos      = semestres.flatMap(s => s.ramos);
   const totalRamos      = todosRamos.length;
-  const semFinalizados  = semestres.filter(esCerrado).length;
+  const semFinalizados  = semestres.filter(s => s.cerrado).length;
   const ramosAprobados  = todosRamos.filter(r => r.estado === 'APROBADO').length;
   const ramosReprobados = todosRamos.filter(r => r.estado === 'REPROBADO').length;
   const ramosCursando   = todosRamos.filter(r => r.estado === 'CURSANDO').length;
@@ -365,7 +381,7 @@ export default function EstudianteDesempenoAcademico() {
                       </thead>
                       <tbody>
                         {semestres.map((sem, idx) => {
-                          const cerrado  = esCerrado(sem);
+                          const cerrado  = sem.cerrado;
                           const abierto  = esAbierto(sem);
                           const aprobados  = sem.ramos.filter(r => r.estado === 'APROBADO').length;
                           const reprobados = sem.ramos.filter(r => r.estado === 'REPROBADO').length;

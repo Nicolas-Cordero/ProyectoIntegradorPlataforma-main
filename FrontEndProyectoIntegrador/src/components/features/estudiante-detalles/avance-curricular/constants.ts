@@ -1,7 +1,7 @@
 import type { EstadoEstudiante } from '../../../../types';
 import type { EstadoRamoAvance } from '../../../../services/ramo-avance.service';
 import type { BackendSemestre, TipoSemestre } from '../../../../services/semestre-avance.service';
-import type { CodigoSemUI, RamoUI } from './types';
+import type { CodigoSemUI } from './types';
 
 export const UI_TO_BACKEND: Record<CodigoSemUI, BackendSemestre> = {
   '1':        'PRIMER_SEMESTRE',
@@ -72,8 +72,4 @@ export function normalizarNota(valor: number | string | null | undefined): numbe
   if (valor === null || valor === undefined || valor === '') return null;
   const n = Number(valor);
   return isNaN(n) ? null : n;
-}
-
-export function esCerrado(ramos: RamoUI[]): boolean {
-  return ramos.length > 0 && ramos.every(r => r.estado !== 'CURSANDO');
 }

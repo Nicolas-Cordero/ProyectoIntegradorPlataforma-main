@@ -1,6 +1,6 @@
 import { Add as AddIcon, Delete as DeleteIcon, Lock as LockIcon } from '@mui/icons-material';
 import type { SemestreUI, RamoUI } from './types';
-import { esCerrado, semLabel } from './constants';
+import { semLabel } from './constants';
 import { RamoCard } from './RamoCard';
 
 interface SemestreColumnaProps {
@@ -15,7 +15,7 @@ interface SemestreColumnaProps {
 }
 
 export function SemestreColumna({ semestre, canEdit, canAdmin, onCerrar, onEliminar, onAgregarRamo, onEditarRamo, onEliminarRamo }: SemestreColumnaProps) {
-  const cerrado = esCerrado(semestre.ramos);
+  const cerrado = semestre.cerrado;
   const ramoLimitAlcanzado = semestre.tipo === 'RECUPERATIVO' && semestre.ramos.length >= 1;
   const todosConNota = semestre.ramos.length > 0
     && semestre.ramos.every(r => r.estado === 'ELIMINADO' || r.nota_final !== null);

@@ -11,6 +11,7 @@ import {
 import { SemestreService } from './semestre.service';
 import { CreateSemestreDto } from './dto/create-semestre.dto';
 import { LinkCarreraDto } from './dto/link-carrera.dto';
+import { CerrarSemestreDto } from './dto/cerrar-semestre.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRol } from '@prisma/client';
 
@@ -47,6 +48,21 @@ export class SemestreController {
   @HttpCode(200)
   unlinkCarrera(@Body() dto: LinkCarreraDto) {
     return this.semestreService.unlinkCarrera(
+      dto.semestre_id,
+      dto.codigo_carrera,
+    );
+  }
+
+  // Único camino para cerrar un semestre: exige rol admin/tutor y valida que
+  // todos los ramos (no eliminados) tengan nota final antes de calcular sus
+  // estados y marcar el semestre como cerrado. Ningún estudiante puede
+  // disparar esto desde /ramo/me, así que cambiar el estado de sus propios
+  // ramos nunca cierra el semestre.
+  @Post('cerrar')
+  @Roles(UserRol.ADMIN, UserRol.TUTOR)
+  @HttpCode(200)
+  cerrarSemestre(@Body() dto: CerrarSemestreDto) {
+    return this.semestreService.cerrarSemestre(
       dto.semestre_id,
       dto.codigo_carrera,
     );

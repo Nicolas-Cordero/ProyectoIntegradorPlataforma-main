@@ -39,4 +39,8 @@ export class SemestreService {
   unlinkCarrera(semestre_id: number, codigo_carrera: number): Promise<void> {
     return this.semestreRepository.unlinkCarrera(semestre_id, codigo_carrera);
   }
+
+  cerrarSemestre(semestre_id: number, codigo_carrera: number): Promise<void> {
+    return this.semestreRepository.cerrarSemestre(semestre_id, codigo_carrera);
+  }
 }

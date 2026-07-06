@@ -18,11 +18,10 @@ import type { EstadoEstudiante } from '../../types';
 import type { UniversidadDto } from '../../services/universidad.service';
 import type { CreateCarreraAvanceDto, ViaAcceso } from '../../services/carrera-avance.service';
 import type { SemestreDto, CreateSemestreDto } from '../../services/semestre-avance.service';
-import type { EstadoRamoAvance } from '../../services/ramo-avance.service';
 import type { CarreraUI, RamoUI, SemestreUI } from '../../components/features/estudiante-detalles/avance-curricular';
 import {
   UI_TO_BACKEND, BACKEND_TO_UI, ORDEN_SEMESTRE,
-  normalizarNota, esCerrado,
+  normalizarNota,
   CarreraAcordeon,
   ModalCarrera, type FormCarrera,
   ModalSemestre, type FormSemestre,
@@ -117,6 +116,7 @@ export default function EstudianteAvanceCurricular() {
           tipo:        s.tipo as SemestreUI['tipo'],
           ramos:       [],
           soloLocal:   false,
+          cerrado:     s.cerrado,
         });
       }
 
@@ -129,6 +129,8 @@ export default function EstudianteAvanceCurricular() {
             tipo,
             ramos: [],
             soloLocal: false,
+            // Sin fila en semestre_carrera (dato huérfano): no puede estar cerrado.
+            cerrado: false,
           });
         }
         semestresMap.get(semestre_id)!.ramos.push({
@@ -266,7 +268,7 @@ export default function EstudianteAvanceCurricular() {
     const backendCodigo = UI_TO_BACKEND[formSem.codigo];
 
     if (formSem.tipo === 'RECUPERATIVO') {
-      const hayRegularCerrado = carrera.semestres.some(s => s.tipo === 'REGULAR' && esCerrado(s.ramos));
+      const hayRegularCerrado = carrera.semestres.some(s => s.tipo === 'REGULAR' && s.cerrado);
       if (!hayRegularCerrado) {
         setErrSem('Se requiere al menos un semestre regular cerrado para agregar uno recuperativo.');
         return;
@@ -299,6 +301,7 @@ export default function EstudianteAvanceCurricular() {
         tipo:        formSem.tipo,
         ramos:       [],
         soloLocal:   false,
+        cerrado:     false,
       };
       setCarreras(cs => cs.map(c => c.codigo_carrera === modalSemestre
         ? { ...c, semestres: [...c.semestres, nuevoSem] }
@@ -338,35 +341,15 @@ export default function EstudianteAvanceCurricular() {
     });
   };
 
+  // El cierre es una acción explícita contra el backend (POST /semestre/cerrar):
+  // valida que todos los ramos no eliminados tengan nota final, recién ahí
+  // calcula su estado final desde esa nota, y marca semestre_carrera.cerrado.
+  // Nunca se deriva del estado de los ramos, para que un estudiante cambiando
+  // el estado de sus propios ramos no pueda cerrar el semestre.
   const cerrarSemestre = async (codigo_carrera: number, semestre_id: number) => {
-    const carrera = carreras.find(c => c.codigo_carrera === codigo_carrera);
-    const sem = carrera?.semestres.find(s => s.semestre_id === semestre_id);
-    if (!sem) return;
-
-    const ramosACerrar = sem.ramos.filter(r => r.estado === 'CURSANDO');
-    if (ramosACerrar.length === 0) return;
-
     try {
-      const actualizados = await Promise.all(
-        ramosACerrar.map(r => {
-          const nuevoEstado: EstadoRamoAvance =
-            r.nota_final !== null && r.nota_final >= 4 ? 'APROBADO' : 'REPROBADO';
-          return ramoAvanceService.update(r.id, { estado: nuevoEstado }).then(res => ({
-            id: r.id, estado: nuevoEstado, res,
-          }));
-        })
-      );
-      setCarreras(cs => cs.map(c => c.codigo_carrera === codigo_carrera ? {
-        ...c,
-        semestres: c.semestres.map(s => s.semestre_id === semestre_id ? {
-          ...s,
-          soloLocal: false,
-          ramos: s.ramos.map(r => {
-            const upd = actualizados.find(u => u.id === r.id);
-            return upd ? { ...r, estado: upd.estado } : r;
-          }),
-        } : s),
-      } : c));
+      await semestreAvanceService.cerrarSemestre(semestre_id, codigo_carrera);
+      await cargarSemestres(codigo_carrera);
     } catch (e: unknown) {
       setErrorCarreras(e instanceof Error ? e.message : 'Error al cerrar el semestre.');
     }
@@ -497,7 +480,7 @@ export default function EstudianteAvanceCurricular() {
     : null;
 
   const hayRegularCerrado = carreraDelSem?.semestres.some(
-    s => s.tipo === 'REGULAR' && esCerrado(s.ramos)
+    s => s.tipo === 'REGULAR' && s.cerrado
   ) ?? false;
 
   // ─────────────────────────────────────────────────────────────────────────

@@ -9,8 +9,10 @@ const mockRepository = {
   findAll: jest.fn(),
   create: jest.fn(),
   findVigente: jest.fn(),
+  findById: jest.fn(),
   firmar: jest.fn(),
   findFirma: jest.fn(),
+  findFirmantes: jest.fn(),
 };
 
 const mockAcuerdo = {
@@ -227,5 +229,40 @@ describe('AcuerdoService', () => {
       firmadoAt: null,
     });
     expect(mockRepository.findFirma).not.toHaveBeenCalled();
+  });
+
+  // ── Firmantes de una versión ─────────────────────────────────────────────
+
+  it('Debe retornar los estudiantes que firmaron una versión concreta del acuerdo', async () => {
+    mockRepository.findById.mockResolvedValue(mockAcuerdo);
+    mockRepository.findFirmantes.mockResolvedValue([
+      {
+        firmado_at: new Date('2026-06-16'),
+        estudiante: {
+          rut_estudiante: '12345678-9',
+          nombre: 'Camila',
+          apellido: 'Rojas',
+        },
+      },
+    ]);
+
+    const firmantes = await service.getFirmantes(1);
+
+    expect(mockRepository.findFirmantes).toHaveBeenCalledWith(1);
+    expect(firmantes).toEqual([
+      {
+        rut_estudiante: '12345678-9',
+        nombre: 'Camila',
+        apellido: 'Rojas',
+        firmadoAt: new Date('2026-06-16'),
+      },
+    ]);
+  });
+
+  it('Debe lanzar NotFoundException al pedir los firmantes de un acuerdo inexistente', async () => {
+    mockRepository.findById.mockResolvedValue(null);
+
+    await expect(service.getFirmantes(999)).rejects.toThrow(NotFoundException);
+    expect(mockRepository.findFirmantes).not.toHaveBeenCalled();
   });
 });

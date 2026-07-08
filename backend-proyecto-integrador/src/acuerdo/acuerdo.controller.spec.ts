@@ -8,6 +8,7 @@ const mockAcuerdoService = {
   findMostNear: jest.fn(),
   update: jest.fn(),
   remove: jest.fn(),
+  getFirmantes: jest.fn(),
 };
 
 describe('AcuerdoController', () => {
@@ -22,7 +23,23 @@ describe('AcuerdoController', () => {
     controller = module.get<AcuerdoController>(AcuerdoController);
   });
 
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('Debe delegar getFirmantes al servicio con el id numérico', async () => {
+    const firmantes = [
+      { rut_estudiante: '12345678-9', nombre: 'Camila', apellido: 'Rojas', firmadoAt: new Date('2026-06-16') },
+    ];
+    mockAcuerdoService.getFirmantes.mockResolvedValue(firmantes);
+
+    const response = await controller.getFirmantes('1');
+
+    expect(mockAcuerdoService.getFirmantes).toHaveBeenCalledWith(1);
+    expect(response).toEqual(firmantes);
   });
 });

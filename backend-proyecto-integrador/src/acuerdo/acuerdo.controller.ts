@@ -57,6 +57,13 @@ export class AcuerdoController {
     return this.acuerdoService.getEstadoFirmaVigente(user.rut_usuario);
   }
 
+  // Estudiantes que firmaron una versión concreta del acuerdo (pestaña "Firmas").
+  @Get(':id/firmas')
+  @Roles(UserRol.ADMIN)
+  getFirmantes(@Param('id') id: string) {
+    return this.acuerdoService.getFirmantes(+id);
+  }
+
   @Patch(':id')
   @Roles(UserRol.ADMIN)
   update(@Param('id') id: string, @Body() updateAcuerdoDto: UpdateAcuerdoDto) {

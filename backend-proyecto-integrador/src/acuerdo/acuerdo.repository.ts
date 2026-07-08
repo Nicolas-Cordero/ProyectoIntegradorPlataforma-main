@@ -28,6 +28,26 @@ export class AcuerdoRepository {
     return this.prisma.acuerdo.findFirst({ orderBy: { createdAt: 'desc' } });
   }
 
+  // Acuerdo por id (null si no existe). Sirve para validar antes de listar sus firmantes.
+  async findById(id: number): Promise<acuerdo | null> {
+    return this.prisma.acuerdo.findUnique({ where: { id } });
+  }
+
+  // Estudiantes que firmaron una versión concreta del acuerdo, con la fecha en que
+  // firmaron, ordenados alfabéticamente por apellido/nombre.
+  async findFirmantes(acuerdo_id: number) {
+    return this.prisma.firma_acuerdo.findMany({
+      where: { acuerdo_id },
+      select: {
+        firmado_at: true,
+        estudiante: {
+          select: { rut_estudiante: true, nombre: true, apellido: true },
+        },
+      },
+      orderBy: { estudiante: { apellido: 'asc' } },
+    });
+  }
+
   // Registra la firma de un estudiante sobre una versión del acuerdo. Idempotente:
   // si ya había firmado esa versión, conserva la firma original (no la duplica ni
   // re-fecha) gracias al @@unique([acuerdo_id, rut_estudiante]).

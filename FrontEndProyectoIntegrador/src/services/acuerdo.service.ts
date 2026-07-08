@@ -43,6 +43,15 @@ export interface UpdateAcuerdoDto {
   documento?: UpdateDocumentoCompromisoDto;
 }
 
+// Fila de `firma_acuerdo` enriquecida con datos básicos del estudiante
+// (lo que devuelve GET /acuerdo/:id/firmas).
+export interface FirmanteAcuerdo {
+  rut_estudiante: string;
+  nombre: string;
+  apellido: string;
+  firmadoAt: string;
+}
+
 class AcuerdoService extends BaseHttpClient {
   /**
    * GET /acuerdo
@@ -73,6 +82,14 @@ class AcuerdoService extends BaseHttpClient {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
+  }
+
+  /**
+   * GET /acuerdo/:id/firmas
+   * Estudiantes que firmaron esa versión concreta del acuerdo, con la fecha de firma.
+   */
+  async getFirmantes(id: number | string): Promise<FirmanteAcuerdo[]> {
+    return this.request<FirmanteAcuerdo[]>(`/acuerdo/${id}/firmas`);
   }
 }
 

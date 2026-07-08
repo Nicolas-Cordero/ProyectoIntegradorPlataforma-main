@@ -111,6 +111,25 @@ export class AcuerdoService {
       firmadoAt: firma?.firmado_at ?? null,
     };
   }
+
+  /**
+   * Estudiantes que firmaron una versión concreta del acuerdo, con la fecha en que
+   * firmaron. Lanza NotFoundException si esa versión no existe.
+   */
+  async getFirmantes(acuerdoId: number): Promise<FirmanteAcuerdo[]> {
+    const acuerdo = await this.acuerdoRepo.findById(acuerdoId);
+    if (!acuerdo) {
+      throw new NotFoundException(`No existe un acuerdo con id ${acuerdoId}`);
+    }
+
+    const firmas = await this.acuerdoRepo.findFirmantes(acuerdoId);
+    return firmas.map((f) => ({
+      rut_estudiante: f.estudiante.rut_estudiante,
+      nombre: f.estudiante.nombre,
+      apellido: f.estudiante.apellido,
+      firmadoAt: f.firmado_at,
+    }));
+  }
 }
 
 export interface EstadoFirmaAcuerdo {
@@ -118,4 +137,11 @@ export interface EstadoFirmaAcuerdo {
   acuerdoId: number | null;
   firmado: boolean;
   firmadoAt: Date | null;
+}
+
+export interface FirmanteAcuerdo {
+  rut_estudiante: string;
+  nombre: string;
+  apellido: string;
+  firmadoAt: Date;
 }

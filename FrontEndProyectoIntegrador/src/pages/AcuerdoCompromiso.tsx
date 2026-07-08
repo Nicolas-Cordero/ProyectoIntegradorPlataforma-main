@@ -14,8 +14,10 @@ import { Select, Input, Textarea, Button, DateLabel } from '../components/ui';
 import { useConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useSnackbar } from '../hooks/useSnackbar';
 import { acuerdoService } from '../services';
-import type { AcuerdoResponse, DocumentoCompromiso } from '../services/acuerdo.service';
+import type { AcuerdoResponse, DocumentoCompromiso, FirmanteAcuerdo } from '../services/acuerdo.service';
 import { descargarPdf } from '../utils/pdfDownload';
+
+type Vista = 'acuerdo' | 'firmas';
 
 // ── Modelo interno (ergonómico para la UI) ──────────────────────────────────────
 // El backend entrega/recibe el documento como { titulo, subtitulo, abstract,
@@ -96,6 +98,13 @@ export function AcuerdoCompromiso() {
   const { showSuccess, showError, SnackbarComponent } = useSnackbar();
   const { showConfirm, ConfirmDialog } = useConfirmDialog();
 
+  // Pestaña activa: el documento del acuerdo o la lista de quién firmó la versión
+  // seleccionada en el combo.
+  const [vista, setVista] = useState<Vista>('acuerdo');
+  const [firmantes, setFirmantes] = useState<FirmanteAcuerdo[]>([]);
+  const [cargandoFirmantes, setCargandoFirmantes] = useState(false);
+  const [errorFirmantes, setErrorFirmantes] = useState<string | null>(null);
+
   // Todas las versiones (filas de `acuerdo`) y la seleccionada. `versionId` es a la
   // vez la opción activa de la combo y la base del PATCH al guardar.
   const [versiones, setVersiones] = useState<AcuerdoResponse[]>([]);
@@ -149,6 +158,31 @@ export function AcuerdoCompromiso() {
   useEffect(() => {
     cargarVersiones();
   }, [cargarVersiones]);
+
+  // Carga los firmantes de la versión seleccionada al entrar a la pestaña "Firmas"
+  // o al cambiar de versión estando ya en ella.
+  useEffect(() => {
+    if (vista !== 'firmas' || versionId === null) return;
+    let cancelado = false;
+    setCargandoFirmantes(true);
+    setErrorFirmantes(null);
+    acuerdoService
+      .getFirmantes(versionId)
+      .then((data) => {
+        if (!cancelado) setFirmantes(data);
+      })
+      .catch((e) => {
+        if (!cancelado) {
+          setErrorFirmantes(e instanceof Error ? e.message : 'No se pudo cargar la lista de firmas.');
+        }
+      })
+      .finally(() => {
+        if (!cancelado) setCargandoFirmantes(false);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [vista, versionId]);
 
   // Cada versión existente como opción de la combo; la primera (más reciente) se
   // marca como vigente.
@@ -414,6 +448,68 @@ export function AcuerdoCompromiso() {
           </div>
         </div>
 
+        {/* Navegación Acuerdo / Firmas */}
+        <div className="flex justify-start gap-1 border-b border-gray-100 mb-6">
+          {(['acuerdo', 'firmas'] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => setVista(v)}
+              disabled={v === 'firmas' && editando}
+              title={v === 'firmas' && editando ? 'Termina o cancela la edición para ver las firmas' : undefined}
+              className={`px-4 py-2 text-sm transition-colors border-b-2 disabled:opacity-40 disabled:cursor-not-allowed ${
+                vista === v
+                  ? 'text-[#65B39B] font-bold border-[#65B39B]'
+                  : 'text-gray-500 font-medium border-transparent hover:text-[#65B39B]'
+              }`}
+            >
+              {v === 'acuerdo' ? 'Acuerdo' : 'Firmas'}
+            </button>
+          ))}
+        </div>
+
+        {vista === 'firmas' ? (
+          /* ── Firmas de la versión seleccionada ─────────────────────────── */
+          <div className="flex flex-col gap-4">
+            {cargandoFirmantes ? (
+              <div
+                className="rounded-xl bg-white p-8 text-center text-sm text-gray-500"
+                style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}
+              >
+                Cargando firmas…
+              </div>
+            ) : errorFirmantes ? (
+              <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+                {errorFirmantes}
+              </div>
+            ) : firmantes.length === 0 ? (
+              <div
+                className="rounded-xl bg-white p-8 text-center text-sm text-gray-400"
+                style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}
+              >
+                Todavía nadie ha firmado esta versión del acuerdo.
+              </div>
+            ) : (
+              <div
+                className="rounded-xl bg-white overflow-hidden"
+                style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)', border: '1px solid rgba(0,0,0,0.05)' }}
+              >
+                {firmantes.map((f, i) => (
+                  <div
+                    key={f.rut_estudiante}
+                    className={`flex items-center justify-between px-6 py-4 ${i > 0 ? 'border-t border-gray-100' : ''}`}
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">{f.nombre} {f.apellido}</p>
+                      <p className="text-xs text-gray-400">{f.rut_estudiante}</p>
+                    </div>
+                    <DateLabel fecha={f.firmadoAt} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+        <>
         {/* Barra de acciones global */}
         <div className="flex items-center justify-end gap-3 mb-4">
           {recienGuardado && (
@@ -639,6 +735,8 @@ export function AcuerdoCompromiso() {
               </div>
             )}
           </div>
+        )}
+        </>
         )}
 
       </div>

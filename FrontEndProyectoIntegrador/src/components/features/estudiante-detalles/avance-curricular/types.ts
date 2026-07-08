@@ -12,7 +12,6 @@ export interface RamoUI {
   comentario: string;
   intento: number;
   nota_final: number | null;
-  url_certificado: string | null;
 }
 
 export interface SemestreUI {
@@ -25,6 +24,9 @@ export interface SemestreUI {
   // Cierre explícito (backend, semestre_carrera.cerrado) — nunca derivado del
   // estado de los ramos. Solo cambia vía la acción de cierre del admin/tutor.
   cerrado: boolean;
+  // Certificado de notas del semestre: un solo documento por carrera+semestre
+  // (semestre_carrera.url_certificado), no uno por ramo.
+  url_certificado: string | null;
 }
 
 export interface CarreraUI extends CarreraAvanceDto {

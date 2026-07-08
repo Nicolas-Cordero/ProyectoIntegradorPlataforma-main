@@ -117,6 +117,7 @@ export default function EstudianteAvanceCurricular() {
           ramos:       [],
           soloLocal:   false,
           cerrado:     s.cerrado,
+          url_certificado: s.url_certificado,
         });
       }
 
@@ -131,16 +132,16 @@ export default function EstudianteAvanceCurricular() {
             soloLocal: false,
             // Sin fila en semestre_carrera (dato huérfano): no puede estar cerrado.
             cerrado: false,
+            url_certificado: null,
           });
         }
         semestresMap.get(semestre_id)!.ramos.push({
-          id:              r.id,
-          nombre:          r.nombre,
-          estado:          r.estado,
-          comentario:      r.comentario,
-          intento:         r.intento,
-          nota_final:      normalizarNota(r.nota_final),
-          url_certificado: r.url_certificado ?? null,
+          id:         r.id,
+          nombre:     r.nombre,
+          estado:     r.estado,
+          comentario: r.comentario,
+          intento:    r.intento,
+          nota_final: normalizarNota(r.nota_final),
         });
       }
 
@@ -302,6 +303,7 @@ export default function EstudianteAvanceCurricular() {
         ramos:       [],
         soloLocal:   false,
         cerrado:     false,
+        url_certificado: null,
       };
       setCarreras(cs => cs.map(c => c.codigo_carrera === modalSemestre
         ? { ...c, semestres: [...c.semestres, nuevoSem] }
@@ -410,7 +412,7 @@ export default function EstudianteAvanceCurricular() {
           semestres: c.semestres.map(s => s.semestre_id === modalRamo.semestreId ? {
             ...s,
             ramos: s.ramos.map(r => r.id === modalRamo.editRamo!.id
-              ? { ...r, nombre: updated.nombre, estado: updated.estado, comentario: updated.comentario, intento: updated.intento, nota_final: normalizarNota(updated.nota_final), url_certificado: r.url_certificado }
+              ? { ...r, nombre: updated.nombre, estado: updated.estado, comentario: updated.comentario, intento: updated.intento, nota_final: normalizarNota(updated.nota_final) }
               : r
             ),
           } : s),
@@ -427,13 +429,12 @@ export default function EstudianteAvanceCurricular() {
           nota_final:     notaFinal,
         });
         const nuevoRamo: RamoUI = {
-          id:              created.id,
-          nombre:          created.nombre,
-          estado:          created.estado,
-          comentario:      created.comentario,
-          intento:         created.intento,
-          nota_final:      normalizarNota(created.nota_final),
-          url_certificado: created.url_certificado ?? null,
+          id:         created.id,
+          nombre:     created.nombre,
+          estado:     created.estado,
+          comentario: created.comentario,
+          intento:    created.intento,
+          nota_final: normalizarNota(created.nota_final),
         };
         setCarreras(cs => cs.map(c => c.codigo_carrera === modalRamo.carreraId ? {
           ...c,

@@ -1,4 +1,9 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { EstadoRamo, Prisma, semestre } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSemestreDto } from './dto/create-semestre.dto';
@@ -53,12 +58,59 @@ export class SemestreRepository {
 
   async getByCarrera(
     codigo_carrera: number,
-  ): Promise<(semestre & { cerrado: boolean })[]> {
+  ): Promise<
+    (semestre & { cerrado: boolean; url_certificado: string | null })[]
+  > {
     const links = await this.prisma.semestre_carrera.findMany({
       where: { codigo_carrera },
       include: { semestre: true },
     });
-    return links.map((l) => ({ ...l.semestre, cerrado: l.cerrado }));
+    return links.map((l) => ({
+      ...l.semestre,
+      cerrado: l.cerrado,
+      url_certificado: l.url_certificado,
+    }));
+  }
+
+  // Dueño de la carrera, para validar que el estudiante autenticado solo
+  // pueda subir el certificado de su propia carrera.
+  async findCarreraRut(codigo_carrera: number): Promise<string | null> {
+    const carrera = await this.prisma.carrera.findUnique({
+      where: { codigo_carrera },
+      select: { rut_estudiante: true },
+    });
+    return carrera?.rut_estudiante ?? null;
+  }
+
+  async updateCertificado(
+    semestre_id: number,
+    codigo_carrera: number,
+    url_certificado: string,
+  ): Promise<semestre & { cerrado: boolean; url_certificado: string | null }> {
+    try {
+      const updated = await this.prisma.semestre_carrera.update({
+        where: { semestre_id_codigo_carrera: { semestre_id, codigo_carrera } },
+        data: { url_certificado },
+        include: { semestre: true },
+      });
+      // Mismo shape aplanado que getByCarrera, para que los clientes puedan
+      // parsear la respuesta con el mismo modelo "semestre" en ambos casos.
+      return {
+        ...updated.semestre,
+        cerrado: updated.cerrado,
+        url_certificado: updated.url_certificado,
+      };
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(
+          `El semestre ${semestre_id} no está vinculado a la carrera ${codigo_carrera}.`,
+        );
+      }
+      throw error;
+    }
   }
 
   // Cierre explícito de un semestre para una carrera: solo el admin/tutor lo

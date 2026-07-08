@@ -11,6 +11,8 @@ export interface SemestreDto {
   // Cierre explícito del semestre para esta carrera (ver semestre_carrera.cerrado
   // en el backend). Solo lo cambia la acción de cierre del admin/tutor.
   cerrado: boolean;
+  // Certificado de notas del semestre: un solo documento por carrera+semestre.
+  url_certificado: string | null;
 }
 
 export interface CreateSemestreDto {

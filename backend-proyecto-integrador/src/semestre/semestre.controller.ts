@@ -7,13 +7,20 @@ import {
   Delete,
   ParseIntPipe,
   HttpCode,
+  BadRequestException,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { SemestreService } from './semestre.service';
 import { CreateSemestreDto } from './dto/create-semestre.dto';
 import { LinkCarreraDto } from './dto/link-carrera.dto';
 import { CerrarSemestreDto } from './dto/cerrar-semestre.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRol } from '@prisma/client';
+import type { AuthenticatedUser } from '../auth/interfaces/auth.interfaces';
 
 @Controller('semestre')
 export class SemestreController {
@@ -65,6 +72,28 @@ export class SemestreController {
     return this.semestreService.cerrarSemestre(
       dto.semestre_id,
       dto.codigo_carrera,
+    );
+  }
+
+  // Certificado de notas del semestre: un solo documento por carrera+semestre
+  // (reemplaza al certificado por ramo que vivía en /ramo/me/:id_ramo/certificado).
+  @Post('me/:semestre_id/carrera/:codigo_carrera/certificado')
+  @Roles(UserRol.ESTUDIANTE)
+  @UseInterceptors(FileInterceptor('certificado', { storage: memoryStorage() }))
+  async uploadMyCertificado(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('semestre_id', ParseIntPipe) semestre_id: number,
+    @Param('codigo_carrera', ParseIntPipe) codigo_carrera: number,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file || file.mimetype !== 'application/pdf') {
+      throw new BadRequestException('El archivo debe ser un PDF');
+    }
+    return this.semestreService.uploadCertificado(
+      semestre_id,
+      codigo_carrera,
+      user.rut_usuario,
+      file,
     );
   }
 

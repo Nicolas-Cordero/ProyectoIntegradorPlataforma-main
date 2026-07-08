@@ -7,12 +7,7 @@ import {
   Param,
   Delete,
   ParseIntPipe,
-  BadRequestException,
-  UseInterceptors,
-  UploadedFile,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
 import { RamoService } from './ramo.service';
 import { CreateRamoDto } from './dto/create-ramo.dto';
 import { CreateRamoMeDto } from './dto/create-ramo-me.dto';
@@ -61,20 +56,6 @@ export class RamoController {
     @Body() updateRamoDto: UpdateRamoDto,
   ) {
     return this.ramoService.updateOwn(id_ramo, user.rut_usuario, updateRamoDto);
-  }
-
-  @Post('me/:id_ramo/certificado')
-  @Roles(UserRol.ESTUDIANTE)
-  @UseInterceptors(FileInterceptor('certificado', { storage: memoryStorage() }))
-  async uploadMyCertificado(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('id_ramo', ParseIntPipe) id_ramo: number,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    if (!file || file.mimetype !== 'application/pdf') {
-      throw new BadRequestException('El archivo debe ser un PDF');
-    }
-    return this.ramoService.uploadCertificado(id_ramo, user.rut_usuario, file);
   }
 
   // Rutas con segmentos literales ANTES de rutas con parámetros puros para evitar ambigüedad

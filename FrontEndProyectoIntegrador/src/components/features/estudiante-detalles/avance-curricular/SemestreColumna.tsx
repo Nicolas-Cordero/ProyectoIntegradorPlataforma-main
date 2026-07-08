@@ -1,4 +1,4 @@
-import { Add as AddIcon, Delete as DeleteIcon, Lock as LockIcon } from '@mui/icons-material';
+import { Add as AddIcon, Delete as DeleteIcon, Lock as LockIcon, FileDownload as FileDownloadIcon } from '@mui/icons-material';
 import type { SemestreUI, RamoUI } from './types';
 import { semLabel } from './constants';
 import { RamoCard } from './RamoCard';
@@ -71,6 +71,22 @@ export function SemestreColumna({ semestre, canEdit, canAdmin, onCerrar, onElimi
             ))
         }
       </div>
+
+      {/* Certificado de notas del semestre (uno solo, no por ramo) */}
+      {semestre.url_certificado && (
+        <div className="px-3 pb-2">
+          <a
+            href={semestre.url_certificado}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-[#65B39B] hover:text-[#4a9e87] hover:underline transition-colors"
+            title="Descargar certificado de notas del semestre"
+          >
+            <FileDownloadIcon sx={{ fontSize: 14 }} />
+            Certificado del semestre
+          </a>
+        </div>
+      )}
 
       {/* Acciones (solo semestre abierto y con permisos) */}
       {!cerrado && canEdit && (

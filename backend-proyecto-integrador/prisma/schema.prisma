@@ -194,6 +194,11 @@ model semestre_carrera {
   // el semestre indirectamente cambiando el estado de sus propios ramos.
   cerrado Boolean @default(false)
 
+  // Certificado de notas del semestre: un solo documento por carrera+semestre,
+  // no uno por ramo (antes vivía en ramo.url_certificado, lo que llevaba a que
+  // el mismo PDF se subiera repetido una vez por cada ramo del semestre).
+  url_certificado String?
+
   semestre semestre @relation(fields: [semestre_id],    references: [semestre_id])
   carrera  carrera  @relation(fields: [codigo_carrera], references: [codigo_carrera])
 
@@ -319,7 +324,6 @@ model ramo {
   comentario      String
   intento         Int
   nota_final      Decimal?
-  url_certificado String?
 
   estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])
   semestre   semestre   @relation(fields: [semestre_id], references: [semestre_id])

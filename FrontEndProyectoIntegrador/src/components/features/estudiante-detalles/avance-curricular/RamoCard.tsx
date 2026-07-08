@@ -1,4 +1,4 @@
-import { Delete as DeleteIcon, FileDownload as FileDownloadIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon } from '@mui/icons-material';
 import type { RamoUI } from './types';
 import { ESTADO_CHIP } from './constants';
 
@@ -56,20 +56,6 @@ export function RamoCard({ ramo, semAbierto, canEdit, canAdmin, onEditar, onElim
           <span className="text-sm text-gray-400">· {ramo.intento}° intento</span>
         )}
       </div>
-
-      {ramo.url_certificado && (
-        <a
-          href={ramo.url_certificado}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={e => e.stopPropagation()}
-          className="inline-flex items-center gap-1 mt-2 text-xs text-[#65B39B] hover:text-[#4a9e87] hover:underline transition-colors"
-          title="Descargar certificado del estudiante"
-        >
-          <FileDownloadIcon sx={{ fontSize: 14 }} />
-          Certificado
-        </a>
-      )}
 
       {puedeEditarRamo && (
         <p className="text-xs text-[#65B39B] mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -8,14 +8,10 @@ import { CreateRamoMeDto } from './dto/create-ramo-me.dto';
 import { UpdateRamoDto } from './dto/update-ramo.dto';
 import { RamoRepository, RamoConDetalle } from './ramo.repository';
 import { ramo } from '@prisma/client';
-import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class RamoService {
-  constructor(
-    private readonly ramoRepository: RamoRepository,
-    private readonly storageService: StorageService,
-  ) {}
+  constructor(private readonly ramoRepository: RamoRepository) {}
 
   create(createRamoDto: CreateRamoDto): Promise<ramo> {
     return this.ramoRepository.create(createRamoDto);
@@ -71,24 +67,5 @@ export class RamoService {
       );
     }
     return this.ramoRepository.update(id_ramo, updateRamoDto);
-  }
-
-  // Solo el estudiante propietario puede subir el certificado de su propio ramo.
-  async uploadCertificado(
-    id_ramo: number,
-    rut_estudiante: string,
-    file: Express.Multer.File,
-  ): Promise<ramo> {
-    const ramo = await this.ramoRepository.findOne(id_ramo);
-    if (!ramo) {
-      throw new NotFoundException(`Ramo con id ${id_ramo} no encontrado`);
-    }
-    if (ramo.rut_estudiante !== rut_estudiante) {
-      throw new ForbiddenException(
-        'No puedes subir un certificado a un ramo que no te pertenece',
-      );
-    }
-    const { url } = await this.storageService.uploadPDF(file, 'certificados');
-    return this.ramoRepository.updateCertificado(id_ramo, url);
   }
 }

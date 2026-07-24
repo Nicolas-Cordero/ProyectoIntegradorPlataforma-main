@@ -15,6 +15,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { EstudianteService } from './estudiante.service';
 import { CreateEstudianteDto } from './dto/create-estudiante.dto';
+import { CreateEstudiantesBulkDto } from './dto/create-estudiantes-bulk.dto';
 import { UpdateEstudianteDto } from './dto/update-estudiante.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -33,6 +34,16 @@ export class EstudianteController {
   @Roles(UserRol.ADMIN)
   create(@Body() createEstudianteDto: CreateEstudianteDto) {
     return this.estudianteService.create(createEstudianteDto);
+  }
+
+  // Carga masiva (importación por Excel). Todo-o-nada: si un solo estudiante
+  // falla, la transacción hace rollback y no se inserta ninguno.
+  @Post('bulk')
+  @Roles(UserRol.ADMIN)
+  createMany(@Body() createEstudiantesBulkDto: CreateEstudiantesBulkDto) {
+    return this.estudianteService.createMany(
+      createEstudiantesBulkDto.estudiantes,
+    );
   }
 
   @Get()

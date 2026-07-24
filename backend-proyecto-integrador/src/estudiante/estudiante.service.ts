@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { CreateEstudianteDto } from './dto/create-estudiante.dto';
 import { UpdateEstudianteDto } from './dto/update-estudiante.dto';
@@ -72,6 +73,72 @@ export class EstudianteService {
         error.code === 'P2002'
       ) {
         throw new ConflictException('Ya existe un usuario con ese RUT o email');
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Carga masiva transaccional (importación por Excel). O se crean TODOS los
+   * estudiantes o ninguno: cualquier fallo dentro de la transacción del
+   * repositorio hace rollback completo.
+   *
+   * Antes de tocar la base se detectan RUT/email repetidos DENTRO del mismo
+   * lote (Prisma createMany no los detecta entre sí de forma amigable) y se
+   * traducen los errores de Prisma a mensajes entendibles.
+   */
+  async createMany(dtos: CreateEstudianteDto[]) {
+    const rutsVistos = new Set<string>();
+    const emailsVistos = new Set<string>();
+    for (const dto of dtos) {
+      const email = dto.email.toLowerCase();
+      if (rutsVistos.has(dto.rut_estudiante)) {
+        throw new ConflictException(
+          `El RUT ${dto.rut_estudiante} está repetido dentro del archivo`,
+        );
+      }
+      if (emailsVistos.has(email)) {
+        throw new ConflictException(
+          `El email ${dto.email} está repetido dentro del archivo`,
+        );
+      }
+      rutsVistos.add(dto.rut_estudiante);
+      emailsVistos.add(email);
+    }
+
+    const usuariosData: Prisma.usuarioUncheckedCreateInput[] =
+      await Promise.all(
+        dtos.map(async (dto) => ({
+          rut_usuario: dto.rut_estudiante,
+          nombre: dto.nombre,
+          apellido: dto.apellido,
+          email: dto.email,
+          telefono: dto.telefono,
+          rol: UserRol.ESTUDIANTE,
+          password: await bcrypt.hash(rutSinDV(dto.rut_estudiante), 10),
+          must_change_password: true,
+          activo: true,
+        })),
+      );
+
+    try {
+      const creados = await this.estudianteRepo.createManyWithUsers(
+        dtos,
+        usuariosData,
+      );
+      return { creados };
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new ConflictException(
+            'Ya existe un estudiante con ese RUT o email en el sistema. No se importó ninguno.',
+          );
+        }
+        if (error.code === 'P2003') {
+          throw new BadRequestException(
+            'Algún RBD de liceo no existe en el sistema. No se importó ninguno.',
+          );
+        }
       }
       throw error;
     }

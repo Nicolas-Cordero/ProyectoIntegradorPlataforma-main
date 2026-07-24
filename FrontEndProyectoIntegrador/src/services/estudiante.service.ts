@@ -38,7 +38,6 @@ export interface UpdateEstudianteDto {
 
 export interface CreateManyResult {
   creados: number;
-  errores: { rut: string; motivo: string }[];
 }
 
 class EstudianteService extends BaseHttpClient {
@@ -83,24 +82,14 @@ class EstudianteService extends BaseHttpClient {
     });
   }
 
-  // Crea múltiples estudiantes secuencialmente (no hay endpoint batch en el backend)
+  // Carga masiva transaccional: el backend crea TODOS los estudiantes o ninguno
+  // (POST /estudiante/bulk). Si algo falla lanza el error con un mensaje
+  // entendible; nunca deja una carga a medias.
   async createMany(data: CreateEstudianteDto[]): Promise<CreateManyResult> {
-    let creados = 0;
-    const errores: { rut: string; motivo: string }[] = [];
-
-    for (const dto of data) {
-      try {
-        await this.create(dto);
-        creados++;
-      } catch (err: unknown) {
-        errores.push({
-          rut: dto.rut_estudiante,
-          motivo: err instanceof Error ? err.message : 'Error desconocido',
-        });
-      }
-    }
-
-    return { creados, errores };
+    return this.request<CreateManyResult>('/estudiante/bulk', {
+      method: 'POST',
+      body: JSON.stringify({ estudiantes: data }),
+    });
   }
 
   async update(id: string, data: UpdateEstudianteDto): Promise<void> {

@@ -156,6 +156,29 @@ export class EstudianteRepository {
     });
   }
 
+  /**
+   * Crea en una sola transacción todos los estudiantes del lote y sus usuarios
+   * de login. Si cualquiera de los dos `createMany` falla (RUT/email duplicado,
+   * RBD inexistente, etc.), la transacción hace rollback y no queda ningún
+   * registro: garantiza la carga masiva "todo o nada".
+   *
+   * `usuariosData` ya viene con las contraseñas hasheadas (el hash de bcrypt se
+   * hace fuera de la transacción para no agotar su timeout con lotes grandes).
+   */
+  async createManyWithUsers(
+    estudiantesData: CreateEstudianteDto[],
+    usuariosData: Prisma.usuarioUncheckedCreateInput[],
+  ): Promise<number> {
+    return this.prisma.$transaction(
+      async (tx) => {
+        await tx.estudiante.createMany({ data: estudiantesData });
+        await tx.usuario.createMany({ data: usuariosData });
+        return estudiantesData.length;
+      },
+      { timeout: 60000, maxWait: 15000 },
+    );
+  }
+
   async update(
     rut_estudiante: string,
     updateEstudianteDto: UpdateEstudianteDto,

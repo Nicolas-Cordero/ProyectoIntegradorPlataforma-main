@@ -14,14 +14,18 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRol } from '@prisma/client';
 
 @Controller('beneficios')
-@Roles(UserRol.ADMIN)
+@Roles(UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA)
 export class BeneficiosController {
   constructor(private readonly beneficiosService: BeneficiosService) {}
 
   // === CATÁLOGO DE BENEFICIOS ===
+  // Lectura (GET) abierta a los tres roles, igual que en BeneficioEstudianteController
+  // — un TUTOR ya puede asignar beneficios y necesita ver el catálogo para elegir uno.
+  // Escritura (crear/editar/eliminar el catálogo en sí) sigue restringida a ADMIN.
 
   //metodo  para crear nuevos beneficios.
   @Post()
+  @Roles(UserRol.ADMIN)
   createBeneficio(@Body() createDto: CreateBeneficioDto) {
     return this.beneficiosService.createBeneficio(createDto);
   }
@@ -40,6 +44,7 @@ export class BeneficiosController {
 
   //tiene sentido debido a que lo actualiza
   @Patch(':id')
+  @Roles(UserRol.ADMIN)
   updateBeneficio(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: UpdateBeneficioDto,
@@ -49,6 +54,7 @@ export class BeneficiosController {
 
   //lo remueve
   @Delete(':id')
+  @Roles(UserRol.ADMIN)
   removeBeneficio() {
     return this.beneficiosService.removeBeneficio();
   }

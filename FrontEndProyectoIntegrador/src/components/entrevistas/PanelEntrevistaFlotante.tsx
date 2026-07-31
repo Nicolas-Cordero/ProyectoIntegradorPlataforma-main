@@ -195,11 +195,11 @@ export function PanelEntrevistaFlotante() {
     );
   }
 
-  // ── Panel expandido (Fix 7: 460px ancho, 80vh alto; Fix 8: texto más grande) ──
+  // ── Panel expandido ──
   return (
     <>
-      <div className="fixed bottom-4 right-4 z-50 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
-           style={{ width: '600px', maxHeight: '88vh' }}>
+      <div className="fixed top-4 bottom-4 right-4 z-50 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
+           style={{ width: '600px' }}>
         {/* Encabezado */}
         <div className="bg-[#2D4A3E] text-white px-4 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex-1 min-w-0">

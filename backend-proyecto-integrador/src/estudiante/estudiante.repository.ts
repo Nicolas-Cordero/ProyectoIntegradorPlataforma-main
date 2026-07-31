@@ -18,6 +18,26 @@ export class EstudianteRepository {
     });
   }
 
+  // Para validar en bloque (importación masiva) qué RUT/email ya pertenecen
+  // a un estudiante existente.
+  async findManyByRuts(
+    ruts: string[],
+  ): Promise<Pick<estudiante, 'rut_estudiante'>[]> {
+    return this.prisma.estudiante.findMany({
+      where: { rut_estudiante: { in: ruts } },
+      select: { rut_estudiante: true },
+    });
+  }
+
+  async findManyByEmails(
+    emails: string[],
+  ): Promise<Pick<estudiante, 'email'>[]> {
+    return this.prisma.estudiante.findMany({
+      where: { email: { in: emails } },
+      select: { email: true },
+    });
+  }
+
   /**
    * Devuelve el estudiante con los datos mínimos que necesita la vista de perfil
    * simple: generación, nombre del liceo y nombre de la carrera, todo en una

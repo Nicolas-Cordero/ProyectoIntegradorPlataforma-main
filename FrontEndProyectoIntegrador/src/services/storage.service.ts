@@ -1,6 +1,5 @@
 import { BaseHttpClient } from './base.http';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import { API_BASE_URL } from '../config';
 
 class StorageService extends BaseHttpClient {
   async uploadFotoPerfil(rut_estudiante: string, file: File): Promise<{ foto_url: string }> {

@@ -145,6 +145,24 @@ export class UsersRepository {
     });
   }
 
+  // Para validar en bloque (importación masiva) si alguno de estos RUT ya
+  // pertenece a un usuario existente — de cualquier rol, no solo estudiante.
+  async findManyByRuts(
+    ruts: string[],
+  ): Promise<Pick<usuario, 'rut_usuario' | 'nombre' | 'apellido' | 'rol'>[]> {
+    return this.prisma.usuario.findMany({
+      where: { rut_usuario: { in: ruts } },
+      select: { rut_usuario: true, nombre: true, apellido: true, rol: true },
+    });
+  }
+
+  async findManyByEmails(emails: string[]): Promise<Pick<usuario, 'email'>[]> {
+    return this.prisma.usuario.findMany({
+      where: { email: { in: emails } },
+      select: { email: true },
+    });
+  }
+
   // Excluye usuarios desactivados (ver `delete`, que ahora desactiva en vez
   // de borrar) — la vista de gestión de usuarios solo debe listar activos.
   async findAll(): Promise<SafeUsuario[]> {

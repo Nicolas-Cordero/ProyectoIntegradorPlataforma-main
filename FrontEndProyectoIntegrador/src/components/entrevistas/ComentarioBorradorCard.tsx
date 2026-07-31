@@ -62,7 +62,7 @@ export function ComentarioBorradorCard({
         </div>
       </div>
 
-      {editando && (
+      {editando ? (
         <div className="mt-1 space-y-2">
           <textarea
             className="w-full text-base border border-gray-300 rounded p-2 resize-none focus:outline-none focus:ring-1 focus:ring-[#65B39B]"
@@ -87,6 +87,8 @@ export function ComentarioBorradorCard({
             </button>
           </div>
         </div>
+      ) : (
+        <p className="text-base text-gray-700 whitespace-pre-wrap mt-1">{texto}</p>
       )}
     </div>
   );

@@ -29,6 +29,10 @@ interface HistorialItem {
   created_at: Date;
 }
 
+interface RamoSemestreItem {
+  semestre: { year: number; semestre: string; tipo: string };
+}
+
 interface CarreraItem {
   codigo_carrera: number;
   nombre: string;
@@ -37,6 +41,7 @@ interface CarreraItem {
   estado: EstadoEstudiante;
   universidad: { nombre: string; comuna: string };
   historial_estados: HistorialItem[];
+  ramos: RamoSemestreItem[];
 }
 
 interface EstudianteItem {
@@ -107,17 +112,44 @@ function tuvoCambioDeCarrera(carreras: CarreraItem[]): boolean {
   return false;
 }
 
-// Duración real en semestres: desde anio_ingreso (asumido S1) hasta el
-// semestre en que historial_estado_carrera registra el paso a
-// TITULADO/EGRESADO. null si la carrera no ha llegado a ese estado.
+const SEMESTRE_NUM: Record<string, number> = {
+  PRIMER_SEMESTRE: 1,
+  SEGUNDO_SEMESTRE: 2,
+};
+
+// Duración real en semestres: distancia entre anio_ingreso (asumido S1) y el
+// último semestre REGULAR (no recuperativo de invierno/verano) con ramos
+// registrados. Se usa el semestre académico real de los ramos, no la fecha en
+// que se registró el cambio de estado en la plataforma — esa fecha es solo
+// cuándo alguien hizo clic, que puede ser mucho después del hecho real
+// (carga de datos históricos, atrasos administrativos), e inflaba la
+// duración con tiempo que el estudiante nunca cursó.
+//
+// Las suspensiones no necesitan tratamiento aparte: si el estudiante
+// congeló 2 semestres a mitad de carrera, ese hueco simplemente queda dentro
+// del rango entre el primer y el último semestre real, contando como el
+// atraso que efectivamente representa.
+//
+// null si la carrera no llegó a EGRESADO/TITULADO, o no tiene ramos en
+// ningún semestre regular.
 function duracionRealSemestres(carrera: CarreraItem): number | null {
-  const transicion = carrera.historial_estados.find(
+  const llegoAEgresarOTitular = carrera.historial_estados.some(
     (h) => h.estado_nuevo === 'TITULADO' || h.estado_nuevo === 'EGRESADO',
   );
-  if (!transicion) return null;
-  const año = transicion.created_at.getFullYear();
-  const semestre = transicion.created_at.getMonth() < 6 ? 1 : 2;
-  return (año - carrera.anio_ingreso) * 2 + semestre;
+  if (!llegoAEgresarOTitular) return null;
+
+  let ultimo: { año: number; semestre: number } | null = null;
+  for (const { semestre: s } of carrera.ramos) {
+    if (s.tipo !== 'REGULAR') continue;
+    const numero = SEMESTRE_NUM[s.semestre];
+    if (!numero) continue;
+    if (!ultimo || s.year * 2 + numero > ultimo.año * 2 + ultimo.semestre) {
+      ultimo = { año: s.year, semestre: numero };
+    }
+  }
+  if (!ultimo) return null;
+
+  return (ultimo.año - carrera.anio_ingreso) * 2 + ultimo.semestre;
 }
 
 function agruparConteo<T>(
@@ -178,6 +210,11 @@ export class PdfEstadisticasGenerator
             historial_estados: {
               orderBy: { created_at: 'asc' },
               select: { estado_nuevo: true, created_at: true },
+            },
+            ramos: {
+              select: {
+                semestre: { select: { year: true, semestre: true, tipo: true } },
+              },
             },
           },
         },

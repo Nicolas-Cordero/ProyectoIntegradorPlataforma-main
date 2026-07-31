@@ -23,12 +23,14 @@ interface ModalAsignarBeneficioProps {
   onCerrar: () => void;
   rutEstudiante: string;
   catalogo: Beneficio[];
+  catalogoLoading: boolean;
+  catalogoError: string;
   yaAsignados: number[];
   onAsignado: (nueva: BeneficioEstudiante) => void;
 }
 
 export function ModalAsignarBeneficio({
-  abierto, onCerrar, rutEstudiante, catalogo, yaAsignados, onAsignado,
+  abierto, onCerrar, rutEstudiante, catalogo, catalogoLoading, catalogoError, yaAsignados, onAsignado,
 }: ModalAsignarBeneficioProps) {
   const [busqueda, setBusqueda] = useState('');
   const [seleccionado, setSeleccionado] = useState<Beneficio | null>(null);
@@ -128,7 +130,7 @@ export function ModalAsignarBeneficio({
               </button>
             </div>
           ) : (
-            <>
+            <div className="relative">
               <input
                 type="text"
                 value={busqueda}
@@ -137,14 +139,19 @@ export function ModalAsignarBeneficio({
                 autoFocus
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#65B39B]/40 focus:border-[#65B39B]"
               />
-              <div className="mt-1 border border-gray-200 rounded-lg max-h-44 overflow-y-auto shadow-sm">
-                {catalogo.length === 0 ? (
+              {/* Flotante: se superpone al resto del formulario en vez de empujarlo hacia abajo */}
+              <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg max-h-44 overflow-y-auto shadow-lg">
+                {catalogoLoading ? (
                   <p className="px-3 py-2.5 text-sm text-gray-400">Cargando catálogo…</p>
+                ) : catalogoError ? (
+                  <p className="px-3 py-2.5 text-sm text-red-500">No se pudo cargar el catálogo de beneficios</p>
+                ) : catalogo.length === 0 ? (
+                  <p className="px-3 py-2.5 text-sm text-gray-400">Aún no hay beneficios registrados en el catálogo</p>
                 ) : disponibles.length === 0 ? (
                   <p className="px-3 py-2.5 text-sm text-gray-400">
                     {yaAsignados.length >= catalogo.length
                       ? 'El estudiante ya tiene todos los beneficios disponibles'
-                      : 'Sin resultados'}
+                      : 'Sin resultados para tu búsqueda'}
                   </p>
                 ) : (
                   disponibles.map(b => (
@@ -163,7 +170,7 @@ export function ModalAsignarBeneficio({
                   ))
                 )}
               </div>
-            </>
+            </div>
           )}
         </div>
 

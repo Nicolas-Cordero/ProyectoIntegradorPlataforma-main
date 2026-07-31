@@ -4,8 +4,7 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 import { type LoginCredentials, type Usuario, UserRol, type UserRolType } from '../types';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import { API_BASE_URL } from '../config';
 
 class AuthService {
   private currentUser: Usuario | null = null;

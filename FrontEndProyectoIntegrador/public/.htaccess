@@ -1,0 +1,15 @@
+# SPA fallback: las rutas de React Router (p. ej. /estudiante/123/datos-personales)
+# no existen como archivos reales en el servidor. Sin esto, F5, un marcador o un
+# link directo a una ruta interna devuelven 404 de LiteSpeed en vez de cargar la app.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Si la petición corresponde a un archivo o carpeta real (index.html, assets/*.js,
+  # imágenes...), se sirve tal cual.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # Cualquier otra ruta: se entrega index.html y React Router toma el control.
+  RewriteRule . /index.html [L]
+</IfModule>

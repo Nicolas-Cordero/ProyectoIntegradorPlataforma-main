@@ -101,9 +101,12 @@ export const ExcelImportModal: React.FC<Props> = ({
       // Ante cualquier fallo volvemos al preview con el mensaje: nunca se queda
       // "importando" para siempre y el backend es transaccional (no hay carga
       // parcial). El usuario puede corregir y reintentar.
+      // El backend ya deja claro en su propio mensaje que no se importó nada
+      // (el endpoint es todo-o-nada) — no se le agrega nada más para no
+      // duplicar esa frase.
       setError(
         err instanceof Error
-          ? `${err.message} No se importó ningún estudiante.`
+          ? err.message
           : 'Ocurrió un error al importar. No se importó ningún estudiante.',
       );
       setStatus('preview');

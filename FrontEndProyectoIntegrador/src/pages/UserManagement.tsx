@@ -12,6 +12,7 @@ import { BackgroundParticles } from '../components/common/Particles';
 import marcoIzquierdo from '../assets/frames/marco-izquierda.svg';
 import marcoDerecho from '../assets/frames/mardo-derecha.svg';
 import { UserRol, type UserRolType } from '../types';
+import { normalizarRut, normalizarTelefono } from '../utils/validators';
 
 type Vista = 'usuarios' | 'estudiantes';
 
@@ -121,11 +122,11 @@ export const UserManagement: React.FC = () => {
         rol: UserRolType;
       };
       const userData: UserPayload = {
-        rut_usuario: formData.rut,
+        rut_usuario: normalizarRut(formData.rut),
         nombre:      formData.nombres,
         apellido:    formData.apellidos,
         email:       formData.email,
-        telefono:    formData.telefono,
+        telefono:    normalizarTelefono(formData.telefono),
         rol:         formData.rol as UserRolType,
       };
 

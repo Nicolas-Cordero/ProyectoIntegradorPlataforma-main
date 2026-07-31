@@ -5,7 +5,7 @@ import type { EstudianteOutletContext } from './EstudianteDetail';
 import type { UpdateEstudianteDto } from '../../services/estudiante.service';
 import type { UpdatePaesDto } from '../../services/paes.service';
 import type { Paes, Beneficio, BeneficioEstudiante } from '../../types';
-import { useConfirmDialog } from '../../components/ui';
+import { useConfirmDialog, Alert } from '../../components/ui';
 import {
   InformacionPersonalCard,
   InformacionAcademicaCard,
@@ -35,6 +35,7 @@ export default function EstudianteDatosPersonales() {
   const [beneficiosEstudiante, setBeneficiosEstudiante] = useState<BeneficioEstudiante[]>([]);
   const [catalogoBeneficios, setCatalogoBeneficios] = useState<Beneficio[]>([]);
   const [beneficiosLoading, setBeneficiosLoading] = useState(true);
+  const [catalogoError, setCatalogoError] = useState('');
   const [showAsignarBeneficio, setShowAsignarBeneficio] = useState(false);
 
   const contactoEmergencia = estudiante.familiares?.find(f => f.es_contacto_emergencia) ?? null;
@@ -52,6 +53,7 @@ export default function EstudianteDatosPersonales() {
 
   useEffect(() => {
     setBeneficiosLoading(true);
+    setCatalogoError('');
     Promise.all([
       beneficiosService.getBeneficiosByEstudiante(estudiante.rut_estudiante),
       beneficiosService.getBeneficios(),
@@ -60,7 +62,9 @@ export default function EstudianteDatosPersonales() {
         setBeneficiosEstudiante(asignados);
         setCatalogoBeneficios(catalogo);
       })
-      .catch(() => {})
+      .catch((err: unknown) => {
+        setCatalogoError(err instanceof Error ? err.message : 'Error al cargar los beneficios');
+      })
       .finally(() => setBeneficiosLoading(false));
   }, [estudiante.rut_estudiante]);
 
@@ -168,9 +172,24 @@ export default function EstudianteDatosPersonales() {
         onCerrar={() => setShowAsignarBeneficio(false)}
         rutEstudiante={estudiante.rut_estudiante}
         catalogo={catalogoBeneficios}
+        catalogoLoading={beneficiosLoading}
+        catalogoError={catalogoError}
         yaAsignados={beneficiosEstudiante.map(b => b.codigo_beneficio)}
         onAsignado={nueva => setBeneficiosEstudiante(prev => [...prev, nueva])}
       />
+
+      {/* Toast flotante: por encima de cualquier modal abierto (MUI Dialog usa z-index 1300) */}
+      {catalogoError && (
+        <div className="fixed top-6 right-6 z-[1400] w-full max-w-sm">
+          <Alert
+            tipo="error"
+            titulo="No se pudo cargar el catálogo de beneficios"
+            mensaje={catalogoError}
+            cerrable
+            onCerrar={() => setCatalogoError('')}
+          />
+        </div>
+      )}
 
       <ConfirmDialog />
     </div>

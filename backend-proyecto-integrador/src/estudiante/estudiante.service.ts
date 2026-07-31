@@ -10,10 +10,14 @@ import { EstudianteRepository } from './estudiante.repository';
 import { estudiante, EstadoEstudiante, Prisma, UserRol } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { rutSinDV } from '../common/rut.util';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class EstudianteService {
-  constructor(private readonly estudianteRepo: EstudianteRepository) {}
+  constructor(
+    private readonly estudianteRepo: EstudianteRepository,
+    private readonly usersService: UsersService,
+  ) {}
 
   private derivarEstado(
     carreras: { estado: EstadoEstudiante }[],
@@ -43,6 +47,20 @@ export class EstudianteService {
     if (existing) {
       throw new ConflictException(
         `Ya existe un estudiante con RUT ${createEstudianteDto.rut_estudiante}`,
+      );
+    }
+
+    // Crear un estudiante también crea su `usuario` (rol ESTUDIANTE), y
+    // `usuario.rut_usuario` es la llave primaria de TODA cuenta del sistema
+    // — se valida antes de intentar el insert para poder avisar con nombre y
+    // rol de quién ya tiene ese RUT (p. ej. un ex-becario que hoy es TUTOR).
+    const usuariosExistentes = await this.usersService.findManyByRuts([
+      createEstudianteDto.rut_estudiante,
+    ]);
+    if (usuariosExistentes.length > 0) {
+      const u = usuariosExistentes[0];
+      throw new ConflictException(
+        `Ya existe un usuario con el RUT ${u.rut_usuario} registrado (${u.nombre} ${u.apellido}, rol ${u.rol}).`,
       );
     }
 
@@ -94,16 +112,57 @@ export class EstudianteService {
       const email = dto.email.toLowerCase();
       if (rutsVistos.has(dto.rut_estudiante)) {
         throw new ConflictException(
-          `El RUT ${dto.rut_estudiante} está repetido dentro del archivo`,
+          `El RUT ${dto.rut_estudiante} está repetido dentro del archivo. No se importó ninguno.`,
         );
       }
       if (emailsVistos.has(email)) {
         throw new ConflictException(
-          `El email ${dto.email} está repetido dentro del archivo`,
+          `El email ${dto.email} está repetido dentro del archivo. No se importó ninguno.`,
         );
       }
       rutsVistos.add(dto.rut_estudiante);
       emailsVistos.add(email);
+    }
+
+    // Antes de intentar el insert: ¿alguno de estos RUT/email ya pertenece a
+    // un usuario existente (de cualquier rol) o a un estudiante existente?
+    // Es exactamente el caso de un ex-becario que hoy trabaja en la
+    // fundación con cuenta de TUTOR y aparece en una generación antigua que
+    // recién se está cargando — el `usuario.rut_usuario` de esa cuenta
+    // choca con el que se intentaría crear para el estudiante.
+    const ruts = dtos.map((dto) => dto.rut_estudiante);
+    const emails = dtos.map((dto) => dto.email);
+
+    const [usuariosPorRut, estudiantesPorRut, usuariosPorEmail, estudiantesPorEmail] =
+      await Promise.all([
+        this.usersService.findManyByRuts(ruts),
+        this.estudianteRepo.findManyByRuts(ruts),
+        this.usersService.findManyByEmails(emails),
+        this.estudianteRepo.findManyByEmails(emails),
+      ]);
+
+    if (usuariosPorRut.length > 0) {
+      const detalle = usuariosPorRut
+        .map((u) => `${u.rut_usuario} (${u.nombre} ${u.apellido}, rol ${u.rol})`)
+        .join('; ');
+      throw new ConflictException(
+        `Ya existe un usuario con el RUT registrado: ${detalle}. No se importó ninguno.`,
+      );
+    }
+    if (estudiantesPorRut.length > 0) {
+      const detalle = estudiantesPorRut.map((e) => e.rut_estudiante).join(', ');
+      throw new ConflictException(
+        `Ya existe un estudiante con el RUT ${detalle} en el sistema. No se importó ninguno.`,
+      );
+    }
+    if (usuariosPorEmail.length > 0 || estudiantesPorEmail.length > 0) {
+      const detalle = [
+        ...usuariosPorEmail.map((u) => u.email),
+        ...estudiantesPorEmail.map((e) => e.email),
+      ].join(', ');
+      throw new ConflictException(
+        `Ya existe un usuario con el email ${detalle} registrado. No se importó ninguno.`,
+      );
     }
 
     const usuariosData: Prisma.usuarioUncheckedCreateInput[] =
@@ -130,8 +189,10 @@ export class EstudianteService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
+          // Red de seguridad: la comprobación previa ya cubre el caso común
+          // (condición de carrera entre la validación y el insert).
           throw new ConflictException(
-            'Ya existe un estudiante con ese RUT o email en el sistema. No se importó ninguno.',
+            'Ya existe un usuario con ese RUT o email registrado en el sistema. No se importó ninguno.',
           );
         }
         if (error.code === 'P2003') {

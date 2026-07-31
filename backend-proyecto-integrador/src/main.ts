@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe, BadRequestException } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter, HttpExceptionFilter } from './common';
 import helmet from 'helmet';
@@ -7,7 +8,13 @@ import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // En producción la app corre detrás de un proxy (Passenger/LiteSpeed), que
+  // entrega todas las peticiones desde una única IP local. Sin esto Express ve
+  // esa misma IP para todo el mundo y el ThrottlerGuard cuenta a todos los
+  // usuarios en un solo cubo compartido, bloqueándolos entre sí.
+  app.set('trust proxy', 1);
 
   const isProd = process.env.NODE_ENV === 'production';
   if (isProd && !process.env.CORS_ORIGINS) {

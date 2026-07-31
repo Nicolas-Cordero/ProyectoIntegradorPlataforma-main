@@ -17,8 +17,13 @@ function carrera(overrides: Record<string, unknown> = {}) {
     estado: 'ACTIVO',
     universidad: { nombre: 'Universidad de La Serena', comuna: 'La Serena' },
     historial_estados: [],
+    ramos: [],
     ...overrides,
   };
+}
+
+function ramoEn(year: number, semestre: 'PRIMER_SEMESTRE' | 'SEGUNDO_SEMESTRE', tipo = 'REGULAR') {
+  return { semestre: { year, semestre, tipo } };
 }
 
 const AÑO_ACTUAL = new Date().getFullYear();
@@ -38,7 +43,16 @@ const estudiantesFake = [
         codigo_carrera: 1,
         anio_ingreso: 2013,
         estado: 'TITULADO',
-        historial_estados: [{ estado_nuevo: 'TITULADO', created_at: new Date('2018-07-15') }],
+        // El estado se registró en la plataforma recién en 2020 (carga
+        // administrativa tardía) — dos años después de que Ana realmente
+        // terminó. La duración real NO debe salir de esta fecha.
+        historial_estados: [{ estado_nuevo: 'TITULADO', created_at: new Date('2020-03-10') }],
+        // Su último semestre real con ramos es 2018/2S. El recuperativo de
+        // verano 2019 no debe mover el punto final del cálculo.
+        ramos: [
+          ramoEn(2018, 'SEGUNDO_SEMESTRE'),
+          { semestre: { year: 2019, semestre: 'VERANO', tipo: 'RECUPERATIVO' } },
+        ],
       }),
     ],
   },
@@ -55,6 +69,7 @@ const estudiantesFake = [
         anio_ingreso: 2014,
         estado: 'EGRESADO',
         historial_estados: [{ estado_nuevo: 'EGRESADO', created_at: new Date('2019-12-01') }],
+        ramos: [ramoEn(2019, 'PRIMER_SEMESTRE')],
       }),
     ],
   },
@@ -198,11 +213,21 @@ describe('PdfEstadisticasGenerator', () => {
     expect(contenidoStr).toContain('20,0%');
   });
 
-  it('debe calcular la duración real de las carreras tituladas/egresadas', async () => {
+  it('debe calcular la duración real desde el último semestre con ramos, no desde la fecha del cambio de estado', async () => {
     await service.pdfGenerate(dtoValido);
     const [docDefinition] = mockPrinter.createPdf.mock.calls[0];
     const contenidoStr = JSON.stringify(docDefinition.content);
-    // Ana: ingreso 2013, titulada en 2018/2S -> (2018-2013)*2 + 2 = 12 semestres reales.
     expect(contenidoStr).toContain('Duración nominal, real y sobreduración');
+
+    // Ana: ingreso 2013, último ramo regular en 2018/2S (el recuperativo de
+    // verano 2019 no cuenta) -> (2018-2013)*2 + 2 = 12 semestres reales.
+    // Su TITULADO se registró en la plataforma en 2020 (carga tardía); si el
+    // cálculo dependiera de esa fecha en vez de sus ramos, daría 15 en lugar
+    // de 12 -- ese número NO debe aparecer.
+    expect(contenidoStr).toContain('"12"');
+    expect(contenidoStr).not.toContain('"15"');
+
+    // Bruno: ingreso 2014, último ramo regular en 2019/1S -> 11 semestres reales.
+    expect(contenidoStr).toContain('"11"');
   });
 });

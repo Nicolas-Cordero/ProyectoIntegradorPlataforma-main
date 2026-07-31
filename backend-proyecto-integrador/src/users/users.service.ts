@@ -60,6 +60,16 @@ export class UsersService {
     return user;
   }
 
+  // Usado por otros módulos (p. ej. importación masiva de estudiantes) para
+  // detectar de antemano RUT/email ya en uso por un usuario de cualquier rol.
+  async findManyByRuts(ruts: string[]) {
+    return this.usersRepo.findManyByRuts(ruts);
+  }
+
+  async findManyByEmails(emails: string[]) {
+    return this.usersRepo.findManyByEmails(emails);
+  }
+
   async update(
     rut: string,
     updateUserDto: UpdateUserDto,

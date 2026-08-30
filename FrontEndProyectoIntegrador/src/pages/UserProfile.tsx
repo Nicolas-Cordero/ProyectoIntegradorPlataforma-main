@@ -4,6 +4,7 @@ import { authService, userService, PermissionService } from '../services';
 import type { Usuario } from '../types';
 import { UserRol } from '../types';
 import { Input, Alert } from '../components/ui';
+import { formatDate } from '../utils/dateUtils';
 import { PasswordChangeModal } from '../components/features/auth/password-recovery';
 import {
   Edit as EditIcon,
@@ -326,10 +327,7 @@ export const UserProfile: React.FC<UserProfileProps> = () => {
                   <span className="text-sm text-gray-500">Fecha de Registro</span>
                 </div>
                 <p className="text-sm text-gray-700">
-                  {user.created_at
-                    ? new Date(user.created_at).toLocaleDateString('es-CL')
-                    : 'No disponible'
-                  }
+                  {formatDate(user.created_at, 'No disponible')}
                 </p>
               </div>
             </div>

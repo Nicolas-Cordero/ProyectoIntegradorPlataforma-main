@@ -6,6 +6,7 @@ export {
 
 // Interceptors
 export { LoggingInterceptor } from './interceptors/logging.interceptor';
+export { DecimalSerializerInterceptor } from './interceptors/decimal-serializer.interceptor';
 
 // Pipes
 export { ValidationPipe } from './pipes/validation.pipe';

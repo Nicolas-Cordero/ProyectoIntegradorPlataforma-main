@@ -12,8 +12,6 @@ export async function beneficiosSeeder() {
         nombre: beneficio.nombre,
         proveedor: beneficio.proveedor,
         tipo: beneficio.tipo,
-        descripcion: beneficio.descripcion,
-        monto: beneficio.monto,
       },
     });
   }

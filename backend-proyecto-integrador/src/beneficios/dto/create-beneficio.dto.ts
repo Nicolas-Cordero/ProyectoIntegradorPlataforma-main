@@ -1,27 +1,18 @@
-import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
 import { TipoBeneficio } from '@prisma/client';
-import { Beneficios } from '../beneficios.enum';
 
 export class CreateBeneficioDto {
-  @IsEnum(Beneficios)
+  // El catálogo se carga desde el seeder (`src/seeder/data/beneficios.data.ts`),
+  // no desde esta API: no hay una lista cerrada de nombres que validar.
+  @IsString()
   @IsNotEmpty()
-  nombre!: Beneficios;
+  nombre!: string;
 
   @IsEnum(TipoBeneficio)
   @IsNotEmpty()
   tipo!: TipoBeneficio;
 
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  monto!: number;
-
   @IsString()
   @IsNotEmpty()
   proveedor!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  descripcion!: string;
 }

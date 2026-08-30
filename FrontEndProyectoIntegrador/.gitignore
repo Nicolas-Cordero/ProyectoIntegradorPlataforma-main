@@ -48,3 +48,6 @@ coverage
 .vscode/launch.json
 debug.log
 .vercel
+
+
+deploy.zip

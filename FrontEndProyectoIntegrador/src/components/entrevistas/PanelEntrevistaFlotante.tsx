@@ -230,7 +230,7 @@ export function PanelEntrevistaFlotante() {
         </div>
 
         {/* Cuerpo — lista de comentarios (scroll interno) */}
-        <div className="flex-1 overflow-y-auto px-3 pt-3 pb-1">
+        <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden px-3 pt-3 pb-1">
           {borrador.comentarios.length === 0 ? (
             <p className="text-base text-gray-400 text-center py-6">
               Sin comentarios aún. Agrega el primero.

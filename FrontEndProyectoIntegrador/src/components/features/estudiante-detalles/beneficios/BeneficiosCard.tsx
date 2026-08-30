@@ -1,6 +1,7 @@
 import { InfoCard } from '../InfoCard';
 import { BeneficioCard } from './BeneficioCard';
 import type { Beneficio, BeneficioEstudiante } from '../../../../types';
+import type { CambiosAsignacion } from './BeneficioCard';
 
 interface BeneficiosCardProps {
   asignaciones: BeneficioEstudiante[];
@@ -8,10 +9,11 @@ interface BeneficiosCardProps {
   loading: boolean;
   canEdit: boolean;
   onQuitar: (codigo_beneficio: number, nombre: string) => void;
+  onActualizar: (codigo_beneficio: number, cambios: CambiosAsignacion) => Promise<void>;
   onAgregarClick: () => void;
 }
 
-export function BeneficiosCard({ asignaciones, catalogo, loading, canEdit, onQuitar, onAgregarClick }: BeneficiosCardProps) {
+export function BeneficiosCard({ asignaciones, catalogo, loading, canEdit, onQuitar, onActualizar, onAgregarClick }: BeneficiosCardProps) {
   return (
     <InfoCard titulo="Beneficios">
       {loading ? (
@@ -32,6 +34,7 @@ export function BeneficiosCard({ asignaciones, catalogo, loading, canEdit, onQui
                     beneficio={beneficio}
                     canEdit={canEdit}
                     onEliminar={() => onQuitar(asignacion.codigo_beneficio, beneficio.nombre)}
+                    onActualizar={cambios => onActualizar(asignacion.codigo_beneficio, cambios)}
                   />
                 );
               })}

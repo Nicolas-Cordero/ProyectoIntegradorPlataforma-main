@@ -10,6 +10,30 @@ export interface RequestOptions extends RequestInit {
   requireAuth?: boolean;
 }
 
+/** Se lanza cuando la sesión caducó y no se pudo renovar. */
+export class SessionExpiredError extends Error {
+  constructor() {
+    super('Tu sesión expiró. Vuelve a iniciar sesión.');
+    this.name = 'SessionExpiredError';
+  }
+}
+
+/**
+ * Redirige al login y corta la petición en curso.
+ *
+ * Tiene que LANZAR, no devolver: `window.location.href` no detiene la ejecución
+ * (la navegación se encola y el JS sigue corriendo hasta que el navegador
+ * descarga la página, y si ya estás en '/' puede que ni navegue). Cuando esto
+ * devolvía `undefined`, la promesa se cumplía en vez de rechazar, así que los
+ * `.catch()` de los llamadores no se disparaban y el `undefined` llegaba hasta
+ * el primer `.map()` — que reventaba con un TypeError en lugar de mostrar
+ * "sesión expirada".
+ */
+function sesionExpirada(): never {
+  window.location.href = '/';
+  throw new SessionExpiredError();
+}
+
 // Evita múltiples llamadas simultáneas al endpoint de refresh
 let refreshPromise: Promise<boolean> | null = null;
 
@@ -49,23 +73,15 @@ export class BaseHttpClient {
 
     if (response.status === 401) {
       // No intentar refresh si la petición fallida ya era /auth/refresh
-      if (endpoint === '/auth/refresh') {
-        window.location.href = '/';
-        return undefined as T;
-      }
+      if (endpoint === '/auth/refresh') sesionExpirada();
 
       const refreshed = await tryRefresh();
-      if (!refreshed) {
-        window.location.href = '/';
-        return undefined as T;
-      }
+      if (!refreshed) sesionExpirada();
 
       // Reintentar la petición original con el nuevo access_token en cookie
       const retryResponse = await fetch(url, config);
-      if (retryResponse.status === 401) {
-        window.location.href = '/';
-        return undefined as T;
-      }
+      if (retryResponse.status === 401) sesionExpirada();
+
       if (!retryResponse.ok) {
         const errorData = await retryResponse.json().catch(() => ({}));
         throw new Error(errorData.message || `HTTP ${retryResponse.status}: ${retryResponse.statusText}`);

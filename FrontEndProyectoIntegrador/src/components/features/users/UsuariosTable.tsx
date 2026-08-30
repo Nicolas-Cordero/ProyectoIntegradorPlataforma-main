@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatDate } from '../../../utils/dateUtils';
 import {
   Paper,
   Table,
@@ -106,7 +107,7 @@ export const UsuariosTable: React.FC<UsuariosTableProps> = ({
                           )}
                         </div>
                         <p className="text-xs text-gray-500">
-                          {u.created_at && `Desde ${new Date(u.created_at).toLocaleDateString('es-CL')}`}
+                          {u.created_at && `Desde ${formatDate(u.created_at)}`}
                         </p>
                       </div>
                     </div>

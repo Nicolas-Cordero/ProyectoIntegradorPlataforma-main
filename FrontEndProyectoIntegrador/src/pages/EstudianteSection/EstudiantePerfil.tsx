@@ -12,10 +12,12 @@ import { LiceoSelector } from '../../components/features/estudiantes';
 import { FotoPerfilModal } from '../../components/features/estudiante-detalles/FotoPerfilModal';
 import { BACKEND_TO_UI, ORDEN_SEMESTRE, semLabel } from '../../components/features/estudiante-detalles/avance-curricular';
 import { esTelefonoValido, normalizarTelefono } from '../../utils/validators';
-import { formatDate } from '../../utils/dateUtils';
+import { formatDate, toInputDate } from '../../utils/dateUtils';
 import userSvg from '../../assets/icons/user.svg';
 
-// Normaliza coma decimal a punto antes de cualquier operación numérica (Bug 10)
+// El usuario puede escribir el promedio con coma. Los valores que vienen del
+// backend ya llegan como number (ver DecimalSerializerInterceptor), así que esto
+// solo aplica a lo que se teclea en el formulario.
 function normalizarDecimal(v: string | number | undefined | null): string {
   if (v === null || v === undefined) return '';
   return String(v).replace(',', '.');
@@ -87,19 +89,16 @@ export default function EstudiantePerfil() {
   }, [estudiante.rut_estudiante, canEdit]);
 
   const openEditModal = () => {
-    // Bug 10 fix: normalizar promedios_media (puede llegar con coma decimal del backend)
     setEditForm({
       nombre:           estudiante.nombre,
       apellido:         estudiante.apellido,
       email:            estudiante.email,
       telefono:         estudiante.telefono,
-      fecha_nacimiento: typeof estudiante.fecha_nacimiento === 'string'
-        ? estudiante.fecha_nacimiento.split('T')[0]
-        : estudiante.fecha_nacimiento?.toISOString().split('T')[0],
+      fecha_nacimiento: toInputDate(estudiante.fecha_nacimiento) || undefined,
       direccion:        estudiante.direccion,
       genero:           estudiante.genero,
       rbd_liceo:        estudiante.rbd_liceo,
-      promedios_media:  parseFloat(normalizarDecimal(estudiante.promedios_media)) || 0,
+      promedios_media:  estudiante.promedios_media ?? 0,
     });
     setSaveError('');
     setModalOpen(true);
@@ -114,13 +113,9 @@ export default function EstudiantePerfil() {
     setSaving(true);
     setSaveError('');
     try {
-      // Bug 10 fix: asegurar punto decimal antes de enviar
       const payload = {
         ...editForm,
         telefono: editForm.telefono !== undefined ? normalizarTelefono(editForm.telefono) : undefined,
-        promedios_media: editForm.promedios_media !== undefined
-          ? parseFloat(normalizarDecimal(editForm.promedios_media))
-          : undefined,
       };
       await estudianteService.update(estudiante.rut_estudiante, payload);
       setModalOpen(false);
@@ -253,8 +248,8 @@ export default function EstudiantePerfil() {
           <div>
             <p className="text-gray-400 text-xs mb-0.5">Promedio media</p>
             <p className="font-bold text-gray-800">
-              {Number.isFinite(parseFloat(normalizarDecimal(estudiante.promedios_media)))
-                ? parseFloat(normalizarDecimal(estudiante.promedios_media)).toFixed(2)
+              {Number.isFinite(estudiante.promedios_media)
+                ? estudiante.promedios_media.toFixed(2)
                 : '—'}
             </p>
           </div>

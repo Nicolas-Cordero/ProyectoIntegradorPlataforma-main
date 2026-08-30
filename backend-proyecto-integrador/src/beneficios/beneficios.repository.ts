@@ -78,5 +78,4 @@ export class BeneficiosRepository {
       throw error;
     }
   }
-
 }

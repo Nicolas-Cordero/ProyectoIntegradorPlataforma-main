@@ -14,6 +14,16 @@ import { UpdateBeneficioEstudianteDto } from './dto/update-beneficio-estudiante.
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRol } from '@prisma/client';
 
+/**
+ * Asignaciones beneficio ↔ estudiante. La llave es compuesta
+ * (`codigo_beneficio` + `rut_estudiante`): no existe un id propio, por eso
+ * todas las rutas de detalle llevan ambos segmentos.
+ *
+ * OJO: este controller cuelga de `beneficios/estudiantes`, que también encaja
+ * en el `@Get(':id')` de BeneficiosController. Depende de que
+ * BeneficioEstudianteModule se registre ANTES que BeneficiosModule en
+ * app.module.ts — ver la nota allí.
+ */
 @Controller('beneficios/estudiantes')
 @Roles(UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA)
 export class BeneficioEstudianteController {
@@ -21,49 +31,55 @@ export class BeneficioEstudianteController {
     private readonly beneficioEstudianteService: BeneficioEstudianteService,
   ) {}
 
-  /**Deberia quedar algo asi.
-  GET    /estudiantes/:estudianteId/beneficios
-  GET    /estudiantes/:estudianteId/beneficios/:beneficioId
-  POST   /estudiantes/:estudianteId/beneficios
-  PATCH  /estudiantes/:estudianteId/beneficios/:id   // relación
-  DELETE /estudiantes/:estudianteId/beneficios/:id
-  */
-
+  /**
+   * Los parámetros de la ruta mandan sobre el cuerpo: si discrepan, gana la URL
+   * en vez de aplicarse el cuerpo en silencio.
+   */
   @Post(':id_beneficio/:rut_estudiante')
   @Roles(UserRol.ADMIN, UserRol.TUTOR)
-  create(@Body() createBeneficioEstudianteDto: CreateBeneficioEstudianteDto) {
-    return this.beneficioEstudianteService.createAsociation(
-      createBeneficioEstudianteDto,
-    );
+  create(
+    @Param('id_beneficio', ParseIntPipe) codigo_beneficio: number,
+    @Param('rut_estudiante') rut_estudiante: string,
+    @Body() createBeneficioEstudianteDto: CreateBeneficioEstudianteDto,
+  ) {
+    return this.beneficioEstudianteService.createAssociation({
+      ...createBeneficioEstudianteDto,
+      codigo_beneficio,
+      rut_estudiante,
+    });
   }
 
   @Get()
   findAll() {
-    return this.beneficioEstudianteService.findAllAsociations();
+    return this.beneficioEstudianteService.findAllAssociations();
   }
 
+  /** Asignaciones de un beneficio, cada una con su estudiante. */
   @Get(':id_beneficio')
-  findEstudiantesByBeneficio(
+  findAssociationsByBeneficio(
     @Param('id_beneficio', ParseIntPipe) codigo_beneficio: number,
   ) {
-    return this.beneficioEstudianteService.findEstudiantesByBeneficio(
+    return this.beneficioEstudianteService.findAssociationsByBeneficio(
       codigo_beneficio,
     );
   }
 
+  /** Asignaciones de un estudiante, cada una con su beneficio del catálogo. */
   @Get('rut/:rut_estudiante')
-  findBeneficiosByEstudiante(@Param('rut_estudiante') rut_estudiante: string) {
-    return this.beneficioEstudianteService.findBeneficiosByEstudiante(
+  findAssociationsByEstudiante(
+    @Param('rut_estudiante') rut_estudiante: string,
+  ) {
+    return this.beneficioEstudianteService.findAssociationsByEstudiante(
       rut_estudiante,
     );
   }
 
   @Get(':id_beneficio/:rut_estudiante')
-  findOneAsociation(
+  findOneAssociation(
     @Param('id_beneficio', ParseIntPipe) codigo_beneficio: number,
     @Param('rut_estudiante') rut_estudiante: string,
   ) {
-    return this.beneficioEstudianteService.findOneAsociation(
+    return this.beneficioEstudianteService.findOneAssociation(
       codigo_beneficio,
       rut_estudiante,
     );

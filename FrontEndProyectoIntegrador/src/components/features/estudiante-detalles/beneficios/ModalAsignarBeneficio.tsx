@@ -2,21 +2,8 @@ import { useState } from 'react';
 import { Modal, Alert } from '../../../ui';
 import type { Beneficio, BeneficioEstudiante } from '../../../../types';
 import { beneficiosService } from '../../../../services';
+import { chipEstado, ESTADO_OPTS, TIPO_LABEL, type EstadoBeneficio } from './constants';
 
-type EstadoBeneficio = BeneficioEstudiante['estado'];
-
-const ESTADO_OPTS: { valor: EstadoBeneficio; etiqueta: string }[] = [
-  { valor: 'ACTIVO',     etiqueta: 'Activo'      },
-  { valor: 'EN_TRAMITE', etiqueta: 'En trámite'  },
-  { valor: 'SUSPENDIDO', etiqueta: 'Suspendido'  },
-  { valor: 'RECHAZADO',  etiqueta: 'Rechazado'   },
-  { valor: 'FINALIZADO', etiqueta: 'Finalizado'  },
-];
-
-const TIPO_LABEL: Record<string, string> = {
-  ARANCEL:     'Arancel',
-  MANUTENCION: 'Manutención',
-};
 
 interface ModalAsignarBeneficioProps {
   abierto: boolean;
@@ -33,10 +20,10 @@ export function ModalAsignarBeneficio({
   abierto, onCerrar, rutEstudiante, catalogo, catalogoLoading, catalogoError, yaAsignados, onAsignado,
 }: ModalAsignarBeneficioProps) {
   const [busqueda, setBusqueda] = useState('');
+  const [listaAbierta, setListaAbierta] = useState(false);
   const [seleccionado, setSeleccionado] = useState<Beneficio | null>(null);
   const [estado, setEstado] = useState<EstadoBeneficio>('ACTIVO');
   const [inicio, setInicio] = useState('');
-  const [fin, setFin] = useState('');
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
 
@@ -50,10 +37,10 @@ export function ModalAsignarBeneficio({
 
   const reset = () => {
     setBusqueda('');
+    setListaAbierta(false);
     setSeleccionado(null);
     setEstado('ACTIVO');
     setInicio('');
-    setFin('');
     setError('');
   };
 
@@ -62,7 +49,6 @@ export function ModalAsignarBeneficio({
   const handleGuardar = async () => {
     if (!seleccionado) { setError('Selecciona un beneficio del catálogo'); return; }
     if (!inicio)       { setError('La fecha de inicio es obligatoria'); return; }
-    if (fin && fin < inicio) { setError('La fecha de fin no puede ser anterior a la fecha de inicio'); return; }
 
     setGuardando(true);
     setError('');
@@ -72,7 +58,6 @@ export function ModalAsignarBeneficio({
         rut_estudiante:   rutEstudiante,
         estado,
         inicio,
-        fin: fin || null,
       });
       onAsignado(nueva);
       handleCerrar();
@@ -123,24 +108,36 @@ export function ModalAsignarBeneficio({
               </div>
               <button
                 type="button"
-                onClick={() => { setSeleccionado(null); setBusqueda(''); }}
+                onClick={() => { setSeleccionado(null); setBusqueda(''); setListaAbierta(true); }}
                 className="shrink-0 text-xs text-[#65B39B] hover:text-[#3a7a6b] underline"
               >
                 Cambiar
               </button>
             </div>
           ) : (
-            <div className="relative">
+            <div>
               <input
                 type="text"
                 value={busqueda}
-                onChange={e => setBusqueda(e.target.value)}
+                onChange={e => { setBusqueda(e.target.value); setListaAbierta(true); }}
+                onFocus={() => setListaAbierta(true)}
+                onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); setListaAbierta(false); } }}
                 placeholder="Buscar por nombre o proveedor…"
                 autoFocus
+                role="combobox"
+                aria-expanded={listaAbierta}
+                aria-controls="lista-beneficios"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#65B39B]/40 focus:border-[#65B39B]"
               />
-              {/* Flotante: se superpone al resto del formulario en vez de empujarlo hacia abajo */}
-              <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg max-h-44 overflow-y-auto shadow-lg">
+              {/* La lista va en el flujo normal, no flotante: dentro del modal un
+                  elemento absolute lo recorta el contenedor con overflow. Solo se
+                  muestra mientras se busca, así el resto del formulario queda libre. */}
+              {listaAbierta && (
+              <div
+                id="lista-beneficios"
+                role="listbox"
+                className="mt-1 bg-white border border-gray-200 rounded-lg max-h-44 overflow-y-auto"
+              >
                 {catalogoLoading ? (
                   <p className="px-3 py-2.5 text-sm text-gray-400">Cargando catálogo…</p>
                 ) : catalogoError ? (
@@ -158,18 +155,20 @@ export function ModalAsignarBeneficio({
                     <button
                       key={b.codigo_beneficio}
                       type="button"
-                      onClick={() => setSeleccionado(b)}
+                      role="option"
+                      aria-selected={false}
+                      onClick={() => { setSeleccionado(b); setListaAbierta(false); }}
                       className="w-full text-left px-3 py-2.5 text-sm hover:bg-[#65B39B]/10 transition-colors border-b border-gray-100 last:border-0"
                     >
                       <p className="font-medium text-gray-800">{b.nombre}</p>
                       <p className="text-xs text-gray-400">
                         {b.proveedor} · {TIPO_LABEL[b.tipo] ?? b.tipo}
-                        {b.monto > 0 && ` · ${b.monto.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}`}
                       </p>
                     </button>
                   ))
                 )}
               </div>
+              )}
             </div>
           )}
         </div>
@@ -183,34 +182,20 @@ export function ModalAsignarBeneficio({
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#65B39B]/40 focus:border-[#65B39B]"
           >
             {ESTADO_OPTS.map(o => (
-              <option key={o.valor} value={o.valor}>{o.etiqueta}</option>
+              <option key={o} value={o}>{chipEstado(o).label}</option>
             ))}
           </select>
         </div>
 
-        {/* Fechas */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <p className="text-sm font-medium text-gray-700 mb-1.5">Fecha inicio</p>
-            <input
-              type="date"
-              value={inicio}
-              onChange={e => setInicio(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#65B39B]/40 focus:border-[#65B39B]"
-            />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-700 mb-1.5">
-              Fecha fin <span className="text-gray-400 font-normal text-xs">(opcional)</span>
-            </p>
-            <input
-              type="date"
-              value={fin}
-              min={inicio}
-              onChange={e => setFin(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#65B39B]/40 focus:border-[#65B39B]"
-            />
-          </div>
+        {/* Fecha de inicio */}
+        <div>
+          <p className="text-sm font-medium text-gray-700 mb-1.5">Fecha inicio</p>
+          <input
+            type="date"
+            value={inicio}
+            onChange={e => setInicio(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#65B39B]/40 focus:border-[#65B39B]"
+          />
         </div>
       </div>
     </Modal>

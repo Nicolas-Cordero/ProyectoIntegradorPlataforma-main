@@ -88,7 +88,7 @@ export function ComentarioBorradorCard({
           </div>
         </div>
       ) : (
-        <p className="text-base text-gray-700 whitespace-pre-wrap mt-1">{texto}</p>
+        <p className="text-base text-gray-700 whitespace-pre-wrap break-words mt-1">{texto}</p>
       )}
     </div>
   );

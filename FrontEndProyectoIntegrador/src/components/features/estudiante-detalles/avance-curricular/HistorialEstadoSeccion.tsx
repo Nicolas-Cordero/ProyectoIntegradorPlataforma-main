@@ -4,6 +4,7 @@ import { historialEstadoCarreraService } from '../../../../services';
 import type { EstadoEstudiante } from '../../../../types';
 import type { CarreraUI } from './types';
 import { ESTADO_CARRERA_CHIP, ESTADO_CARRERA_OPTS } from './constants';
+import { formatDate } from '../../../../utils/dateUtils';
 
 interface HistorialEstadoSeccionProps {
   carrera: CarreraUI;
@@ -114,9 +115,7 @@ export function HistorialEstadoSeccion({ carrera, canEdit, onEstadoCambiado }: H
                       {h.usuario.nombre} {h.usuario.apellido}
                     </td>
                     <td className="py-2.5 px-4 text-gray-400 whitespace-nowrap">
-                      {new Date(h.created_at).toLocaleDateString('es-CL', {
-                        day: '2-digit', month: '2-digit', year: 'numeric',
-                      })}
+                      {formatDate(h.created_at)}
                     </td>
                   </tr>
                 );

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Typography, Box } from '@mui/material';
 import type { TypographyProps } from '@mui/material';
-import { formatDateChilean, formatRelativeDate } from '../../utils/dateHelpers';
+import { formatDate, formatRelativeDate } from '../../utils/dateUtils';
 
 type ModoFecha = 'chileno' | 'relativo';
 
@@ -25,9 +25,9 @@ export const DateLabel: React.FC<DateLabelProps> = ({
     textoFecha = fallback;
   } else {
     try {
-      textoFecha = modo === 'chileno' 
-        ? formatDateChilean(fecha)
-        : formatRelativeDate(fecha);
+      textoFecha = modo === 'chileno'
+        ? formatDate(fecha, 'Fecha inválida')
+        : formatRelativeDate(fecha, 'Fecha inválida');
     } catch {
       textoFecha = 'Fecha inválida';
     }

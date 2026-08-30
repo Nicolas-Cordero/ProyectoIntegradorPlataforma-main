@@ -40,7 +40,12 @@ export class AuthController {
     return {
       httpOnly: true,
       secure: isProd,
-      sameSite: 'none' as const,
+      // `SameSite=None` OBLIGA a `Secure`: los navegadores rechazan el
+      // Set-Cookie entero si falta. En producción hace falta 'none' porque el
+      // front (Vercel) y la API están en sitios distintos, y ahí sí hay HTTPS.
+      // En desarrollo, sobre http, 'none' hacía que el navegador descartara la
+      // cookie en silencio: el login respondía 200 y todo lo demás daba 401.
+      sameSite: isProd ? ('none' as const) : ('lax' as const),
     };
   }
 

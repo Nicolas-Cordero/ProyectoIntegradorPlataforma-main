@@ -2,16 +2,14 @@ import { BaseHttpClient } from './base.http';
 import type { Beneficio, BeneficioEstudiante } from '../types';
 
 /**
- * Servicio para gestionar beneficios y beneficios de estudiantes
+ * Beneficios y asignaciones de beneficios a estudiantes.
+ *
+ * El catálogo (`beneficio`) es de solo lectura desde el front: se carga con el
+ * seeder del backend y el modelo de negocio no contempla crearlo, editarlo ni
+ * borrarlo desde la aplicación. Por eso aquí solo vive el GET del catálogo.
  */
 class BeneficiosService extends BaseHttpClient {
-  // ============================================
-  // BENEFICIOS
-  // ============================================
-
-  /**
-   * Obtener todos los beneficios (catálogo)
-   */
+  /** Catálogo completo de beneficios. */
   async getBeneficios(): Promise<Beneficio[]> {
     return this.request<Beneficio[]>('/beneficios', {
       method: 'GET',
@@ -20,79 +18,20 @@ class BeneficiosService extends BaseHttpClient {
   }
 
   /**
-   * Obtener un beneficio por ID
-   */
-  async getBeneficioById(id: number): Promise<Beneficio> {
-    return this.request<Beneficio>(`/beneficios/${id}`, {
-      method: 'GET',
-      requireAuth: true,
-    });
-  }
-
-  /**
-   * Crear un nuevo beneficio
-   */
-  async createBeneficio(data: Omit<Beneficio, 'codigo_beneficio'>): Promise<Beneficio> {
-    return this.request<Beneficio>('/beneficios', {
-      method: 'POST',
-      body: JSON.stringify(data),
-      requireAuth: true,
-    });
-  }
-
-  /**
-   * Actualizar un beneficio existente
-   */
-  async updateBeneficio(id: number, data: Partial<Beneficio>): Promise<Beneficio> {
-    return this.request<Beneficio>(`/beneficios/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-      requireAuth: true,
-    });
-  }
-
-  /**
-   * Eliminar un beneficio del catálogo (el backend lo rechaza siempre:
-   * un beneficio referenciado históricamente no se puede borrar)
-   */
-  async deleteBeneficio(id: number): Promise<void> {
-    return this.request<void>(`/beneficios/${id}`, {
-      method: 'DELETE',
-      requireAuth: true,
-    });
-  }
-
-  // ============================================
-  // BENEFICIOS DE ESTUDIANTES
-  // ============================================
-
-  /**
-   * Obtener todos los beneficios asignados a un estudiante.
+   * Beneficios asignados a un estudiante, con el estado e inicio de cada
+   * asignación.
    *
-   * `GET /beneficios/estudiantes/rut/:rut` solo devuelve el catálogo (nombre,
-   * proveedor, tipo...) de los beneficios asignados, sin estado/inicio/fin de
-   * la asociación real. Para obtener esos datos hay que pedir cada asociación
-   * individualmente por su llave compuesta (codigo_beneficio + rut_estudiante).
+   * `GET /beneficios/estudiantes/rut/:rut` devuelve las asociaciones completas,
+   * así que basta una llamada.
    */
   async getBeneficiosByEstudiante(rutEstudiante: string): Promise<BeneficioEstudiante[]> {
-    const asignados = await this.request<Beneficio[]>(
+    return this.request<BeneficioEstudiante[]>(
       `/beneficios/estudiantes/rut/${rutEstudiante}`,
       { method: 'GET', requireAuth: true }
     );
-
-    return Promise.all(
-      asignados.map(b =>
-        this.request<BeneficioEstudiante>(
-          `/beneficios/estudiantes/${b.codigo_beneficio}/${rutEstudiante}`,
-          { method: 'GET', requireAuth: true }
-        )
-      )
-    );
   }
 
-  /**
-   * Asignar un beneficio a un estudiante
-   */
+  /** Asigna un beneficio a un estudiante. */
   async asignarBeneficioEstudiante(
     data: BeneficioEstudiante
   ): Promise<BeneficioEstudiante> {
@@ -107,12 +46,13 @@ class BeneficiosService extends BaseHttpClient {
   }
 
   /**
-   * Actualizar un beneficio asignado a un estudiante (llave compuesta: no existe un id propio)
+   * Cambia el estado de una asignación (llave compuesta: no hay id propio).
+   * Una beca pasa de EN_TRAMITE a ACTIVO, o a SUSPENDIDO, a lo largo del año.
    */
   async updateBeneficioEstudiante(
     codigoBeneficio: number,
     rutEstudiante: string,
-    data: Partial<Pick<BeneficioEstudiante, 'inicio' | 'fin' | 'estado'>>
+    data: Partial<Pick<BeneficioEstudiante, 'inicio' | 'estado'>>
   ): Promise<BeneficioEstudiante> {
     return this.request<BeneficioEstudiante>(
       `/beneficios/estudiantes/${codigoBeneficio}/${rutEstudiante}`,
@@ -124,9 +64,7 @@ class BeneficiosService extends BaseHttpClient {
     );
   }
 
-  /**
-   * Quitar un beneficio asignado a un estudiante (llave compuesta: no existe un id propio)
-   */
+  /** Quita un beneficio de un estudiante (llave compuesta: no hay id propio). */
   async deleteBeneficioEstudiante(codigoBeneficio: number, rutEstudiante: string): Promise<void> {
     return this.request<void>(`/beneficios/estudiantes/${codigoBeneficio}/${rutEstudiante}`, {
       method: 'DELETE',

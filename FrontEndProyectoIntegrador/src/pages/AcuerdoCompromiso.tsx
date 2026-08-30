@@ -131,7 +131,7 @@ export function AcuerdoCompromiso() {
   const seleccionarVersion = useCallback((version: AcuerdoResponse) => {
     setVersionId(version.id);
     setAcuerdo(fromBackend(version.documento));
-    setFechaActualizacion(version.createdAt.slice(0, 10));
+    setFechaActualizacion(version.createdAt);
   }, []);
 
   // Carga todas las versiones y selecciona la más reciente (la vigente).

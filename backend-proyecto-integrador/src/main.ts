@@ -2,7 +2,11 @@ import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe, BadRequestException } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
-import { AllExceptionsFilter, HttpExceptionFilter } from './common';
+import {
+  AllExceptionsFilter,
+  HttpExceptionFilter,
+  DecimalSerializerInterceptor,
+} from './common';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 
@@ -85,6 +89,10 @@ async function bootstrap() {
   });
 
   app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter());
+
+  // Convierte los `Decimal` de Prisma a `number` antes de serializar; sin
+  // esto viajan como string y el frontend los formatea mal (ver el interceptor).
+  app.useGlobalInterceptors(new DecimalSerializerInterceptor());
 
   app.useGlobalPipes(
     new ValidationPipe({

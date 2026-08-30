@@ -9,6 +9,6 @@ import { UsersModule } from '../users/users.module';
   imports: [StorageModule, UsersModule],
   controllers: [EstudianteController],
   providers: [EstudianteService, EstudianteRepository],
-  exports: [EstudianteService],
+  exports: [EstudianteService, EstudianteRepository],
 })
 export class EstudianteModule {}

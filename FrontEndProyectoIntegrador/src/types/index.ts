@@ -212,8 +212,6 @@ export interface Beneficio {
   nombre: string;
   proveedor: string;
   tipo: TipoBeneficio;
-  descripcion: string;
-  monto: number;
 }
 
 export interface BeneficioEstudiante {
@@ -221,7 +219,6 @@ export interface BeneficioEstudiante {
   rut_estudiante: string;
   estado: 'ACTIVO' | 'SUSPENDIDO' | 'FINALIZADO' | 'RECHAZADO' | 'EN_TRAMITE';
   inicio: Date | string;
-  fin: Date | string | null;
 }
 
 // ============================================

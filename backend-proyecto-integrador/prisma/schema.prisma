@@ -163,8 +163,6 @@ model beneficio {
   nombre           String  @unique
   proveedor        String
   tipo             TipoBeneficio
-  descripcion      String
-  monto            Decimal
 
   beneficio_estudiante beneficio_estudiante[]
 }
@@ -281,7 +279,6 @@ model beneficio_estudiante {
   rut_estudiante   String
   estado           EstadoBeneficio
   inicio           DateTime
-  fin              DateTime?
 
   beneficio  beneficio  @relation(fields: [codigo_beneficio], references: [codigo_beneficio])
   estudiante estudiante @relation(fields: [rut_estudiante], references: [rut_estudiante])

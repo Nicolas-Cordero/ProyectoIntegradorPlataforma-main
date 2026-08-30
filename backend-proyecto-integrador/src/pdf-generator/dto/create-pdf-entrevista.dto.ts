@@ -5,5 +5,5 @@ export class CreatePdfEntrevistaDto {
   @Type(() => Number)
   @IsInt()
   @IsPositive()
-  id_entrevista: number;
+  id_entrevista!: number;
 }

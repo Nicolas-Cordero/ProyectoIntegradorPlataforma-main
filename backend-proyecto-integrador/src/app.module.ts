@@ -46,6 +46,12 @@ import { HistorialEstadoCarreraModule } from './historial-estado-carrera';
     ]),
     PrismaModule,
     AuthModule,
+    // El orden importa: BeneficioEstudianteController cuelga de
+    // `beneficios/estudiantes`, que también encaja en el `@Get(':id')` de
+    // BeneficiosController. Nest registra las rutas en el orden de este array,
+    // así que BeneficioEstudianteModule DEBE ir antes que BeneficiosModule; si
+    // se invierte, `GET /beneficios/estudiantes` cae en el ParseIntPipe del
+    // catálogo y responde 400.
     BeneficioEstudianteModule,
     BeneficiosModule,
     CarreraModule,

@@ -3,9 +3,9 @@ import { IsString, IsNotEmpty } from 'class-validator';
 export class CreatePdfEntrevistaResumenDto {
   @IsString()
   @IsNotEmpty()
-  rut_estudiante: string;
+  rut_estudiante!: string;
 
   @IsString()
   @IsNotEmpty()
-  nombre_estudiante: string;
+  nombre_estudiante!: string;
 }

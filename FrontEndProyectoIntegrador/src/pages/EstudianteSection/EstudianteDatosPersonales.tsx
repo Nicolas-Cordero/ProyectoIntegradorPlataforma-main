@@ -19,6 +19,7 @@ import {
   BeneficiosCard,
   ModalAsignarBeneficio,
 } from '../../components/features/estudiante-detalles/beneficios';
+import type { CambiosAsignacion } from '../../components/features/estudiante-detalles/beneficios/BeneficioCard';
 
 export default function EstudianteDatosPersonales() {
   const { estudiante, liceo, generacion, canEdit } = useOutletContext<EstudianteOutletContext>();
@@ -51,19 +52,35 @@ export default function EstudianteDatosPersonales() {
       .finally(() => setPaesLoading(false));
   }, [estudiante.rut_estudiante]);
 
+  // allSettled y no all: son dos llamadas independientes. Con Promise.all, si
+  // falla una la otra se descarta aunque haya respondido bien, y el mensaje de
+  // error termina culpando al catálogo aunque lo que fallara fueran las
+  // asignaciones. Así cada lista se llena si su llamada funcionó.
   useEffect(() => {
     setBeneficiosLoading(true);
     setCatalogoError('');
-    Promise.all([
+    Promise.allSettled([
       beneficiosService.getBeneficiosByEstudiante(estudiante.rut_estudiante),
       beneficiosService.getBeneficios(),
     ])
       .then(([asignados, catalogo]) => {
-        setBeneficiosEstudiante(asignados);
-        setCatalogoBeneficios(catalogo);
-      })
-      .catch((err: unknown) => {
-        setCatalogoError(err instanceof Error ? err.message : 'Error al cargar los beneficios');
+        const fallos: string[] = [];
+
+        if (asignados.status === 'fulfilled') {
+          setBeneficiosEstudiante(asignados.value);
+        } else {
+          setBeneficiosEstudiante([]);
+          fallos.push('los beneficios del estudiante');
+        }
+
+        if (catalogo.status === 'fulfilled') {
+          setCatalogoBeneficios(catalogo.value);
+        } else {
+          setCatalogoBeneficios([]);
+          fallos.push('el catálogo de beneficios');
+        }
+
+        setCatalogoError(fallos.length ? `No se pudo cargar ${fallos.join(' ni ')}.` : '');
       })
       .finally(() => setBeneficiosLoading(false));
   }, [estudiante.rut_estudiante]);
@@ -75,6 +92,7 @@ export default function EstudianteDatosPersonales() {
       confirmText: 'Quitar',
       confirmColor: 'error',
       onConfirm: async () => {
+        setSaveError('');
         try {
           await beneficiosService.deleteBeneficioEstudiante(codigo_beneficio, estudiante.rut_estudiante);
           setBeneficiosEstudiante(prev => prev.filter(b => b.codigo_beneficio !== codigo_beneficio));
@@ -83,6 +101,23 @@ export default function EstudianteDatosPersonales() {
         }
       },
     });
+  };
+
+  const handleActualizarBeneficio = async (codigo_beneficio: number, cambios: CambiosAsignacion) => {
+    setSaveError('');
+    try {
+      const actualizada = await beneficiosService.updateBeneficioEstudiante(
+        codigo_beneficio,
+        estudiante.rut_estudiante,
+        cambios,
+      );
+      setBeneficiosEstudiante(prev =>
+        prev.map(b => (b.codigo_beneficio === codigo_beneficio ? actualizada : b)),
+      );
+    } catch (e: unknown) {
+      // No se toca el estado local: la tarjeta sigue mostrando el valor guardado.
+      setSaveError(e instanceof Error ? e.message : 'Error al actualizar el beneficio');
+    }
   };
 
   const handleSave = useCallback(async (key: keyof UpdateEstudianteDto, rawValue: string): Promise<boolean> => {
@@ -154,6 +189,7 @@ export default function EstudianteDatosPersonales() {
         loading={beneficiosLoading}
         canEdit={canEdit}
         onQuitar={handleQuitarBeneficio}
+        onActualizar={handleActualizarBeneficio}
         onAgregarClick={() => setShowAsignarBeneficio(true)}
       />
 
@@ -183,7 +219,7 @@ export default function EstudianteDatosPersonales() {
         <div className="fixed top-6 right-6 z-[1400] w-full max-w-sm">
           <Alert
             tipo="error"
-            titulo="No se pudo cargar el catálogo de beneficios"
+            titulo="Error al cargar beneficios"
             mensaje={catalogoError}
             cerrable
             onCerrar={() => setCatalogoError('')}

@@ -125,7 +125,7 @@ export interface Carrera {
 
 // ============================================
 
-export type EstadoRamo = 'APROBADO' | 'REPROBADO' | 'CURSANDO' | 'ELIMINADO';
+export type EstadoRamo = 'APROBADO' | 'REPROBADO' | 'CURSANDO' | 'ELIMINADO' | 'PENDIENTE';
 
 export interface RamoSemestre {
   semestre_id: number;
@@ -178,7 +178,7 @@ export interface Entrevista {
   // relaciones (incluidas por el backend en listado y detalle)
   entrevistador?: { nombre: string; apellido: string };
   semestre?: EntrevistaSemestre;
-  comentarios?: ComentarioEntrevista[];
+  comentario?: ComentarioEntrevista | null;
 }
 
 // ============================================
@@ -241,24 +241,10 @@ export interface Paes {
 // ENTREVISTAS
 // ============================================
 
-export type Topico = 'GENERAL' | 'ACADEMICO' | 'REL_INTER' | 'SALUD' | 'ACTS_EXTRA';
-
-export const TOPICO_LABELS: Record<Topico, string> = {
-  GENERAL:    'General',
-  ACADEMICO:  'Académico',
-  REL_INTER:  'Relaciones interpersonales',
-  SALUD:      'Salud',
-  ACTS_EXTRA: 'Actividades extracurriculares',
-};
-
-export const TODOS_LOS_TOPICOS: Topico[] = [
-  'GENERAL', 'ACADEMICO', 'REL_INTER', 'SALUD', 'ACTS_EXTRA',
-];
-
+// Anotación general de la entrevista: una sola por entrevista, sin tópicos.
 export interface ComentarioEntrevista {
   id: number;
   entrevista_id: number;
-  topico: Topico;
   texto: string;
   created_at: string;
   updated_at: string;

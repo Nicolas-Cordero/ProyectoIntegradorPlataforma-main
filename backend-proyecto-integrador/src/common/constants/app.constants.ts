@@ -20,3 +20,7 @@ export const DATABASE_CONSTANTS = {
   MAX_QUERY_TIMEOUT: 30000, // 30 segundos
   DEFAULT_CONNECTION_RETRY: 3,
 } as const;
+
+// Nota mínima con la que un ramo se considera aprobado (escala 1,0 – 7,0).
+// La usan tanto el cierre de semestre como la regla de salida de PENDIENTE.
+export const NOTA_APROBACION = 4;

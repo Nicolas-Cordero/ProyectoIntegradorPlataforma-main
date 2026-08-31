@@ -58,6 +58,7 @@ const ESTADO_CHIP: Record<EstadoRamoAvance, { bg: string; text: string; label: s
   REPROBADO: { bg: 'bg-red-100',   text: 'text-red-700',   label: 'Reprobado' },
   CURSANDO:  { bg: 'bg-blue-100',  text: 'text-blue-700',  label: 'Cursando'  },
   ELIMINADO: { bg: 'bg-gray-100',  text: 'text-gray-500',  label: 'Eliminado' },
+  PENDIENTE: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Pendiente' },
 };
 
 // ─── Tipos UI ─────────────────────────────────────────────────────────────────
@@ -181,13 +182,18 @@ export default function EstudianteDesempenoSemestral() {
   // Solo puede haber un semestre abierto por carrera
   const semestreAbierto  = semestres.find(esAbierto) ?? null;
 
-  // Resumen de semestre cerrado: los ramos eliminados no cuentan para el promedio
-  const ramosEvaluados = semestreActual?.ramos.filter(r => r.estado !== 'ELIMINADO') ?? [];
+  // Resumen de semestre cerrado: ni los ramos eliminados ni los pendientes
+  // cuentan para el promedio. Un PENDIENTE es un ramo que se cerró sin nota y
+  // que todavía puede recibirla, así que no debe arrastrar el promedio.
+  const ramosEvaluados = semestreActual?.ramos.filter(
+    r => r.estado !== 'ELIMINADO' && r.estado !== 'PENDIENTE'
+  ) ?? [];
   const notas          = ramosEvaluados.map(r => r.nota_final).filter((n): n is number => n !== null);
   const promedio       = notas.length > 0 ? notas.reduce((a, b) => a + b, 0) / notas.length : null;
   const aprobados      = ramosEvaluados.filter(r => r.estado === 'APROBADO').length;
   const reprobados     = ramosEvaluados.filter(r => r.estado === 'REPROBADO').length;
-  const eliminados     = (semestreActual?.ramos.length ?? 0) - ramosEvaluados.length;
+  const eliminados     = semestreActual?.ramos.filter(r => r.estado === 'ELIMINADO').length ?? 0;
+  const pendientes     = semestreActual?.ramos.filter(r => r.estado === 'PENDIENTE').length ?? 0;
 
   const [descargandoUno, setDescargandoUno] = useState(false);
   const [descargandoTodos, setDescargandoTodos] = useState(false);
@@ -421,6 +427,11 @@ export default function EstudianteDesempenoSemestral() {
                       {eliminados > 0 && (
                         <span className="px-3 py-1.5 text-sm font-semibold rounded-full bg-gray-100 text-gray-500">
                           {eliminados} eliminado{eliminados !== 1 ? 's' : ''}
+                        </span>
+                      )}
+                      {pendientes > 0 && (
+                        <span className="px-3 py-1.5 text-sm font-semibold rounded-full bg-amber-100 text-amber-700">
+                          {pendientes} pendiente{pendientes !== 1 ? 's' : ''}
                         </span>
                       )}
                     </div>

@@ -3,10 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useEntrevistaEnCurso } from '../../context/EntrevistaEnCursoContext';
 import { useConfirmDialog } from '../ui/ConfirmDialog';
 import { useSnackbar } from '../../hooks/useSnackbar';
-import { ComentarioBorradorCard } from './ComentarioBorradorCard';
 import { ModalFinalizarEntrevista } from './ModalFinalizarEntrevista';
-import { TOPICO_LABELS, TODOS_LOS_TOPICOS } from '../../types';
-import type { Topico } from '../../types';
 
 // ── Timer ─────────────────────────────────────────────────────────────────────
 
@@ -28,71 +25,13 @@ function useTimer(horaInicio: Date): string {
   return `${h}:${m}:${s}`;
 }
 
-// ── Formulario de agregar comentario ─────────────────────────────────────────
-
-interface AgregarComentarioFormProps {
-  topicosUsados: Topico[];
-  onAgregar: (topico: Topico, texto: string) => void;
-  onCancelar: () => void;
-}
-
-function AgregarComentarioForm({ topicosUsados, onAgregar, onCancelar }: AgregarComentarioFormProps) {
-  const topicosDisponibles = TODOS_LOS_TOPICOS.filter((t) => !topicosUsados.includes(t));
-  const [topico, setTopico] = useState<Topico>(topicosDisponibles[0]);
-  const [texto, setTexto] = useState('');
-
-  return (
-    <div className="border border-[#65B39B]/40 rounded-lg p-3 bg-[#65B39B]/5 mt-2">
-      <div className="mb-2">
-        <label className="block text-sm font-semibold text-gray-600 mb-1">Tópico</label>
-        <select
-          className="w-full border border-gray-300 rounded px-2 py-2 text-base focus:outline-none focus:ring-1 focus:ring-[#65B39B] bg-white"
-          value={topico}
-          onChange={(e) => setTopico(e.target.value as Topico)}
-        >
-          {topicosDisponibles.map((t) => (
-            <option key={t} value={t}>{TOPICO_LABELS[t]}</option>
-          ))}
-        </select>
-      </div>
-      <div className="mb-2">
-        <label className="block text-sm font-semibold text-gray-600 mb-1">Texto</label>
-        <textarea
-          className="w-full border border-gray-300 rounded px-2 py-2 text-base resize-none focus:outline-none focus:ring-1 focus:ring-[#65B39B]"
-          rows={3}
-          value={texto}
-          onChange={(e) => setTexto(e.target.value)}
-          placeholder="Escribe el comentario..."
-          autoFocus
-        />
-      </div>
-      <div className="flex justify-end gap-2">
-        <button
-          onClick={onCancelar}
-          className="text-sm px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-100 transition-colors"
-        >
-          Cancelar
-        </button>
-        <button
-          onClick={() => { if (texto.trim()) onAgregar(topico, texto.trim()); }}
-          disabled={!texto.trim()}
-          className="text-sm px-3 py-1.5 rounded bg-[#65B39B] text-white hover:bg-[#4A9B7D] disabled:opacity-50 transition-colors"
-        >
-          Agregar
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // ── Panel principal ───────────────────────────────────────────────────────────
 
 export function PanelEntrevistaFlotante() {
   const {
     borrador,
-    agregarComentario,
-    editarComentario,
-    eliminarComentario,
+    actualizarComentario,
+    alternarModo,
     minimizar,
     restaurar,
     descartar,
@@ -106,19 +45,17 @@ export function PanelEntrevistaFlotante() {
   const { showConfirm, ConfirmDialog } = useConfirmDialog();
   const { showSuccess, showError, SnackbarComponent } = useSnackbar();
 
-  const [mostrandoAgregar, setMostrandoAgregar] = useState(false);
   const [mostrandoFinalizar, setMostrandoFinalizar] = useState(false);
-  // Tópico del comentario que se está editando actualmente (solo uno a la vez,
-  // y no puede coincidir con estar agregando uno nuevo).
-  const [editandoTopico, setEditandoTopico] = useState<Topico | null>(null);
 
-  // Cierra el form de agregar cuando ya no quedan tópicos disponibles
+  const modoInferior =
+    borrador !== null && !borrador.minimizado && borrador.modo === 'inferior';
+
+  // El hueco de la mitad inferior lo reserva una regla global sobre #root (ver
+  // index.css): así vale para cualquier ruta sin tocar cada shell de layout.
   useEffect(() => {
-    if (!borrador) return;
-    if (borrador.comentarios.length >= TODOS_LOS_TOPICOS.length) {
-      setMostrandoAgregar(false);
-    }
-  }, [borrador]);
+    document.body.classList.toggle('entrevista-panel-inferior', modoInferior);
+    return () => document.body.classList.remove('entrevista-panel-inferior');
+  }, [modoInferior]);
 
   const handleRestaurar = useCallback(() => {
     if (!borrador) return;
@@ -132,28 +69,12 @@ export function PanelEntrevistaFlotante() {
   const handleDescartar = useCallback(() => {
     showConfirm({
       title: 'Descartar entrevista',
-      message: '¿Seguro que quieres descartar la entrevista en curso? Se perderán todos los comentarios escritos.',
+      message: '¿Seguro que quieres descartar la entrevista en curso? Se perderá la anotación escrita.',
       confirmText: 'Descartar',
       confirmColor: 'error',
       onConfirm: descartar,
     });
   }, [showConfirm, descartar]);
-
-  const handleAgregarComentario = useCallback(
-    (topico: Topico, texto: string) => {
-      agregarComentario({ topico, texto });
-      setMostrandoAgregar(false);
-    },
-    [agregarComentario]
-  );
-
-  const handleGuardarEdicion = useCallback(
-    (topico: Topico, texto: string) => {
-      editarComentario(topico, texto);
-      setEditandoTopico(null);
-    },
-    [editarComentario]
-  );
 
   const handleFinalizar = useCallback(
     async (params: { fechaHora?: Date; duracionS: number; resumen?: string }) => {
@@ -171,8 +92,15 @@ export function PanelEntrevistaFlotante() {
   if (!borrador) return null;
 
   const horaInicio = new Date(borrador.horaInicio);
-  const topicosUsados = borrador.comentarios.map((c) => c.topico);
-  const puedeAgregarMas = topicosUsados.length < TODOS_LOS_TOPICOS.length;
+
+  // Lateral: flotante a la derecha, superpuesto. Inferior: anclado al pie a
+  // todo el ancho, con la app reacomodada encima (no tapa nada).
+  const clasesPanel = modoInferior
+    ? 'fixed bottom-0 left-0 right-0 rounded-t-2xl border-t'
+    : 'fixed top-4 bottom-4 right-4 rounded-2xl border';
+  const estiloPanel = modoInferior
+    ? { height: 'var(--alto-panel-entrevista)' }
+    : { width: '600px' };
 
   // ── Panel minimizado (Fix 9: sin botón de descartar) ─────────────────────
   if (borrador.minimizado) {
@@ -198,8 +126,8 @@ export function PanelEntrevistaFlotante() {
   // ── Panel expandido ──
   return (
     <>
-      <div className="fixed top-4 bottom-4 right-4 z-50 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
-           style={{ width: '600px' }}>
+      <div className={`${clasesPanel} z-50 bg-white shadow-2xl border-gray-200 flex flex-col overflow-hidden`}
+           style={estiloPanel}>
         {/* Encabezado */}
         <div className="bg-[#2D4A3E] text-white px-4 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex-1 min-w-0">
@@ -208,6 +136,22 @@ export function PanelEntrevistaFlotante() {
           </div>
           <ExpandedTimer horaInicio={horaInicio} />
           <div className="flex items-center gap-1 ml-2">
+            <button
+              onClick={alternarModo}
+              className="text-white/70 hover:text-white p-1 rounded hover:bg-white/10 transition-colors"
+              title={modoInferior
+                ? 'Volver al panel lateral'
+                : 'Anclar abajo para navegar sin tapar el software'}
+              aria-label={modoInferior ? 'Panel lateral' : 'Panel inferior'}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 5h16v14H4z" />
+                <path
+                  strokeLinecap="round"
+                  d={modoInferior ? 'M15 5v14' : 'M4 13h16'}
+                />
+              </svg>
+            </button>
             <button
               onClick={minimizar}
               className="text-white/70 hover:text-white p-1 rounded hover:bg-white/10 transition-colors"
@@ -229,53 +173,24 @@ export function PanelEntrevistaFlotante() {
           </div>
         </div>
 
-        {/* Cuerpo — lista de comentarios (scroll interno) */}
-        <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden px-3 pt-3 pb-1">
-          {borrador.comentarios.length === 0 ? (
-            <p className="text-base text-gray-400 text-center py-6">
-              Sin comentarios aún. Agrega el primero.
-            </p>
-          ) : (
-            borrador.comentarios.map((c) => (
-              <ComentarioBorradorCard
-                key={c.topico}
-                topico={c.topico}
-                texto={c.texto}
-                editando={editandoTopico === c.topico}
-                puedeEditar={!mostrandoAgregar && (editandoTopico === null || editandoTopico === c.topico)}
-                onIniciarEdicion={() => setEditandoTopico(c.topico)}
-                onCancelarEdicion={() => setEditandoTopico(null)}
-                onGuardarEdicion={(texto) => handleGuardarEdicion(c.topico, texto)}
-                onEliminar={eliminarComentario}
-              />
-            ))
-          )}
-
-          {mostrandoAgregar && (
-            <AgregarComentarioForm
-              topicosUsados={topicosUsados}
-              onAgregar={handleAgregarComentario}
-              onCancelar={() => setMostrandoAgregar(false)}
-            />
-          )}
+        {/* Cuerpo — la anotación de la entrevista, escribible desde el primer
+            segundo: ya no hay que pulsar nada para empezar a tomar notas. */}
+        <div className="flex-1 min-w-0 flex flex-col px-3 pt-3 pb-1">
+          <label htmlFor="anotacion-entrevista" className="text-sm font-semibold text-gray-600 mb-1.5">
+            Anotaciones de la entrevista
+          </label>
+          <textarea
+            id="anotacion-entrevista"
+            className="flex-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-base resize-none focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B]"
+            value={borrador.comentario}
+            onChange={(e) => actualizarComentario(e.target.value)}
+            placeholder="Escribe aquí lo conversado durante la entrevista…"
+            autoFocus
+          />
         </div>
 
         {/* Footer */}
         <div className="px-3 py-3 border-t border-gray-100 flex gap-2 flex-shrink-0">
-          {!mostrandoAgregar && (
-            <button
-              onClick={() => setMostrandoAgregar(true)}
-              disabled={!puedeAgregarMas || editandoTopico !== null}
-              className="flex-1 text-base border border-[#65B39B] text-[#65B39B] rounded-lg py-2 hover:bg-[#65B39B]/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              title={
-                editandoTopico !== null
-                  ? 'Termina de editar el comentario en curso antes de agregar uno nuevo'
-                  : !puedeAgregarMas ? 'Ya se usaron todos los tópicos' : undefined
-              }
-            >
-              + Comentario
-            </button>
-          )}
           <button
             onClick={() => setMostrandoFinalizar(true)}
             className="flex-1 text-base bg-[#65B39B] text-white rounded-lg py-2 hover:bg-[#4A9B7D] transition-colors font-medium"

@@ -5,15 +5,6 @@ import { CreatePdfEntrevistaDto } from '../dto';
 import { InformeBuilder } from '../builders/pdf-layout.builder';
 import { PdfPrinterProvider } from '../providers/pdf-printer.provider';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Topico } from '@prisma/client';
-
-const TOPICO_LABELS: Record<Topico, string> = {
-  GENERAL: 'General',
-  ACADEMICO: 'Académico',
-  REL_INTER: 'Relaciones interpersonales',
-  SALUD: 'Salud',
-  ACTS_EXTRA: 'Actividades extracurriculares',
-};
 
 function formatDuracion(s: number): string {
   const h = Math.floor(s / 3600);
@@ -38,7 +29,7 @@ export class PdfEntrevistaGenerator
       where: { id: dto.id_entrevista },
       include: {
         entrevistador: { select: { nombre: true, apellido: true } },
-        comentarios: { orderBy: { created_at: 'asc' } },
+        comentario: true,
         estudiante: {
           select: {
             nombre: true,
@@ -62,7 +53,7 @@ export class PdfEntrevistaGenerator
       );
     }
 
-    const { estudiante, entrevistador, comentarios } = entrevista;
+    const { estudiante, entrevistador, comentario } = entrevista;
     const nombreCompleto = `${estudiante.nombre} ${estudiante.apellido}`;
 
     const fechaHora = new Date(entrevista.fecha_hora).toLocaleDateString(
@@ -132,31 +123,22 @@ export class PdfEntrevistaGenerator
       margin: [0, 4, 0, 18] as [number, number, number, number],
     };
 
-    const seccionComentarios: Content[] =
-      comentarios.length > 0
-        ? [
-            {
-              text: 'Comentarios por tópico',
-              style: 'header',
-              margin: [0, 16, 0, 8] as [number, number, number, number],
-            },
-            ...comentarios.flatMap<Content>((c) => [
-              {
-                text: TOPICO_LABELS[c.topico],
-                bold: true,
-                fontSize: 11,
-                margin: [0, 6, 0, 2] as [number, number, number, number],
-              },
-              InformeBuilder.paragrafBuilder(c.texto),
-            ]),
-          ]
-        : [
-            {
-              text: 'Sin comentarios registrados en esta entrevista.',
-              style: 'parrafo',
-              margin: [0, 12, 0, 0] as [number, number, number, number],
-            },
-          ];
+    const seccionComentarios: Content[] = comentario
+      ? [
+          {
+            text: 'Comentario de la entrevista',
+            style: 'header',
+            margin: [0, 16, 0, 8] as [number, number, number, number],
+          },
+          InformeBuilder.paragrafBuilder(comentario.texto),
+        ]
+      : [
+          {
+            text: 'Sin comentario registrado en esta entrevista.',
+            style: 'parrafo',
+            margin: [0, 12, 0, 0] as [number, number, number, number],
+          },
+        ];
 
     const docDefinition = {
       content: [

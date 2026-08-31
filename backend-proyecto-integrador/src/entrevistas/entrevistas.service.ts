@@ -47,7 +47,7 @@ export class EntrevistasService {
       semestre_id,
       duracion_s: createEntrevistaDto.duracion_s,
       resumen: createEntrevistaDto.resumen,
-      comentarios: createEntrevistaDto.comentarios ?? [],
+      comentario: createEntrevistaDto.comentario,
     });
   }
 

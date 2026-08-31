@@ -14,7 +14,7 @@ import { formatDate } from '../../utils/dateUtils';
 import { descargarPdf } from '../../utils/pdfDownload';
 import type { Entrevista, ComentarioEntrevista } from '../../types';
 
-type Vista = 'general' | 'comentarios';
+type Vista = 'general' | 'anotaciones';
 
 function toDatetimeLocal(date: Date | string): string {
   const d = new Date(date);
@@ -40,7 +40,7 @@ export function ModalDetalleEntrevista({
   const puedeEditar = PermissionService.canEditStudent(usuario); // Admin + Tutor
 
   const [entrevista, setEntrevista] = useState<Entrevista | null>(null);
-  const [comentarios, setComentarios] = useState<ComentarioEntrevista[]>([]);
+  const [comentario, setComentario] = useState<ComentarioEntrevista | null>(null);
   const [cargando, setCargando] = useState(false);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
   const [vista, setVista] = useState<Vista>('general');
@@ -58,7 +58,7 @@ export function ModalDetalleEntrevista({
   useEffect(() => {
     if (!entrevistaId) {
       setEntrevista(null);
-      setComentarios([]);
+      setComentario(null);
       return;
     }
     setVista('general');
@@ -67,7 +67,7 @@ export function ModalDetalleEntrevista({
     entrevistaService.getById(String(entrevistaId))
       .then((data) => {
         setEntrevista(data);
-        setComentarios(data.comentarios ?? []);
+        setComentario(data.comentario ?? null);
         setFechaHoraInput(toDatetimeLocal(data.fecha_hora));
         setDuracionS(data.duracion_s);
         setResumenInput(data.resumen ?? '');
@@ -86,7 +86,7 @@ export function ModalDetalleEntrevista({
         resumen: resumenInput || undefined,
       });
       setEntrevista(updated);
-      setComentarios(updated.comentarios ?? comentarios);
+      setComentario(updated.comentario ?? comentario);
       onActualizada(updated); // Fix 5
       showSuccess('Entrevista actualizada');
       onCerrar();
@@ -101,7 +101,7 @@ export function ModalDetalleEntrevista({
     if (!entrevista) return;
     showConfirm({
       title: 'Eliminar entrevista',
-      message: 'Esta acción eliminará la entrevista y todos sus comentarios. No se puede deshacer.',
+      message: 'Esta acción eliminará la entrevista y su anotación. No se puede deshacer.',
       confirmText: 'Eliminar',
       confirmColor: 'error',
       onConfirm: async () => {
@@ -182,9 +182,9 @@ export function ModalDetalleEntrevista({
           <p className="text-center text-red-500 py-6">{errorCarga}</p>
         ) : entrevista ? (
           <div className="space-y-5">
-            {/* Navegación general / comentarios */}
+            {/* Navegación general / anotaciones */}
             <div className="flex justify-center gap-1 border-b border-gray-100 -mt-2">
-              {(['general', 'comentarios'] as const).map((v) => (
+              {(['general', 'anotaciones'] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => setVista(v)}
@@ -194,37 +194,43 @@ export function ModalDetalleEntrevista({
                       : 'text-gray-500 font-medium border-transparent hover:text-[#65B39B]'
                   }`}
                 >
-                  {v === 'general' ? 'General' : `Comentarios${comentarios.length ? ` (${comentarios.length})` : ''}`}
+                  {v === 'general' ? 'General' : 'Anotaciones'}
                 </button>
               ))}
             </div>
 
             {vista === 'general' ? (
               <div className="space-y-5">
-                {/* Metadatos */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-sm text-gray-400 uppercase tracking-wide mb-0.5">Entrevistador</p>
-                    <p className="text-base font-medium text-gray-700">{entrevistador}</p>
-                  </div>
-                  {semestre && (
+                {/* Metadatos — dos filas compactas (quién/cuánto/cuándo del
+                    semestre arriba, las dos fechas abajo) para dejarle alto al
+                    cuadro de resumen. */}
+                <div className="space-y-3 ">
+                  <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <p className="text-sm text-gray-400 uppercase tracking-wide mb-0.5">Semestre</p>
-                      <p className="text-base font-medium text-gray-700">{semestre}</p>
+                      <p className="text-sm text-gray-400 uppercase tracking-wide mb-0.5">Entrevistador</p>
+                      <p className="text-base font-medium text-gray-700">{entrevistador}</p>
                     </div>
-                  )}
-                  <div>
-                    <p className="text-sm text-gray-400 uppercase tracking-wide mb-0.5">Registrada en el sistema</p>
-                    <p className="text-base font-medium text-gray-700">{formatDate(entrevista.created_at)}</p>
+                    <div>
+                      <p className="text-sm text-gray-400 uppercase tracking-wide mb-0.5">Duración</p>
+                      <p className="text-base font-medium text-gray-700">{formatDuracion(entrevista.duracion_s)}</p>
+                    </div>
+                    {semestre && (
+                      <div>
+                        <p className="text-sm text-gray-400 uppercase tracking-wide mb-0.5">Semestre</p>
+                        <p className="text-base font-medium text-gray-700">{semestre}</p>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-400 uppercase tracking-wide mb-0.5">Fecha de celebración</p>
-                    <p className="text-base font-medium text-gray-700">{formatDate(entrevista.fecha_hora)}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">Cuándo se realizó la entrevista</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400 uppercase tracking-wide mb-0.5">Duración</p>
-                    <p className="text-base font-medium text-gray-700">{formatDuracion(entrevista.duracion_s)}</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-sm text-gray-400 uppercase tracking-wide mb-0.5">Registrada en el sistema</p>
+                      <p className="text-base font-medium text-gray-700">{formatDate(entrevista.created_at)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400 uppercase tracking-wide mb-0.5">Fecha de celebración</p>
+                      <p className="text-base font-medium text-gray-700">{formatDate(entrevista.fecha_hora)}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">Cuándo se realizó la entrevista</p>
+                    </div>
                   </div>
                 </div>
 
@@ -252,7 +258,7 @@ export function ModalDetalleEntrevista({
                           <textarea
                             value={resumenInput}
                             onChange={(e) => setResumenInput(e.target.value)}
-                            rows={3}
+                            rows={8}
                             className="w-full text-base border border-gray-200 rounded-lg px-3 py-2 resize-y focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B]/30"
                           />
                         </div>
@@ -263,27 +269,18 @@ export function ModalDetalleEntrevista({
               </div>
             ) : (
               <div>
-                {comentarios.length > 0 ? (
-                  <div className="space-y-2">
-                    {comentarios.map((c) => (
-                      <ComentarioEditable
-                        key={c.id}
-                        comentario={c}
-                        esAdmin={esAdmin}
-                        onActualizado={(updated) =>
-                          setComentarios((prev) => prev.map((x) => (x.id === updated.id ? updated : x)))
-                        }
-                        onEliminado={(id) =>
-                          setComentarios((prev) => prev.filter((x) => x.id !== id))
-                        }
-                        showConfirm={showConfirm}
-                        showSuccess={showSuccess}
-                        showError={showError}
-                      />
-                    ))}
-                  </div>
+                {comentario ? (
+                  <ComentarioEditable
+                    comentario={comentario}
+                    esAdmin={esAdmin}
+                    onActualizado={setComentario}
+                    onEliminado={() => setComentario(null)}
+                    showConfirm={showConfirm}
+                    showSuccess={showSuccess}
+                    showError={showError}
+                  />
                 ) : (
-                  <p className="text-center text-gray-400 py-10">Sin comentarios registrados.</p>
+                  <p className="text-center text-gray-400 py-10">Sin anotaciones registradas.</p>
                 )}
               </div>
             )}

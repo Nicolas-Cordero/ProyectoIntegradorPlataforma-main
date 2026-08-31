@@ -1,21 +1,26 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { entrevistaService } from '../services/entrevista.service';
-import type { Topico } from '../types';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
-export interface ComentarioBorrador {
-  topico: Topico;
-  texto: string;
-}
+// Dónde se ancla el panel cuando está visible:
+//  · 'lateral'  — flotante a la derecha, sobre el contenido (el de siempre).
+//  · 'inferior' — anclado abajo a media pantalla y a todo el ancho, con la
+//                 aplicación reacomodada encima; no tapa nada.
+// Se guarda aparte de `minimizado` para que al restaurar desde el pill se
+// vuelva al último modo que el tutor estaba usando, y no siempre al inicial.
+export type ModoPanel = 'lateral' | 'inferior';
 
 export interface BorradorEntrevista {
   rutEstudiante: string;
   nombreEstudiante: string;
   horaInicio: string; // ISO string (serializable en localStorage)
-  comentarios: ComentarioBorrador[];
+  // Anotación general de la entrevista: un único texto que se escribe en vivo
+  // durante la entrevista. Arranca vacío y se va editando.
+  comentario: string;
   minimizado: boolean;
+  modo: ModoPanel;
 }
 
 interface FinalizarParams {
@@ -27,9 +32,8 @@ interface FinalizarParams {
 interface EntrevistaEnCursoContextValue {
   borrador: BorradorEntrevista | null;
   iniciar: (rutEstudiante: string, nombreEstudiante: string) => void;
-  agregarComentario: (comentario: ComentarioBorrador) => void;
-  editarComentario: (topico: Topico, texto: string) => void;
-  eliminarComentario: (topico: Topico) => void;
+  actualizarComentario: (texto: string) => void;
+  alternarModo: () => void;
   minimizar: () => void;
   restaurar: () => void;
   descartar: () => void;
@@ -42,11 +46,29 @@ interface EntrevistaEnCursoContextValue {
 
 const STORAGE_KEY = 'entrevista_en_curso_borrador';
 
+// Un borrador guardado con el esquema viejo (lista de comentarios por tópico)
+// se normaliza al leerlo, para no romper una entrevista que quedó a medias
+// cuando se desplegó este cambio.
+interface BorradorLegacy {
+  comentarios?: { topico?: string; texto?: string }[];
+}
+
+function normalizarModo(valor: unknown): ModoPanel {
+  return valor === 'inferior' ? 'inferior' : 'lateral';
+}
+
 function safeGet(): BorradorEntrevista | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as BorradorEntrevista;
+    const parsed = JSON.parse(raw) as BorradorEntrevista & BorradorLegacy;
+    const modo = normalizarModo(parsed.modo);
+    if (typeof parsed.comentario === 'string') return { ...parsed, modo };
+    const heredado = (parsed.comentarios ?? [])
+      .map((c) => c?.texto?.trim())
+      .filter((t): t is string => !!t)
+      .join('\n\n');
+    return { ...parsed, comentario: heredado, modo };
   } catch {
     return null;
   }
@@ -97,40 +119,24 @@ export function EntrevistaEnCursoProvider({ children }: { children: ReactNode })
       rutEstudiante,
       nombreEstudiante,
       horaInicio: new Date().toISOString(),
-      comentarios: [],
+      comentario: '',
       minimizado: false,
+      modo: 'lateral',
     };
     setBorrador(nuevo);
     setErrorEnvio(null);
   }, []);
 
-  const agregarComentario = useCallback((comentario: ComentarioBorrador) => {
-    setBorrador((prev) => {
-      if (!prev) return prev;
-      return { ...prev, comentarios: [...prev.comentarios, comentario] };
-    });
+  const actualizarComentario = useCallback((texto: string) => {
+    setBorrador((prev) => (prev ? { ...prev, comentario: texto } : prev));
   }, []);
 
-  const editarComentario = useCallback((topico: Topico, texto: string) => {
-    setBorrador((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        comentarios: prev.comentarios.map((c) =>
-          c.topico === topico ? { ...c, texto } : c
-        ),
-      };
-    });
-  }, []);
-
-  const eliminarComentario = useCallback((topico: Topico) => {
-    setBorrador((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        comentarios: prev.comentarios.filter((c) => c.topico !== topico),
-      };
-    });
+  const alternarModo = useCallback(() => {
+    setBorrador((prev) =>
+      prev
+        ? { ...prev, modo: prev.modo === 'lateral' ? 'inferior' : 'lateral' }
+        : prev
+    );
   }, []);
 
   const minimizar = useCallback(() => {
@@ -164,7 +170,7 @@ export function EntrevistaEnCursoProvider({ children }: { children: ReactNode })
           fecha_hora: fechaFinal.toISOString(),
           duracion_s: duracionS,
           resumen: resumen || undefined,
-          comentarios: borrador.comentarios,
+          comentario: borrador.comentario.trim() || undefined,
         });
 
         safeRemove();
@@ -185,9 +191,8 @@ export function EntrevistaEnCursoProvider({ children }: { children: ReactNode })
       value={{
         borrador,
         iniciar,
-        agregarComentario,
-        editarComentario,
-        eliminarComentario,
+        actualizarComentario,
+        alternarModo,
         minimizar,
         restaurar,
         descartar,

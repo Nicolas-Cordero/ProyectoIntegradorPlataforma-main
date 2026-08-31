@@ -3,7 +3,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateComentarioDto, UpdateComentarioDto } from './dto';
 import { comentario } from '@prisma/client';
 
-//revisar si se tendra mas de un comentario por topico.
 @Injectable()
 export class ComentarioRepository {
   constructor(private readonly prisma: PrismaService) {}

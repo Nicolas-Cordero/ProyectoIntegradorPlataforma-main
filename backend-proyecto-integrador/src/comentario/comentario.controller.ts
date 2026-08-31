@@ -5,13 +5,12 @@ import {
   Param,
   Delete,
   ParseIntPipe,
-  Query,
   Body,
   UseGuards,
 } from '@nestjs/common';
 import { ComentarioService } from './comentario.service';
 import { UpdateComentarioDto } from './dto/update-comentario.dto';
-import { Topico, UserRol } from '@prisma/client';
+import { UserRol } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -29,14 +28,6 @@ export class ComentarioController {
     @Param('id_entrevista', ParseIntPipe) id_entrevista: number,
   ) {
     return this.comentarioService.findAllByEntrevista(id_entrevista);
-  }
-
-  @Get()
-  findAllByTopico(
-    @Query('topico') topico: Topico,
-    @Query('estudiante') rut_estudiante: string,
-  ) {
-    return this.comentarioService.findAllByTopico(topico, rut_estudiante);
   }
 
   @Get('estudiante/:rut_estudiante')

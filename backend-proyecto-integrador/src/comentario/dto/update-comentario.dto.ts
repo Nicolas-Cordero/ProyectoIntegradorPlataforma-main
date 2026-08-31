@@ -1,11 +1,8 @@
 import { PartialType, PickType } from '@nestjs/mapped-types';
 import { CreateComentarioDto } from './create-comentario.dto';
 
-//Corresponderia a "cambiar comentario por topico"
-//se debe poder agregar topicos a una entrevista
-//y se debe poder actualizar el comentario de un topico
-//todo debe quedar registrado en el audit log???
-//donde registramos que algo fue actualizado
+// Lo único editable de un comentario es su texto: la entrevista a la que
+// pertenece no cambia y ya no hay tópico que reasignar.
 export class UpdateComentarioDto extends PartialType(
   PickType(CreateComentarioDto, ['texto']),
 ) {}

@@ -25,16 +25,9 @@ enum EstadoRamo {
   REPROBADO
   CURSANDO
   ELIMINADO
+  PENDIENTE
 }
 
-
-enum Topico {
-  GENERAL
-  ACADEMICO
-  REL_INTER
-  SALUD
-  ACTS_EXTRA
-}
 
 enum EstadoEstudiante {
   ACTIVO
@@ -346,7 +339,7 @@ model entrevista {
   semestre     semestre   @relation(fields: [semestre_id], references: [semestre_id])
   entrevistador usuario   @relation("Entrevistador", fields: [rut_entrevistador], references: [rut_usuario])
   
-  comentarios comentario[]
+  comentario comentario?
 
   @@unique([rut_estudiante, rut_entrevistador, fecha_hora])
 }
@@ -357,14 +350,12 @@ model entrevista {
 
 model comentario {
   id                    Int @id @default(autoincrement())
-  entrevista_id         Int
-  topico                Topico
+  entrevista_id         Int @unique
   texto                 String
   created_at            DateTime @default(now())
   updated_at            DateTime @updatedAt
 
   entrevista entrevista @relation(fields: [entrevista_id], references: [id])
-  @@unique([entrevista_id, topico])
 }
 
 model paes {

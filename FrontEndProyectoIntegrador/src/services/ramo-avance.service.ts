@@ -1,7 +1,15 @@
 import { BaseHttpClient } from './base.http';
 import type { BackendSemestre, TipoSemestre } from './semestre-avance.service';
 
-export type EstadoRamoAvance = 'APROBADO' | 'REPROBADO' | 'CURSANDO' | 'ELIMINADO';
+// PENDIENTE: el semestre se cerró sin la nota de este ramo. Sigue siendo
+// editable con el semestre cerrado y no entra en ningún promedio; en cuanto
+// recibe nota, el backend lo saca de PENDIENTE.
+export type EstadoRamoAvance =
+  | 'APROBADO'
+  | 'REPROBADO'
+  | 'CURSANDO'
+  | 'ELIMINADO'
+  | 'PENDIENTE';
 
 export interface RamoAvanceDto {
   id: number;

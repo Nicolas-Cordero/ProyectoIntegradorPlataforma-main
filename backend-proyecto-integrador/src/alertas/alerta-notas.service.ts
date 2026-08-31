@@ -60,7 +60,14 @@ export class AlertaNotasService {
       ) {
         continue;
       }
-      if (ramo.estado === EstadoRamo.ELIMINADO) {
+      // Solo se reclama la nota de un ramo que todavía la espera. Un ELIMINADO
+      // no la necesita, y un ramo ya evaluado sin nota (APROBADO/REPROBADO) es
+      // de los que no se califican con nota: reclamársela sería una alerta
+      // permanente que nunca se puede cerrar.
+      if (
+        ramo.estado !== EstadoRamo.CURSANDO &&
+        ramo.estado !== EstadoRamo.PENDIENTE
+      ) {
         continue;
       }
       if (ramo.nota_final != null) {

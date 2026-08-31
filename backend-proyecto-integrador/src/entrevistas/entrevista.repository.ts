@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { entrevista, comentario, Topico } from '@prisma/client';
+import { entrevista, comentario } from '@prisma/client';
 
 // Tipos enriquecidos con las relaciones que necesita el frontend.
 export type EntrevistaConRelaciones = entrevista & {
@@ -13,8 +13,9 @@ export type EntrevistaConRelaciones = entrevista & {
   };
 };
 
+// Una entrevista tiene a lo más un comentario general (relación 1-1).
 export type EntrevistaConDetalle = EntrevistaConRelaciones & {
-  comentarios: comentario[];
+  comentario: comentario | null;
 };
 
 export interface EntrevistaCreateData {
@@ -24,7 +25,7 @@ export interface EntrevistaCreateData {
   semestre_id: number;
   duracion_s: number;
   resumen?: string;
-  comentarios: { topico: Topico; texto: string }[];
+  comentario?: string;
 }
 
 export interface EntrevistaUpdateData {
@@ -39,11 +40,12 @@ export class EntrevistaRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(data: EntrevistaCreateData): Promise<entrevista> {
-    const { comentarios, ...fields } = data;
+    const { comentario, ...fields } = data;
     return this.prisma.entrevista.create({
       data: {
         ...fields,
-        comentarios: { create: comentarios },
+        // Sin texto no se crea la fila: una entrevista puede quedar sin comentario.
+        comentario: comentario ? { create: { texto: comentario } } : undefined,
       },
     });
   }
@@ -60,12 +62,12 @@ export class EntrevistaRepository {
         semestre: {
           select: { semestre_id: true, year: true, semestre: true, tipo: true },
         },
-        comentarios: true,
+        comentario: true,
       },
     }) as Promise<EntrevistaConDetalle>;
   }
 
-  // comentarios eliminados explícitamente antes del delete porque la relación
+  // comentario eliminado explícitamente antes del delete porque la relación
   // entrevista→comentario no tiene onDelete: Cascade en el schema actual.
   async delete(id_entrevista: number): Promise<entrevista> {
     return this.prisma.$transaction(async (tx) => {
@@ -84,7 +86,7 @@ export class EntrevistaRepository {
         semestre: {
           select: { semestre_id: true, year: true, semestre: true, tipo: true },
         },
-        comentarios: true,
+        comentario: true,
       },
     }) as Promise<EntrevistaConDetalle | null>;
   }

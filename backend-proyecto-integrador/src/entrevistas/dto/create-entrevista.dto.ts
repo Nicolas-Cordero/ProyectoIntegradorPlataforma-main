@@ -4,21 +4,9 @@ import {
   IsNumber,
   IsOptional,
   IsDate,
-  IsArray,
-  ValidateNested,
-  IsEnum,
+  MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Topico } from '@prisma/client';
-
-export class ComentarioNestedDto {
-  @IsEnum(Topico)
-  topico!: Topico;
-
-  @IsString()
-  @IsNotEmpty()
-  texto!: string;
-}
 
 export class CreateEntrevistaDto {
   @IsString()
@@ -39,9 +27,12 @@ export class CreateEntrevistaDto {
   @IsOptional()
   resumen?: string;
 
-  @IsArray()
+  // Comentario general de la entrevista: uno solo, ya sin tópicos. Se omite si
+  // la entrevista se cerró sin anotaciones.
+  @IsString()
   @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => ComentarioNestedDto)
-  comentarios?: ComentarioNestedDto[];
+  @MaxLength(20000, {
+    message: 'El comentario no puede superar los 20.000 caracteres',
+  })
+  comentario?: string;
 }

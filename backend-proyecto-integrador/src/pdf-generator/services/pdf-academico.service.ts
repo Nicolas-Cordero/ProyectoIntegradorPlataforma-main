@@ -117,7 +117,12 @@ export class PdfAcademicoGenerator
     const ramosReprobados = todosRamos.filter((r) => r.estado === 'REPROBADO').length;
     const ramosCursando = todosRamos.filter((r) => r.estado === 'CURSANDO').length;
     const ramosEliminados = todosRamos.filter((r) => r.estado === 'ELIMINADO').length;
+    const ramosPendientes = todosRamos.filter((r) => r.estado === 'PENDIENTE').length;
+    // Un ramo PENDIENTE no influye en el promedio general: está a la espera de
+    // su nota. Tampoco lo hace ninguno sin nota, porque hay ramos que no se
+    // califican con una.
     const notas = todosRamos
+      .filter((r) => r.estado !== 'PENDIENTE')
       .map((r) => r.nota_final)
       .filter((n): n is number => n !== null);
     const promedioGeneral =
@@ -136,6 +141,7 @@ export class PdfAcademicoGenerator
         ['Ramos reprobados', `${ramosReprobados}${pct(ramosReprobados)}`],
         ['Ramos en curso', `${ramosCursando}${pct(ramosCursando)}`],
         ['Ramos eliminados', `${ramosEliminados}${pct(ramosEliminados)}`],
+        ['Ramos pendientes', `${ramosPendientes}${pct(ramosPendientes)}`],
         [
           'Promedio general',
           promedioGeneral !== null
@@ -150,7 +156,9 @@ export class PdfAcademicoGenerator
     const detalleSemestral: Content =
       semestres.length > 0
         ? InformeBuilder.tableBuilder(
-            ['N°', 'Tipo', 'Año', 'Estado', 'Ramos', 'Aprobados', 'Reprobados', 'Eliminados'],
+            // Encabezados abreviados: con nueve columnas el ancho útil de la página
+            // no alcanza para las palabras completas sin partirlas en dos líneas.
+            ['N°', 'Tipo', 'Año', 'Estado', 'Ramos', 'Aprob.', 'Reprob.', 'Elim.', 'Pend.'],
             semestres.map((sem, idx) => {
               const abierto = sem.ramos.some((r) => r.estado === 'CURSANDO');
               const cerrado = esCerrado(sem);
@@ -164,10 +172,11 @@ export class PdfAcademicoGenerator
                 String(sem.ramos.filter((r) => r.estado === 'APROBADO').length),
                 String(sem.ramos.filter((r) => r.estado === 'REPROBADO').length),
                 String(sem.ramos.filter((r) => r.estado === 'ELIMINADO').length),
+                String(sem.ramos.filter((r) => r.estado === 'PENDIENTE').length),
               ];
             }),
-            [20, '*', 35, 50, 38, 55, 60, 55],
-            ['center', 'left', 'center', 'center', 'center', 'center', 'center', 'center'],
+            [14, '*', 24, 44, 38, 42, 48, 34, 36],
+            ['center', 'left', 'center', 'center', 'center', 'center', 'center', 'center', 'center'],
           )
         : { text: 'Esta carrera no tiene semestres con ramos registrados.', style: 'parrafo' };
 

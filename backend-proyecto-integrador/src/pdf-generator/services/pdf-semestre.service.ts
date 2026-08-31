@@ -188,7 +188,11 @@ export class PdfSemestreGenerator
         const aprobados = sem.ramos.filter((r) => r.estado === 'APROBADO').length;
         const reprobados = sem.ramos.filter((r) => r.estado === 'REPROBADO').length;
         const eliminados = sem.ramos.filter((r) => r.estado === 'ELIMINADO').length;
+        const pendientes = sem.ramos.filter((r) => r.estado === 'PENDIENTE').length;
+        // Un ramo PENDIENTE queda fuera del promedio semestral: el semestre se
+        // cerró sin su nota y esa nota puede llegar después.
         const notas = sem.ramos
+          .filter((r) => r.estado !== 'PENDIENTE')
           .map((r) => r.nota_final)
           .filter((n): n is number => n !== null);
         const promedio =
@@ -199,7 +203,8 @@ export class PdfSemestreGenerator
         bloque.push(
           InformeBuilder.paragrafBuilder(
             `Aprobados: ${aprobados}   ·   Reprobados: ${reprobados}   ·   ` +
-              `Eliminados: ${eliminados}   ·   Promedio: ${promedio}`,
+              `Eliminados: ${eliminados}   ·   Pendientes: ${pendientes}   ·   ` +
+              `Promedio: ${promedio}`,
           ),
         );
       }

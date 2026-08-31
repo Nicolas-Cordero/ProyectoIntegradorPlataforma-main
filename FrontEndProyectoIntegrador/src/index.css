@@ -102,3 +102,19 @@ body {
 .tabs-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #3b82f6;
 }
+
+/* ── Entrevista en curso: modo "panel inferior" ────────────────────────────────
+   El panel se ancla al pie ocupando media pantalla y a todo el ancho. A
+   diferencia del modo lateral, aquí NO se superpone: la aplicación se reacomoda
+   en la mitad superior con su propio scroll, así que nada queda tapado detrás
+   del panel y se puede navegar sin perder de vista la entrevista.
+   Actúa sobre #root para valer en todas las rutas, tengan el shell que tengan. */
+:root {
+  --alto-panel-entrevista: 50vh;
+}
+
+body.entrevista-panel-inferior #root {
+  height: calc(100vh - var(--alto-panel-entrevista));
+  min-height: 0;
+  overflow-y: auto;
+}

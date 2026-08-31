@@ -22,4 +22,5 @@ export {
   APP_CONSTANTS,
   HTTP_MESSAGES,
   DATABASE_CONSTANTS,
+  NOTA_APROBACION,
 } from './constants/app.constants';

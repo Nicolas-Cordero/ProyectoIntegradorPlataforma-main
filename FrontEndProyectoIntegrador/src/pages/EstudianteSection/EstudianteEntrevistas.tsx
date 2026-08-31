@@ -24,6 +24,13 @@ export default function EstudianteEntrevistas() {
   const rutEstudiante = estudiante.rut_estudiante;
   const nombreEstudiante = `${estudiante.nombre} ${estudiante.apellido}`;
 
+  // Lo que interesa para recargar la lista es si hay o no una entrevista en
+  // curso, no su contenido: al finalizarla el borrador pasa a null y la
+  // entrevista recién guardada tiene que aparecer. Depender del objeto
+  // `borrador` completo dispararía una recarga por cada tecla escrita en la
+  // anotación, que crea un borrador nuevo cada vez.
+  const hayEntrevistaEnCurso = borrador !== null;
+
   useEffect(() => {
     if (!canEdit) return;
     setCargando(true);
@@ -32,7 +39,7 @@ export default function EstudianteEntrevistas() {
       .then(setEntrevistas)
       .catch(() => setError('No se pudieron cargar las entrevistas'))
       .finally(() => setCargando(false));
-  }, [rutEstudiante, canEdit, borrador]);
+  }, [rutEstudiante, canEdit, hayEntrevistaEnCurso]);
 
   async function handleDescargarResumen() {
     setDescargandoResumen(true);

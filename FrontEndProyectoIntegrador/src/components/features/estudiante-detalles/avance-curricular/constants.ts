@@ -48,6 +48,7 @@ export const ESTADO_CHIP: Record<EstadoRamoAvance, { bg: string; text: string; l
   REPROBADO: { bg: 'bg-red-100',   text: 'text-red-700',   label: 'Reprobado' },
   CURSANDO:  { bg: 'bg-blue-100',  text: 'text-blue-700',  label: 'Cursando'  },
   ELIMINADO: { bg: 'bg-gray-100',  text: 'text-gray-500',  label: 'Eliminado' },
+  PENDIENTE: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Pendiente' },
 };
 
 export const ESTADO_RAMO_OPTS: { valor: EstadoRamoAvance; etiqueta: string }[] = [
@@ -55,6 +56,7 @@ export const ESTADO_RAMO_OPTS: { valor: EstadoRamoAvance; etiqueta: string }[] =
   { valor: 'REPROBADO', etiqueta: 'Reprobado' },
   { valor: 'CURSANDO',  etiqueta: 'Cursando'  },
   { valor: 'ELIMINADO', etiqueta: 'Eliminado' },
+  { valor: 'PENDIENTE', etiqueta: 'Pendiente' },
 ];
 
 export const VIA_ACCESO_OPTS = [

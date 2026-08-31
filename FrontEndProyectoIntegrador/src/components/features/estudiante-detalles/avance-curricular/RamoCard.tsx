@@ -17,7 +17,10 @@ export function RamoCard({ ramo, semAbierto, canEdit, canAdmin, onEditar, onElim
     ? 'text-gray-300'
     : ramo.nota_final >= 4 ? 'text-green-600' : 'text-red-500';
 
-  const puedeEditarRamo = semAbierto && canEdit;
+  // Un ramo PENDIENTE es la única forma de tocar un semestre ya cerrado: se
+  // cerró sin su nota, así que sigue abierto a recibirla (o a pasar a
+  // ELIMINADO). El resto de los ramos quedan congelados al cerrar.
+  const puedeEditarRamo = canEdit && (semAbierto || ramo.estado === 'PENDIENTE');
 
   return (
     <div

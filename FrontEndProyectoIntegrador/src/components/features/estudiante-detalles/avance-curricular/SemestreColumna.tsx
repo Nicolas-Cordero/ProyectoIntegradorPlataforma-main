@@ -17,14 +17,14 @@ interface SemestreColumnaProps {
 export function SemestreColumna({ semestre, canEdit, canAdmin, onCerrar, onEliminar, onAgregarRamo, onEditarRamo, onEliminarRamo }: SemestreColumnaProps) {
   const cerrado = semestre.cerrado;
   const ramoLimitAlcanzado = semestre.tipo === 'RECUPERATIVO' && semestre.ramos.length >= 1;
-  const todosConNota = semestre.ramos.length > 0
-    && semestre.ramos.every(r => r.estado === 'ELIMINADO' || r.nota_final !== null);
-  const puedesCerrar = semestre.ramos.length > 0 && todosConNota;
-  const tooltipCierre = semestre.ramos.length === 0
-    ? 'Agrega al menos un ramo'
-    : !todosConNota
-      ? 'Todos los ramos deben tener nota final'
-      : undefined;
+  // Un semestre se cierra aunque le falten notas: hay ramos que no se califican
+  // con una. Los que sigan sin nota quedan PENDIENTE y podrán recibirla después,
+  // con el semestre ya cerrado.
+  const puedesCerrar = semestre.ramos.length > 0;
+  const tooltipCierre = semestre.ramos.length === 0 ? 'Agrega al menos un ramo' : undefined;
+  const quedaranPendientes = semestre.ramos.filter(
+    r => r.nota_final === null && (r.estado === 'CURSANDO' || r.estado === 'PENDIENTE')
+  ).length;
 
   return (
     <div className={`w-64 flex-none flex flex-col rounded-xl border-2 overflow-hidden transition-colors ${cerrado ? 'border-green-200' : 'border-gray-200'}`}>
@@ -111,9 +111,15 @@ export function SemestreColumna({ semestre, canEdit, canAdmin, onCerrar, onElimi
             <LockIcon sx={{ fontSize: 15 }} />
             Cerrar semestre
           </button>
-          {tooltipCierre && (
-            <p className="text-xs text-center text-amber-600 leading-snug">{tooltipCierre}</p>
-          )}
+          {tooltipCierre
+            ? <p className="text-xs text-center text-amber-600 leading-snug">{tooltipCierre}</p>
+            : quedaranPendientes > 0 && (
+                <p className="text-xs text-center text-amber-600 leading-snug">
+                  {quedaranPendientes === 1
+                    ? '1 ramo sin nota quedará como Pendiente'
+                    : `${quedaranPendientes} ramos sin nota quedarán como Pendientes`}
+                </p>
+              )}
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateComentarioDto } from './dto/create-comentario.dto';
 import { UpdateComentarioDto } from './dto/update-comentario.dto';
-import { comentario, Topico } from '@prisma/client';
+import { comentario } from '@prisma/client';
 import { ComentarioRepository } from './comentario.repository';
 
 @Injectable()
@@ -14,15 +14,6 @@ export class ComentarioService {
 
   findAllByEntrevista(id_entrevista: number): Promise<comentario[]> {
     return this.comentarioRepo.findAllByEntrevista(id_entrevista);
-  }
-
-  async findAllByTopico(
-    topico: Topico,
-    rut_estudiante: string,
-  ): Promise<comentario[]> {
-    const comentarios_estudiante =
-      await this.comentarioRepo.findAllByEstudiante(rut_estudiante);
-    return comentarios_estudiante.filter((x) => x.topico == topico);
   }
 
   findAllByEstudiante(rut_estudiante: string): Promise<comentario[]> {

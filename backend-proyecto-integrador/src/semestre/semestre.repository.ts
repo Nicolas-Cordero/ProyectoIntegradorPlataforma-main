@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -7,6 +6,19 @@ import {
 import { EstadoRamo, Prisma, semestre } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSemestreDto } from './dto/create-semestre.dto';
+
+// Lo que el cierre necesita saber de un ramo para decidir su estado final.
+export interface RamoParaCierre {
+  id: number;
+  estado: EstadoRamo;
+  nota_final: number | null;
+}
+
+// Estado final que el servicio decidió para un ramo concreto.
+export interface CambioEstadoRamo {
+  id: number;
+  estado: EstadoRamo;
+}
 
 @Injectable()
 export class SemestreRepository {
@@ -113,37 +125,38 @@ export class SemestreRepository {
     }
   }
 
-  // Cierre explícito de un semestre para una carrera: solo el admin/tutor lo
-  // dispara (ver guard de roles en el controller). Exige que todo ramo no
-  // eliminado ya tenga nota final, y recién ahí calcula su estado final
-  // (APROBADO/REPROBADO) a partir de esa nota — nunca al revés. El flag
-  // `cerrado` en semestre_carrera es lo único que determina si el semestre
-  // está cerrado; no se deriva del estado de los ramos.
+  // Persistencia del cierre de un semestre para una carrera. Deliberadamente no
+  // decide nada: qué estado final le corresponde a cada ramo es una regla de
+  // negocio y vive en SemestreService. Aquí solo se abre la transacción, se leen
+  // los ramos, se aplican los cambios que el servicio pidió y se marca el flag
+  // `cerrado` de semestre_carrera — que es lo único que determina si el semestre
+  // está cerrado; nunca se deriva del estado de los ramos.
   async cerrarSemestre(
     semestre_id: number,
     codigo_carrera: number,
+    calcularCambios: (ramos: RamoParaCierre[]) => CambioEstadoRamo[],
   ): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       const ramos = await tx.ramo.findMany({
         where: { semestre_id, codigo_carrera },
+        select: { id: true, estado: true, nota_final: true },
       });
 
-      const pendientes = ramos.filter(
-        (r) => r.estado !== EstadoRamo.ELIMINADO && r.nota_final === null,
+      const cambios = calcularCambios(
+        ramos.map((r) => ({
+          id: r.id,
+          estado: r.estado,
+          // Decimal de Prisma → number, para que la regla de negocio trabaje
+          // con notas y no con un tipo del ORM.
+          nota_final: r.nota_final === null ? null : Number(r.nota_final),
+        })),
       );
-      if (pendientes.length > 0) {
-        throw new BadRequestException(
-          'Todos los ramos deben tener nota final (o estar eliminados) antes de cerrar el semestre.',
-        );
-      }
 
-      for (const r of ramos) {
-        if (r.estado === EstadoRamo.ELIMINADO) continue;
-        const nuevoEstado =
-          Number(r.nota_final) >= 4 ? EstadoRamo.APROBADO : EstadoRamo.REPROBADO;
-        if (r.estado !== nuevoEstado) {
-          await tx.ramo.update({ where: { id: r.id }, data: { estado: nuevoEstado } });
-        }
+      for (const cambio of cambios) {
+        await tx.ramo.update({
+          where: { id: cambio.id },
+          data: { estado: cambio.estado },
+        });
       }
 
       await tx.semestre_carrera.update({

@@ -183,7 +183,11 @@ export default function EstudianteDesempenoAcademico() {
   const ramosReprobados = todosRamos.filter(r => r.estado === 'REPROBADO').length;
   const ramosCursando   = todosRamos.filter(r => r.estado === 'CURSANDO').length;
   const ramosEliminados = todosRamos.filter(r => r.estado === 'ELIMINADO').length;
-  const notas           = todosRamos.map(r => r.nota_final).filter((n): n is number => n !== null);
+  const ramosPendientes = todosRamos.filter(r => r.estado === 'PENDIENTE').length;
+  // Un ramo PENDIENTE no influye en el promedio general: el semestre se cerró
+  // sin su nota y esa nota puede llegar después. Tampoco influye ninguno sin
+  // nota, porque hay ramos que no se califican con una.
+  const notas           = todosRamos.filter(r => r.estado !== 'PENDIENTE').map(r => r.nota_final).filter((n): n is number => n !== null);
   const promedioGeneral = notas.length > 0 ? notas.reduce((a, b) => a + b, 0) / notas.length : null;
 
   const pct = (n: number) => totalRamos > 0 ? `${((n / totalRamos) * 100).toFixed(1)} %` : '—';
@@ -324,6 +328,12 @@ export default function EstudianteDesempenoAcademico() {
                           color: 'text-gray-700',
                         },
                         {
+                          label: 'Ramos pendientes',
+                          valor: totalRamos > 0 ? String(ramosPendientes) : '—',
+                          porcentaje: totalRamos > 0 ? pct(ramosPendientes) : undefined,
+                          color: ramosPendientes > 0 ? 'text-amber-600' : 'text-gray-800',
+                        },
+                        {
                           label: 'Promedio general',
                           valor: promedioGeneral !== null ? promedioGeneral.toFixed(2) : '—',
                           color: promedioGeneral !== null
@@ -376,7 +386,8 @@ export default function EstudianteDesempenoAcademico() {
                           <th className="py-3 px-4 text-center">Total ramos</th>
                           <th className="py-3 px-4 text-center text-green-700">Aprobados</th>
                           <th className="py-3 px-4 text-center text-red-500">Reprobados</th>
-                          <th className="py-3 pl-4 text-center text-gray-400">Eliminados</th>
+                          <th className="py-3 px-4 text-center text-gray-400">Eliminados</th>
+                          <th className="py-3 pl-4 text-center text-amber-600">Pendientes</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -386,6 +397,7 @@ export default function EstudianteDesempenoAcademico() {
                           const aprobados  = sem.ramos.filter(r => r.estado === 'APROBADO').length;
                           const reprobados = sem.ramos.filter(r => r.estado === 'REPROBADO').length;
                           const eliminados = sem.ramos.filter(r => r.estado === 'ELIMINADO').length;
+                          const pendientes = sem.ramos.filter(r => r.estado === 'PENDIENTE').length;
 
                           return (
                             <tr
@@ -426,8 +438,11 @@ export default function EstudianteDesempenoAcademico() {
                               <td className="py-4 px-4 text-center text-base font-semibold tabular-nums text-red-500">
                                 {reprobados}
                               </td>
-                              <td className="py-4 pl-4 text-center text-base font-semibold tabular-nums text-gray-400">
+                              <td className="py-4 px-4 text-center text-base font-semibold tabular-nums text-gray-400">
                                 {eliminados}
+                              </td>
+                              <td className="py-4 pl-4 text-center text-base font-semibold tabular-nums text-amber-600">
+                                {pendientes}
                               </td>
                             </tr>
                           );

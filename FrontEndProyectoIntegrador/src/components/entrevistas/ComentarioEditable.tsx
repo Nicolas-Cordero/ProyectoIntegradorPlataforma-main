@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Edit as EditIcon, Delete as DeleteIcon, Check as CheckIcon, Close as CloseIcon } from '@mui/icons-material';
 import type { ComentarioEntrevista } from '../../types';
-import { TOPICO_LABELS } from '../../types';
 import type { ConfirmDialogOptions } from '../ui/ConfirmDialog';
 import { comentarioService } from '../../services';
 
@@ -36,9 +35,9 @@ export function ComentarioEditable({
       const updated = await comentarioService.actualizar(comentario.id, texto.trim());
       onActualizado(updated);
       setEditando(false);
-      showSuccess('Comentario actualizado');
+      showSuccess('Anotación actualizada');
     } catch {
-      showError('Error al guardar el comentario');
+      showError('Error al guardar la anotación');
     } finally {
       setGuardando(false);
     }
@@ -51,8 +50,8 @@ export function ComentarioEditable({
 
   function handleEliminar() {
     showConfirm({
-      title: 'Eliminar comentario',
-      message: `¿Seguro que deseas eliminar el comentario de tópico "${TOPICO_LABELS[comentario.topico]}"? Esta acción no se puede deshacer.`,
+      title: 'Eliminar anotación',
+      message: '¿Seguro que deseas eliminar la anotación de esta entrevista? Esta acción no se puede deshacer.',
       confirmText: 'Eliminar',
       confirmColor: 'error',
       onConfirm: async () => {
@@ -70,16 +69,13 @@ export function ComentarioEditable({
           : 'border-gray-300'
       }`}
     >
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-sm font-semibold text-[#3a7a6b] uppercase tracking-wide">
-          {TOPICO_LABELS[comentario.topico]}
-        </span>
+      <div className="flex items-center justify-end mb-1.5">
         {!editando && (
           <div className="flex gap-1">
             <button
               onClick={() => setEditando(true)}
               className="p-1 rounded text-gray-400 hover:text-[#65B39B] hover:bg-[#65B39B]/10 transition-colors"
-              title="Editar comentario"
+              title="Editar anotación"
             >
               <EditIcon sx={{ fontSize: 16 }} />
             </button>
@@ -87,7 +83,7 @@ export function ComentarioEditable({
               <button
                 onClick={handleEliminar}
                 className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                title="Eliminar comentario"
+                title="Eliminar anotación"
               >
                 <DeleteIcon sx={{ fontSize: 16 }} />
               </button>
@@ -100,7 +96,7 @@ export function ComentarioEditable({
           <textarea
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
-            rows={3}
+            rows={10}
             className="w-full text-base border border-gray-200 rounded-md p-2 resize-y focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B]/30"
           />
           <div className="flex gap-2 mt-1.5 justify-end">

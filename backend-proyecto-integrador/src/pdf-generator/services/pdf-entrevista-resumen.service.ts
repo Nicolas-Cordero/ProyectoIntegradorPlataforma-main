@@ -5,15 +5,6 @@ import { CreatePdfEntrevistaResumenDto } from '../dto';
 import { InformeBuilder } from '../builders/pdf-layout.builder';
 import { PdfPrinterProvider } from '../providers/pdf-printer.provider';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Topico } from '@prisma/client';
-
-const TOPICO_LABELS: Record<Topico, string> = {
-  GENERAL: 'General',
-  ACADEMICO: 'Académico',
-  REL_INTER: 'Relaciones interpersonales',
-  SALUD: 'Salud',
-  ACTS_EXTRA: 'Actividades extracurriculares',
-};
 
 @Injectable()
 export class PdfEntrevistaResumenGenerator
@@ -29,7 +20,7 @@ export class PdfEntrevistaResumenGenerator
       where: { rut_estudiante: dto.rut_estudiante },
       include: {
         entrevistador: { select: { nombre: true, apellido: true } },
-        comentarios: true,
+        comentario: true,
       },
       orderBy: { fecha_hora: 'asc' },
     });
@@ -43,42 +34,9 @@ export class PdfEntrevistaResumenGenerator
       porAno[yr] = (porAno[yr] ?? 0) + 1;
     }
 
-    // Conteos de comentarios por tópico (sumando todas las entrevistas)
-    const TOPICOS_ORDEN: Topico[] = [
-      'GENERAL',
-      'ACADEMICO',
-      'REL_INTER',
-      'SALUD',
-      'ACTS_EXTRA',
-    ];
-    const porTopico: Record<Topico, number> = {
-      GENERAL: 0,
-      ACADEMICO: 0,
-      REL_INTER: 0,
-      SALUD: 0,
-      ACTS_EXTRA: 0,
-    };
-    for (const e of entrevistas) {
-      for (const c of e.comentarios) {
-        porTopico[c.topico]++;
-      }
-    }
-
-    // Tópico(s) más relevante(s): el/los con mayor cantidad de comentarios
-    const totalComentarios = Object.values(porTopico).reduce(
-      (a, b) => a + b,
-      0,
-    );
-    let topicoPrincipal: string;
-    if (totalComentarios === 0) {
-      topicoPrincipal = 'Sin comentarios registrados';
-    } else {
-      const maxCount = Math.max(...Object.values(porTopico));
-      const topicosMasComentados = TOPICOS_ORDEN.filter(
-        (t) => porTopico[t] === maxCount,
-      ).map((t) => TOPICO_LABELS[t]);
-      topicoPrincipal = topicosMasComentados.join(', ');
-    }
+    // Cada entrevista tiene a lo más un comentario general, así que el total
+    // es simplemente cuántas quedaron con anotaciones.
+    const totalComentarios = entrevistas.filter((e) => e.comentario).length;
 
     // Sección de fechas de celebración: N° - Fecha - Entrevistador
     const fechasSection: Content =
@@ -117,17 +75,6 @@ export class PdfEntrevistaResumenGenerator
             InformeBuilder.paragrafBuilder(e.resumen ?? '(sin resumen)'),
           ]);
 
-    // Sección de comentarios por tópico
-    const comentariosSection: Content =
-      totalComentarios > 0
-        ? InformeBuilder.tableBuilder(
-            ['Tópico', 'N° de comentarios'],
-            TOPICOS_ORDEN.map((t) => [TOPICO_LABELS[t], String(porTopico[t])]),
-            ['*', 120],
-            ['left', 'right'],
-          )
-        : { text: 'Sin comentarios registrados.', style: 'parrafo' };
-
     const docDefinition = {
       content: [
         InformeBuilder.headerBuilder('Resumen de Entrevistas'),
@@ -146,8 +93,7 @@ export class PdfEntrevistaResumenGenerator
         },
         InformeBuilder.fieldListBuilder([
           ['Total de entrevistas', String(totalEntrevistas)],
-          ['Total de comentarios', String(totalComentarios)],
-          ['Tópico más comentado', topicoPrincipal],
+          ['Entrevistas con comentario', String(totalComentarios)],
         ]),
 
         {
@@ -174,14 +120,7 @@ export class PdfEntrevistaResumenGenerator
         fechasSection,
 
         {
-          text: 'Comentarios por tópico',
-          style: 'header',
-          margin: [0, 16, 0, 6] as [number, number, number, number],
-        },
-        comentariosSection,
-
-        {
-          text: 'Resúmenes de cada entrevista',
+          text: 'Detalle de cada entrevista',
           style: 'header',
           margin: [0, 16, 0, 8] as [number, number, number, number],
         },

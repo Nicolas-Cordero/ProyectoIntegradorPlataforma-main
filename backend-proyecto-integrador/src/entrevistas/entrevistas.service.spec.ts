@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
-import { TipoSemestre, Topico } from '@prisma/client';
+import { TipoSemestre } from '@prisma/client';
 import { EntrevistasService } from './entrevistas.service';
 import { EntrevistaRepository } from './entrevista.repository';
 import { PrismaService } from '../prisma/prisma.service';
@@ -183,7 +183,7 @@ describe('EntrevistasService', () => {
           fecha_hora: fecha,
           semestre_id: 5,
           rut_entrevistador: '98765432-1',
-          comentarios: [],
+          comentario: undefined,
         }),
       );
     });
@@ -217,31 +217,32 @@ describe('EntrevistasService', () => {
       );
     });
 
-    it('crea comentarios anidados cuando se envían', async () => {
+    it('traspasa el comentario general cuando se envía', async () => {
       // Arrange
       mockPrisma.semestre.upsert.mockResolvedValue(
         makeSemestre(5, 2026, 'PRIMER_SEMESTRE'),
       );
       mockRepo.create.mockResolvedValue({ id: 3 });
 
-      const comentarios = [
-        { topico: Topico.GENERAL, texto: 'Comentario general' },
-        { topico: Topico.ACADEMICO, texto: 'Comentario académico' },
-      ];
-
       // Act
       await service.create(
-        { rut_estudiante: '12345678-9', duracion_s: 1200, comentarios },
+        {
+          rut_estudiante: '12345678-9',
+          duracion_s: 1200,
+          comentario: 'Conversamos sobre el avance del semestre.',
+        },
         '98765432-1',
       );
 
       // Assert
       expect(mockRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ comentarios }),
+        expect.objectContaining({
+          comentario: 'Conversamos sobre el avance del semestre.',
+        }),
       );
     });
 
-    it('crea sin comentarios si el arreglo viene vacío', async () => {
+    it('crea sin comentario si no se envía ninguno', async () => {
       // Arrange
       mockPrisma.semestre.upsert.mockResolvedValue(
         makeSemestre(5, 2026, 'PRIMER_SEMESTRE'),
@@ -250,13 +251,13 @@ describe('EntrevistasService', () => {
 
       // Act
       await service.create(
-        { rut_estudiante: '12345678-9', duracion_s: 900, comentarios: [] },
+        { rut_estudiante: '12345678-9', duracion_s: 900 },
         '98765432-1',
       );
 
       // Assert
       expect(mockRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ comentarios: [] }),
+        expect.objectContaining({ comentario: undefined }),
       );
     });
   });

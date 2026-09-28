@@ -392,13 +392,6 @@ export default function EstudianteAvanceCurricular() {
       notaFinal = Math.round(notaFinal * 10) / 10;
     }
 
-    const carreraUI = carreras.find(c => c.codigo_carrera === modalRamo.carreraId);
-    const semUI     = carreraUI?.semestres.find(s => s.semestre_id === modalRamo.semestreId);
-    if (semUI?.tipo === 'RECUPERATIVO' && !modalRamo.editRamo && (semUI?.ramos.length ?? 0) >= 1) {
-      setErrRamo('Los semestres recuperativos solo pueden contener un ramo.');
-      return;
-    }
-
     setGuardandoRamo(true);
     setErrRamo('');
     try {

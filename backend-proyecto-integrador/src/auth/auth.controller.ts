@@ -9,7 +9,8 @@ import {
   Res,
   Req,
 } from '@nestjs/common';
-import { Response, Request } from 'express';
+import { Response, Request, CookieOptions } from 'express';
+import { buildCookieOptions } from '../config';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dto/create-auth.dto';
 import {
@@ -35,18 +36,11 @@ import type { AuthenticatedUser } from './interfaces/auth.interfaces';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  private get cookieOptions() {
-    const isProd = process.env.NODE_ENV === 'production';
-    return {
-      httpOnly: true,
-      secure: isProd,
-      // `SameSite=None` OBLIGA a `Secure`: los navegadores rechazan el
-      // Set-Cookie entero si falta. En producción hace falta 'none' porque el
-      // front (Vercel) y la API están en sitios distintos, y ahí sí hay HTTPS.
-      // En desarrollo, sobre http, 'none' hacía que el navegador descartara la
-      // cookie en silencio: el login respondía 200 y todo lo demás daba 401.
-      sameSite: isProd ? ('none' as const) : ('lax' as const),
-    };
+  // Se resuelve en cada uso en vez de una sola vez al construir el controlador
+  // para que un cambio de variables de entorno en caliente se refleje sin
+  // reconstruir el módulo. Ver `config/cookie.config.ts` para el detalle.
+  private get cookieOptions(): CookieOptions {
+    return buildCookieOptions();
   }
 
   private setAuthCookies(

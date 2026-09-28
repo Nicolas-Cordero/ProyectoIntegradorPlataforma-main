@@ -7,6 +7,7 @@ import {
   HttpExceptionFilter,
   DecimalSerializerInterceptor,
 } from './common';
+import { buildCookieOptions, validateCookieConfig } from './config';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 
@@ -26,6 +27,11 @@ async function bootstrap() {
       'CORS_ORIGINS no está definido. Revisa las variables de entorno.',
     );
   }
+
+  // Falla al arrancar si las cookies de sesión están mal configuradas. Sin esta
+  // comprobación el síntoma es un 401 en todos los endpoints sin ningún error
+  // que lo explique: el navegador descarta el Set-Cookie en silencio.
+  validateCookieConfig();
 
   // Lista explícita de orígenes (exacto, case-sensitive).
   const allowedOrigins = process.env.CORS_ORIGINS?.split(',')
@@ -120,5 +126,13 @@ async function bootstrap() {
 
   logger.log(`Server running on port: ${port}`);
   logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+
+  // Se registra porque es la causa habitual de "401 en todo" tras un despliegue
+  // y no hay forma de inspeccionarlo desde fuera (la cookie es HttpOnly).
+  const { secure, sameSite, domain } = buildCookieOptions();
+  logger.log(
+    `Cookies de sesión: SameSite=${String(sameSite)}; Secure=${String(secure)}` +
+      `${domain ? `; Domain=${domain}` : '; host-only'}`,
+  );
 }
 void bootstrap();

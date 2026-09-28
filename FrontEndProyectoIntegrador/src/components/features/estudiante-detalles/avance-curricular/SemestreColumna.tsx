@@ -16,7 +16,6 @@ interface SemestreColumnaProps {
 
 export function SemestreColumna({ semestre, canEdit, canAdmin, onCerrar, onEliminar, onAgregarRamo, onEditarRamo, onEliminarRamo }: SemestreColumnaProps) {
   const cerrado = semestre.cerrado;
-  const ramoLimitAlcanzado = semestre.tipo === 'RECUPERATIVO' && semestre.ramos.length >= 1;
   // Un semestre se cierra aunque le falten notas: hay ramos que no se califican
   // con una. Los que sigan sin nota quedan PENDIENTE y podrán recibirla después,
   // con el semestre ya cerrado.
@@ -91,17 +90,13 @@ export function SemestreColumna({ semestre, canEdit, canAdmin, onCerrar, onElimi
       {/* Acciones (solo semestre abierto y con permisos) */}
       {!cerrado && canEdit && (
         <div className="px-3 pb-3 pt-2 border-t border-gray-100 space-y-2">
-          {!ramoLimitAlcanzado ? (
-            <button
-              onClick={onAgregarRamo}
-              className="flex items-center justify-center gap-1.5 w-full py-2 text-sm font-semibold text-[#65B39B] hover:bg-[#65B39B]/8 rounded-lg transition-colors"
-            >
-              <AddIcon sx={{ fontSize: 16 }} />
-              Agregar ramo
-            </button>
-          ) : (
-            <p className="text-sm text-center text-gray-400 py-1">Límite: 1 ramo por recuperativo</p>
-          )}
+          <button
+            onClick={onAgregarRamo}
+            className="flex items-center justify-center gap-1.5 w-full py-2 text-sm font-semibold text-[#65B39B] hover:bg-[#65B39B]/8 rounded-lg transition-colors"
+          >
+            <AddIcon sx={{ fontSize: 16 }} />
+            Agregar ramo
+          </button>
           <button
             onClick={onCerrar}
             disabled={!puedesCerrar}

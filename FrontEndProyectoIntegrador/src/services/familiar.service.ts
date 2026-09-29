@@ -4,7 +4,7 @@ import type { Familiar, Parentesco } from '../types';
 export interface CreateFamiliarDto {
   rut_estudiante: string;
   nombre: string;
-  telefono: string;
+  telefono?: string | null;
   parentesco: Parentesco;
   observacion?: string;
   es_contacto_emergencia?: boolean;
@@ -12,7 +12,8 @@ export interface CreateFamiliarDto {
 
 export interface UpdateFamiliarDto {
   nombre?: string;
-  telefono?: string;
+  // null elimina el teléfono (no permitido si es contacto de emergencia).
+  telefono?: string | null;
   parentesco?: Parentesco;
   observacion?: string;
   es_contacto_emergencia?: boolean;

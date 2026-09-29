@@ -13,6 +13,7 @@ export { liceoService } from './liceo.service';
 
 // Avance curricular
 export { universidadService } from './universidad.service';
+export { comunaService } from './comuna.service';
 export { carreraAvanceService } from './carrera-avance.service';
 export { semestreAvanceService } from './semestre-avance.service';
 export { ramoAvanceService } from './ramo-avance.service';

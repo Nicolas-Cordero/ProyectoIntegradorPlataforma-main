@@ -12,6 +12,7 @@ import { AuthModule } from './auth';
 import { BeneficioEstudianteModule } from './beneficio-estudiante';
 import { BeneficiosModule } from './beneficios';
 import { CarreraModule } from './carrera';
+import { ComunaModule } from './comuna';
 import { ComentarioModule } from './comentario';
 import { EntrevistasModule } from './entrevistas';
 import { EstudianteModule } from './estudiante';
@@ -63,6 +64,7 @@ import { HistorialEstadoCarreraModule } from './historial-estado-carrera';
     LiceoModule,
     RamoModule,
     UniversidadModule,
+    ComunaModule,
     UsersModule,
     SemestreModule,
     AlertasModule,

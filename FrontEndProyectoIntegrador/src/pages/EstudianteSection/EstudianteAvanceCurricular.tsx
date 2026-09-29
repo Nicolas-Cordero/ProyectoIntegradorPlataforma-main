@@ -9,14 +9,15 @@ import PermissionService from '../../services/permissionService';
 import type { EstudianteOutletContext } from './EstudianteDetail';
 import {
   universidadService,
+  comunaService,
   carreraAvanceService,
   semestreAvanceService,
   ramoAvanceService,
   historialEstadoCarreraService,
 } from '../../services';
-import type { EstadoEstudiante } from '../../types';
+import type { Comuna, EstadoEstudiante } from '../../types';
 import type { UniversidadDto } from '../../services/universidad.service';
-import type { CreateCarreraAvanceDto, ViaAcceso } from '../../services/carrera-avance.service';
+import type { CreateCarreraAvanceDto } from '../../services/carrera-avance.service';
 import type { SemestreDto, CreateSemestreDto } from '../../services/semestre-avance.service';
 import type { CarreraUI, RamoUI, SemestreUI } from '../../components/features/estudiante-detalles/avance-curricular';
 import {
@@ -27,6 +28,12 @@ import {
   ModalSemestre, type FormSemestre,
   ModalRamo, type FormRamo,
 } from '../../components/features/estudiante-detalles/avance-curricular';
+
+const FORM_CARRERA_VACIO: FormCarrera = {
+  nombre: '', codigo_universidad: null, universidad_nombre: '',
+  otra_institucion: false, nueva_institucion: '', nueva_comuna: null,
+  duracion_sem: '8', via_acceso: 'REGULAR', anio_ingreso: '',
+};
 
 export default function EstudianteAvanceCurricular() {
   const { estudiante, canEdit } = useOutletContext<EstudianteOutletContext>();
@@ -44,11 +51,10 @@ export default function EstudianteAvanceCurricular() {
   // ── Modal: Nueva carrera ──────────────────────────────────────────────────
   const [modalCarrera, setModalCarrera] = useState(false);
   const [universidades, setUniversidades] = useState<UniversidadDto[]>([]);
+  const [comunas, setComunas] = useState<Comuna[]>([]);
   const [cargandoUniversidades, setCargandoUniversidades] = useState(false);
   const [busquedaUniv, setBusquedaUniv] = useState('');
-  const [formCarrera, setFormCarrera] = useState<FormCarrera>({
-    nombre: '', codigo_universidad: null, universidad_nombre: '', duracion_sem: '8', via_acceso: 'REGULAR' as ViaAcceso, anio_ingreso: '',
-  });
+  const [formCarrera, setFormCarrera] = useState<FormCarrera>(FORM_CARRERA_VACIO);
   const [errCarrera, setErrCarrera] = useState('');
   const [guardandoCarrera, setGuardandoCarrera] = useState(false);
 
@@ -183,21 +189,24 @@ export default function EstudianteAvanceCurricular() {
 
   // ── Carrera: crear ────────────────────────────────────────────────────────
   const abrirModalCarrera = () => {
-    setFormCarrera({ nombre: '', codigo_universidad: null, universidad_nombre: '', duracion_sem: '8', via_acceso: 'REGULAR', anio_ingreso: '' });
+    setFormCarrera(FORM_CARRERA_VACIO);
     setBusquedaUniv('');
     setErrCarrera('');
-    if (universidades.length === 0) {
+    if (universidades.length === 0 || comunas.length === 0) {
       setCargandoUniversidades(true);
-      universidadService.getAll()
-        .then(setUniversidades)
-        .catch(() => setErrCarrera('No se pudieron cargar las universidades.'))
+      Promise.all([universidadService.getAll(), comunaService.getAll()])
+        .then(([univs, coms]) => { setUniversidades(univs); setComunas(coms); })
+        .catch(() => setErrCarrera('No se pudieron cargar las instituciones.'))
         .finally(() => setCargandoUniversidades(false));
     }
     setModalCarrera(true);
   };
 
   const agregarCarrera = async () => {
-    if (!formCarrera.codigo_universidad) { setErrCarrera('Selecciona una universidad'); return; }
+    if (formCarrera.otra_institucion) {
+      if (!formCarrera.nueva_institucion.trim()) { setErrCarrera('Escribe el nombre de la institución'); return; }
+      if (!formCarrera.nueva_comuna)             { setErrCarrera('Selecciona la comuna de la institución'); return; }
+    } else if (!formCarrera.codigo_universidad) { setErrCarrera('Selecciona una institución'); return; }
     if (!formCarrera.nombre.trim())       { setErrCarrera('El nombre de la carrera es requerido'); return; }
     const dur = parseInt(formCarrera.duracion_sem, 10);
     if (isNaN(dur) || dur < 1)            { setErrCarrera('La duración debe ser al menos 1 semestre'); return; }
@@ -212,11 +221,28 @@ export default function EstudianteAvanceCurricular() {
     setGuardandoCarrera(true);
     setErrCarrera('');
     try {
+      let codigo_universidad = formCarrera.codigo_universidad;
+      if (formCarrera.otra_institucion && formCarrera.nueva_comuna) {
+        const nueva = await universidadService.create({
+          nombre:        formCarrera.nueva_institucion.trim(),
+          codigo_comuna: formCarrera.nueva_comuna,
+        });
+        setUniversidades(us => [...us, nueva]);
+        // Queda seleccionada: si la carrera falla más abajo, reintentar no
+        // vuelve a crear la institución (daría 409 por duplicada).
+        setFormCarrera(f => ({
+          ...f, codigo_universidad: nueva.codigo_universidad, universidad_nombre: nueva.nombre,
+          otra_institucion: false, nueva_institucion: '', nueva_comuna: null,
+        }));
+        codigo_universidad = nueva.codigo_universidad;
+      }
+      if (!codigo_universidad) return;
+
       const payload: CreateCarreraAvanceDto = {
         nombre:             formCarrera.nombre.trim(),
         rut_estudiante:     rut,
         duracion_sem:       dur,
-        codigo_universidad: formCarrera.codigo_universidad,
+        codigo_universidad,
         via_acceso:         formCarrera.via_acceso,
         anio_ingreso,
       };
@@ -583,6 +609,7 @@ export default function EstudianteAvanceCurricular() {
         form={formCarrera}
         setForm={setFormCarrera}
         universidades={universidades}
+        comunas={comunas}
         cargandoUniversidades={cargandoUniversidades}
         busquedaUniv={busquedaUniv}
         setBusquedaUniv={setBusquedaUniv}

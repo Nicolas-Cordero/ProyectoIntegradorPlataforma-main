@@ -86,8 +86,8 @@ export function LoginAdminForm({ onAuthChange }: LoginAdminFormProps) {
           src={logoFundacion}
           alt="Logo Fundación Carmen Goudie"
           sx={{
-            width: 80,
-            height: 80,
+            width: 200,
+            height: 200,
             borderRadius: '50%',
             border: '3px solid rgba(101, 179, 155, 0.3)',
             p: 1,

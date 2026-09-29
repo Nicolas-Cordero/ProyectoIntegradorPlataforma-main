@@ -18,8 +18,10 @@ import { UserRol } from '@prisma/client';
 export class UniversidadController {
   constructor(private readonly universidadService: UniversidadService) {}
 
+  // TUTOR también: registra la carrera de un estudiante cuya institución no
+  // está en el catálogo (IP, CFT, sede nueva) desde el formulario de carrera.
   @Post()
-  @Roles(UserRol.ADMIN)
+  @Roles(UserRol.ADMIN, UserRol.TUTOR)
   create(@Body() createUniversidadDto: CreateUniversidadDto) {
     return this.universidadService.create(createUniversidadDto);
   }
@@ -34,9 +36,9 @@ export class UniversidadController {
     return this.universidadService.findOne(id_universidad);
   }
 
-  @Get('comuna/:comuna')
-  findByComuna(@Param('comuna') comuna: string) {
-    return this.universidadService.findByComuna(comuna);
+  @Get('comuna/:codigo_comuna')
+  findByComuna(@Param('codigo_comuna', ParseIntPipe) codigo_comuna: number) {
+    return this.universidadService.findByComuna(codigo_comuna);
   }
 
   @Get('estudiante/:rut_estudiante')

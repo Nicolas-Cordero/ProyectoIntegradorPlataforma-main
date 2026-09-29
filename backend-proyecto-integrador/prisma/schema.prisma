@@ -128,14 +128,29 @@ model refresh_token {
 
 
 
+// Institución de educación superior (universidad, IP o CFT). El nombre del
+// modelo es histórico: el catálogo inicial solo tenía universidades.
 model universidad {
   codigo_universidad Int    @id @default(autoincrement())
   nombre             String
-  comuna             String
+  codigo_comuna      Int
 
+  comuna   comuna    @relation(fields: [codigo_comuna], references: [codigo_comuna])
   carreras carrera[]
 
-  @@unique([nombre, comuna])
+  @@unique([nombre, codigo_comuna])
+}
+
+
+
+// Catálogo fijo de comunas de Chile. La llave es el Código Único Territorial
+// (CUT) oficial, no un autoincrement, para que coincida en toda base.
+model comuna {
+  codigo_comuna Int    @id
+  nombre        String @unique
+  region        String
+
+  universidades universidad[]
 }
 
 
@@ -243,7 +258,7 @@ model familiar {
   id                    Int     @id @default(autoincrement())
   rut_estudiante        String
   nombre                String
-  telefono              String
+  telefono              String?
   parentesco            Parentesco
   observacion           String?
   es_contacto_emergencia Boolean @default(false)

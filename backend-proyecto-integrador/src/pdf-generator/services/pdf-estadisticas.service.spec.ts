@@ -15,7 +15,7 @@ function carrera(overrides: Record<string, unknown> = {}) {
     duracion_sem: 10,
     anio_ingreso: 2015,
     estado: 'ACTIVO',
-    universidad: { nombre: 'Universidad de La Serena', comuna: 'La Serena' },
+    universidad: { nombre: 'Universidad de La Serena', comuna: { nombre: 'La Serena' } },
     historial_estados: [],
     ramos: [],
     ...overrides,

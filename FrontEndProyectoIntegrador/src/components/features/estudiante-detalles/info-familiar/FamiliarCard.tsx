@@ -61,7 +61,9 @@ export function FamiliarCard({ familiar, canEdit, canDelete, onEdit, onDelete }:
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
         <div>
           <span className="text-sm text-gray-500 uppercase tracking-wide">Teléfono</span>
-          <p className="text-base font-medium text-gray-800">{familiar.telefono}</p>
+          {familiar.telefono
+            ? <p className="text-base font-medium text-gray-800">{familiar.telefono}</p>
+            : <p className="text-base text-gray-400 italic">Sin teléfono</p>}
         </div>
         {familiar.observacion && (
           <div className="sm:col-span-2">

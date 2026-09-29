@@ -60,7 +60,7 @@ export const universidadesData = [
   { nombre: 'Universidad de Los Lagos', comuna: 'Puerto Montt' },
   { nombre: 'Universidad de Los Lagos', comuna: 'Castro' },
   { nombre: 'Universidad de Magallanes', comuna: 'Punta Arenas' },
-  { nombre: 'Universidad de Magallanes', comuna: 'Puerto Natales' },
+  { nombre: 'Universidad de Magallanes', comuna: 'Natales' },
   { nombre: 'Universidad de Magallanes', comuna: 'Porvenir' },
   { nombre: "Universidad de O'Higgins", comuna: 'Rancagua' },
   { nombre: 'Universidad de Playa Ancha de Ciencias de la Educación', comuna: 'Valparaíso' },

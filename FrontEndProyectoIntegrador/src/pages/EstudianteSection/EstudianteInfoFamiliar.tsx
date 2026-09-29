@@ -72,7 +72,7 @@ export default function EstudianteInfoFamiliar() {
     setEditingId(familiar.id);
     setForm({
       nombre: familiar.nombre,
-      telefono: familiar.telefono,
+      telefono: familiar.telefono ?? '',
       parentesco: familiar.parentesco,
       observacion: familiar.observacion ?? '',
       es_contacto_emergencia: familiar.es_contacto_emergencia ?? false,
@@ -82,18 +82,25 @@ export default function EstudianteInfoFamiliar() {
   };
 
   const handleSave = async () => {
-    if (!form.nombre || !form.telefono) {
-      setError('Nombre y teléfono son obligatorios');
+    // El teléfono es opcional, salvo para el contacto de emergencia.
+    const tieneTelefono = form.telefono.trim() !== '';
+    if (!form.nombre) {
+      setError('El nombre es obligatorio');
       return;
     }
-    if (!esTelefonoValido(form.telefono)) {
+    if (form.es_contacto_emergencia && !tieneTelefono) {
+      setError('El contacto de emergencia debe tener un número telefónico');
+      return;
+    }
+    if (tieneTelefono && !esTelefonoValido(form.telefono)) {
       setError('Teléfono inválido. Ej: 912345678 · 56912345678 · +569 1234 5678');
       return;
     }
     setSaving(true);
     setError('');
     try {
-      const telefono = normalizarTelefono(form.telefono);
+      // null (y no undefined) para que en la edición se borre el número.
+      const telefono = tieneTelefono ? normalizarTelefono(form.telefono) : null;
       if (editingId !== null) {
         const update: UpdateFamiliarDto = {
           nombre: form.nombre,
@@ -224,7 +231,7 @@ export default function EstudianteInfoFamiliar() {
             onChange={(v) => setForm(f => ({ ...f, nombre: v }))}
           />
           <Input
-            etiqueta="Teléfono"
+            etiqueta="Teléfono (opcional)"
             tipo="tel"
             valor={form.telefono}
             onChange={(v) => setForm(f => ({ ...f, telefono: v }))}

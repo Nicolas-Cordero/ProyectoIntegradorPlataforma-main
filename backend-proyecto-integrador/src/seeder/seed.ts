@@ -5,6 +5,7 @@ import {
   usersSeeder,
   beneficiosSeeder,
   liceosSeeder,
+  comunasSeeder,
   universidadesSeeder,
   semestresSeeder,
   compromisoSeeder,
@@ -15,6 +16,7 @@ async function main() {
 
   await beneficiosSeeder();
   await liceosSeeder();
+  await comunasSeeder();
   await universidadesSeeder();
   await usersSeeder();
   await semestresSeeder();

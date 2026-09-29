@@ -96,7 +96,7 @@ export interface Familiar {
   id: number;
   rut_estudiante: string;
   nombre: string;
-  telefono: string;
+  telefono: string | null;
   parentesco: Parentesco;
   observacion?: string;
   es_contacto_emergencia: boolean;
@@ -104,10 +104,18 @@ export interface Familiar {
 
 // ============================================
 
+export interface Comuna {
+  codigo_comuna: number; // Código Único Territorial (CUT)
+  nombre: string;
+  region: string;
+}
+
+// Institución de educación superior (universidad, IP o CFT).
 export interface Universidad {
   codigo_universidad: number;
   nombre: string;
-  comuna: string;
+  codigo_comuna: number;
+  comuna: Comuna;
 }
 
 export interface Carrera {

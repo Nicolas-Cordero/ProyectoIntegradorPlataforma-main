@@ -1,4 +1,5 @@
 import { Parentesco } from '@prisma/client';
+import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsEnum,
@@ -17,11 +18,17 @@ export class CreateFamiliarDto {
   @IsNotEmpty()
   nombre!: string;
 
-  @IsNotEmpty({ message: 'El teléfono es requerido' })
+  // Opcional: hay familiares sin número. Un string vacío se trata como "sin
+  // teléfono" (null), que es también como se borra en un update. La exigencia
+  // para el contacto de emergencia vive en FamiliarService.
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' && value.trim() === '' ? null : value,
+  )
+  @IsOptional()
   @Matches(/^\+569\s?\d{4}\s?\d{4}$/, {
     message: 'Formato inválido. Usa +569 xxxx xxxx o +569xxxxxxxx',
   })
-  telefono!: string;
+  telefono?: string | null;
 
   @IsNotEmpty()
   @IsEnum(Parentesco)

@@ -39,7 +39,7 @@ interface CarreraItem {
   duracion_sem: number;
   anio_ingreso: number;
   estado: EstadoEstudiante;
-  universidad: { nombre: string; comuna: string };
+  universidad: { nombre: string; comuna: { nombre: string } };
   historial_estados: HistorialItem[];
   ramos: RamoSemestreItem[];
 }
@@ -206,7 +206,9 @@ export class PdfEstadisticasGenerator
             duracion_sem: true,
             anio_ingreso: true,
             estado: true,
-            universidad: { select: { nombre: true, comuna: true } },
+            universidad: {
+              select: { nombre: true, comuna: { select: { nombre: true } } },
+            },
             historial_estados: {
               orderBy: { created_at: 'asc' },
               select: { estado_nuevo: true, created_at: true },
@@ -449,7 +451,7 @@ export class PdfEstadisticasGenerator
       tablaDesglose(
         agruparConteo(
           enEducacionSuperior,
-          (e) => carreraRepresentativa(e.carreras)!.universidad.comuna,
+          (e) => carreraRepresentativa(e.carreras)!.universidad.comuna.nombre,
         ),
         totalSuperior,
         'Ciudad',
@@ -674,7 +676,7 @@ export class PdfEstadisticasGenerator
       }
     }
     content.push(
-      InformeBuilder.tableCaption(n, `Trayectoria de becarios universitarios en ${añoActual}`),
+      InformeBuilder.tableCaption(n, `Trayectoria de becarios en educación superior en ${añoActual}`),
       tablaDesglose(
         [
           ['Continúan sus estudios con normalidad', continuan],
@@ -724,7 +726,8 @@ export class PdfEstadisticasGenerator
       content.push(
         InformeBuilder.paragrafBuilder(
           `La Tabla ${n} muestra cuántos becarios comenzaron su primera carrera ` +
-            `universitaria durante ${añoActual}, agrupados por la generación a la ` +
+            `en una institución de educación superior durante ${añoActual}, ` +
+            `agrupados por la generación a la ` +
             `que pertenecen (no necesariamente la más nueva: suele ser una ` +
             `generación que ya lleva un tiempo en la Fundación y recién ahora ` +
             `entra a la educación superior).`,
@@ -732,7 +735,7 @@ export class PdfEstadisticasGenerator
         ),
       );
       content.push(
-        InformeBuilder.tableCaption(n, `Becarios que ingresan a la universidad en ${añoActual}`),
+        InformeBuilder.tableCaption(n, `Becarios que ingresan a la educación superior en ${añoActual}`),
         tablaDesglose(
           generacionesIngresantes,
           ingresanEsteAño.length,

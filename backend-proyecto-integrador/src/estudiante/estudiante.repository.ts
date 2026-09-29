@@ -66,7 +66,9 @@ export class EstudianteRepository {
         generacion_rel: true,
         liceo: true,
         paes: true,
-        carreras: { include: { universidad: true } },
+        carreras: {
+          include: { universidad: { include: { comuna: true } } },
+        },
         familiares: true,
         beneficios: true,
         // include semestre: el frontend necesita year/tipo/semestre para

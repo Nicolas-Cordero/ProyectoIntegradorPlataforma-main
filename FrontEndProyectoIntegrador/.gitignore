@@ -50,4 +50,4 @@ debug.log
 .vercel
 
 
-deploy.zip
+*.zip

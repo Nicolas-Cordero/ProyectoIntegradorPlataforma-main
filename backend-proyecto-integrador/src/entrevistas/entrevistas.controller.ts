@@ -50,8 +50,11 @@ export class EntrevistasController {
   }
 
   // Última entrevista y entrevistas del año por estudiante, para la tabla de
-  // estudiantes. Debe declararse antes de ':id_entrevista'.
+  // estudiantes. Debe declararse antes de ':id_entrevista'. Abierto también a
+  // VISITA (reemplaza el @Roles de la clase): solo expone rut, fecha de la
+  // última entrevista y conteo, sin contenido de las entrevistas.
   @Get('resumen')
+  @Roles(UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA)
   resumen(
     @Query('generacion_id', new ParseIntPipe({ optional: true }))
     generacion_id?: number,

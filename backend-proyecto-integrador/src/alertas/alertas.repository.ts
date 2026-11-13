@@ -1,55 +1,56 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ESTADOS_ESPERAN_NOTA } from './alerta-notas.service';
 
+/**
+ * Consultas de las alertas. Todas son en bloque: reciben la lista de ruts a
+ * evaluar y hacen una sola consulta, sin importar cuántos estudiantes sean.
+ */
 @Injectable()
 export class AlertasRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAllEstudiantes() {
+  // Ruts de los estudiantes, opcionalmente solo los de una generación (año).
+  async findRutsEstudiantes(año?: number): Promise<string[]> {
     const estudiantes = await this.prisma.estudiante.findMany({
-      select: {
-        rut_estudiante: true,
-        generacion_rel: { select: { año: true } },
-      },
+      where: año === undefined ? {} : { generacion_rel: { año } },
+      select: { rut_estudiante: true },
     });
-    return estudiantes.map((e) => ({
-      rut_estudiante: e.rut_estudiante,
-      generacion: String(e.generacion_rel.año),
-    }));
+    return estudiantes.map((e) => e.rut_estudiante);
   }
 
-  async getAllEntrevistasbyEstudiante(rut_estudiante: string) {
-    return this.prisma.entrevista.findMany({
-      where: { rut_estudiante },
-      select: { id: true, rut_estudiante: true, fecha_hora: true },
+  // Fecha de la última entrevista de cada estudiante (GROUP BY rut). Los que
+  // no tienen entrevistas no aparecen en el mapa.
+  async getUltimaEntrevistaPorEstudiante(
+    ruts: string[],
+  ): Promise<Map<string, Date>> {
+    const ultimas = await this.prisma.entrevista.groupBy({
+      by: ['rut_estudiante'],
+      where: { rut_estudiante: { in: ruts } },
+      _max: { fecha_hora: true },
     });
+    return new Map(
+      ultimas.flatMap((u) =>
+        u._max.fecha_hora ? [[u.rut_estudiante, u._max.fecha_hora]] : [],
+      ),
+    );
   }
 
-  async getAllEntrevistas() {
-    return this.prisma.entrevista.findMany({
-      select: { id: true, rut_estudiante: true, fecha_hora: true },
-    });
-  }
-
-  async getAllRamosbyEstudiante(rut_estudiante: string) {
+  // Ramos que todavía esperan nota final, con su semestre incluido en la
+  // misma consulta.
+  async getRamosSinNota(ruts: string[]) {
     return this.prisma.ramo.findMany({
-      where: { rut_estudiante },
-      select: {
-        id: true,
-        nombre: true,
-        estado: true,
-        codigo_carrera: true,
-        rut_estudiante: true,
-        nota_final: true,
-        semestre_id: true,
+      where: {
+        rut_estudiante: { in: ruts },
+        estado: { in: ESTADOS_ESPERAN_NOTA },
+        nota_final: null,
       },
-    });
-  }
-
-  async getSemestreById(semestre_id: number) {
-    return this.prisma.semestre.findUnique({
-      where: { semestre_id },
-      select: { semestre_id: true, year: true, semestre: true, tipo: true },
+      orderBy: { id: 'asc' },
+      select: {
+        nombre: true,
+        rut_estudiante: true,
+        semestre: { select: { year: true, semestre: true } },
+      },
     });
   }
 
@@ -61,22 +62,12 @@ export class AlertasRepository {
     });
   }
 
-  // Ruts de los estudiantes que firmaron una versión concreta del acuerdo.
-  // Se trae en bloque para resolver el estado de firma de muchos estudiantes
-  // con una sola consulta (igual que getAllEntrevistas).
-  async getRutsConFirma(acuerdo_id: number): Promise<string[]> {
+  // Ruts, entre los indicados, que firmaron una versión concreta del acuerdo.
+  async getRutsConFirma(acuerdo_id: number, ruts: string[]): Promise<string[]> {
     const firmas = await this.prisma.firma_acuerdo.findMany({
-      where: { acuerdo_id },
+      where: { acuerdo_id, rut_estudiante: { in: ruts } },
       select: { rut_estudiante: true },
     });
     return firmas.map((f) => f.rut_estudiante);
-  }
-
-  // Verifica si un estudiante puntual firmó una versión del acuerdo.
-  async getFirmaAcuerdo(acuerdo_id: number, rut_estudiante: string) {
-    return this.prisma.firma_acuerdo.findUnique({
-      where: { acuerdo_id_rut_estudiante: { acuerdo_id, rut_estudiante } },
-      select: { id: true },
-    });
   }
 }

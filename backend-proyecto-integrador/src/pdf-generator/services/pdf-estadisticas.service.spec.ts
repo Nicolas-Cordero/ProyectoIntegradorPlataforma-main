@@ -47,9 +47,14 @@ const estudiantesFake = [
         // administrativa tardía) — dos años después de que Ana realmente
         // terminó. La duración real NO debe salir de esta fecha.
         historial_estados: [{ estado_nuevo: 'TITULADO', created_at: new Date('2020-03-10') }],
-        // Su último semestre real con ramos es 2018/2S. El recuperativo de
-        // verano 2019 no debe mover el punto final del cálculo.
+        // Cursó 2013–2015, suspendió 2016 (sin ramos) y volvió 2017–2018:
+        // 10 semestres regulares con ramos. 2018/2S tiene dos ramos (cuenta
+        // una vez) y el recuperativo de verano 2019 no cuenta.
         ramos: [
+          ...[2013, 2014, 2015, 2017, 2018].flatMap((year) => [
+            ramoEn(year, 'PRIMER_SEMESTRE'),
+            ramoEn(year, 'SEGUNDO_SEMESTRE'),
+          ]),
           ramoEn(2018, 'SEGUNDO_SEMESTRE'),
           { semestre: { year: 2019, semestre: 'VERANO', tipo: 'RECUPERATIVO' } },
         ],
@@ -214,22 +219,22 @@ describe('PdfEstadisticasGenerator', () => {
     expect(contenidoStr).toContain('20,0%');
   });
 
-  it('debe calcular la duración real desde el último semestre con ramos, no desde la fecha del cambio de estado', async () => {
+  it('debe calcular la duración real como los semestres regulares con ramos', async () => {
     await service.pdfGenerate(dtoValido);
-    const [docDefinition] = mockPrinter.createPdf.mock.calls[0];
-    const contenidoStr = JSON.stringify(docDefinition.content);
-    expect(contenidoStr).toContain('Duración nominal, real y sobreduración');
+    const tablaDuracion = tablasDe(mockPrinter.createPdf.mock.calls[0][0]).find((body) =>
+      body[0].some((celda) => textoCelda(celda).includes('REAL (SEM.)')),
+    )!;
+    const realDe = (apellido: string) =>
+      textoCelda(tablaDuracion.find((fila) => textoCelda(fila[0]) === apellido)![4]);
 
-    // Ana: ingreso 2013, último ramo regular en 2018/2S (el recuperativo de
-    // verano 2019 no cuenta) -> (2018-2013)*2 + 2 = 12 semestres reales.
-    // Su TITULADO se registró en la plataforma en 2020 (carga tardía); si el
-    // cálculo dependiera de esa fecha en vez de sus ramos, daría 15 en lugar
-    // de 12 -- ese número NO debe aparecer.
-    expect(contenidoStr).toContain('"12"');
-    expect(contenidoStr).not.toContain('"15"');
+    // Ana: 10 semestres regulares con ramos. No cuentan el año suspendido
+    // (2016, sin ramos), el ramo repetido en 2018/2S ni el verano 2019. El
+    // cálculo anterior (de ingreso al último semestre) habría dado 12, y la
+    // fecha del cambio de estado (2020), 15.
+    expect(realDe('Titulada')).toBe('10');
 
-    // Bruno: ingreso 2014, último ramo regular en 2019/1S -> 11 semestres reales.
-    expect(contenidoStr).toContain('"11"');
+    // Bruno: un único semestre con ramos.
+    expect(realDe('Egresado')).toBe('1');
   });
 
   it('debe agregar fila de total a todas las tablas salvo la de generaciones', async () => {
@@ -252,6 +257,42 @@ describe('PdfEstadisticasGenerator', () => {
       'Media', 'NoMatriculado', 'Estudiante', 'Suspendido', 'Cambio',
       'Retirado', 'Egresado', 'Titulada', 'Total',
     ]);
+  });
+
+  it('debe mostrar en la sección 3 la carrera titulada, no una posterior en curso', async () => {
+    // Ana, titulada de Ingeniería, ingresó después a un magíster que sigue activo.
+    mockPrisma.estudiante.findMany.mockResolvedValue([
+      {
+        ...estudiantesFake[0],
+        carreras: [
+          ...estudiantesFake[0].carreras,
+          carrera({
+            codigo_carrera: 9,
+            anio_ingreso: 2021,
+            estado: 'ACTIVO',
+            nombre: 'Magíster en Gestión',
+            universidad: { nombre: 'Universidad Católica del Norte', comuna: { nombre: 'Coquimbo' } },
+          }),
+        ],
+      },
+    ]);
+    await service.pdfGenerate(dtoValido);
+    const tablas = tablasDe(mockPrinter.createPdf.mock.calls[0][0]);
+    const conEncabezado = (titulo: string) =>
+      tablas.filter((body) => body[0].some((celda) => textoCelda(celda) === titulo));
+
+    const [listado, duracion] = conEncabezado('APELLIDO');
+    expect(listado[1].map(textoCelda)).toEqual([
+      'Titulada', 'Ana', '2012', 'Liceo A', 'Ingeniería Civil Industrial',
+      'Universidad de La Serena', 'Titulado',
+    ]);
+    expect(duracion[1].map(textoCelda)).toEqual([
+      'Titulada', 'Ana', 'Ingeniería Civil Industrial', '10', '10', '0',
+    ]);
+    const porInstitucion = conEncabezado('INSTITUCIÓN').find((body) =>
+      body.slice(1, -1).some((fila) => textoCelda(fila[0]) === 'Universidad de La Serena'),
+    );
+    expect(porInstitucion).toBeDefined();
   });
 
   it('debe clasificar en la trayectoria del año a todo becario que cuenta en el total', async () => {

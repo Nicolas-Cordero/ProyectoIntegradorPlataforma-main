@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { EstadoRamo } from '@prisma/client';
-import { AlertasRepository } from './alertas.repository';
 import { Alerta, AlertaTipo } from './entities/alerta.entity';
 
 const DIAS_AVISO_NOTAS = 30;
@@ -14,85 +13,46 @@ const FIN_SEMESTRE: Record<string, { mes: number; dia: number }> = {
   VERANO: { mes: 2, dia: 0 }, // último día de febrero (28 o 29)
 };
 
-interface RamoEstudiante {
-  id: number;
+/**
+ * Estados de un ramo que todavía espera su nota final. Un ELIMINADO no la
+ * necesita, y un ramo ya evaluado sin nota (APROBADO/REPROBADO) es de los que
+ * no se califican con nota: reclamársela sería una alerta permanente que nunca
+ * se puede cerrar. El repositorio filtra con esta lista al consultar.
+ */
+export const ESTADOS_ESPERAN_NOTA: EstadoRamo[] = [
+  EstadoRamo.CURSANDO,
+  EstadoRamo.PENDIENTE,
+];
+
+/**
+ * Ramo que espera nota final (estado en ESTADOS_ESPERAN_NOTA y sin
+ * nota_final), con su semestre.
+ */
+export interface RamoSinNota {
   nombre: string;
-  estado: EstadoRamo;
-  codigo_carrera: number;
-  rut_estudiante: string;
-  nota_final?: unknown;
-  semestre_id: number;
+  semestre: { year: number; semestre: string };
 }
 
 /**
  * Regla de negocio de la alerta de ausencia de notas finales.
  *
- * A diferencia de la de entrevistas, esta siempre consulta los ramos por
- * estudiante, así que encapsula su propio acceso al repositorio.
+ * Es lógica pura, como la de entrevistas: el gestor (AlertasService) trae en
+ * bloque los ramos sin nota y aquí solo se decide cuáles ya vencieron.
  */
 @Injectable()
 export class AlertaNotasService {
-  constructor(private readonly alertasRepository: AlertasRepository) {}
-
   /**
-   * Genera una alerta por cada ramo del estudiante que, pasados
-   * DIAS_AVISO_NOTAS días desde el fin del semestre, aún no tiene nota final.
-   *
-   * @param opciones.incluirRut             agrega rut_estudiante a la alerta (vistas globales).
-   * @param opciones.soloRamosDelEstudiante descarta ramos cuyo rut no coincide con el solicitado.
+   * Genera una alerta por cada ramo que, pasados DIAS_AVISO_NOTAS días desde
+   * el fin de su semestre, aún no tiene nota final.
    */
-  async evaluar(
-    rut_estudiante: string,
-    opciones: { incluirRut: boolean; soloRamosDelEstudiante: boolean },
-  ): Promise<Alerta[]> {
-    const ramos: RamoEstudiante[] | undefined =
-      await this.alertasRepository.getAllRamosbyEstudiante(rut_estudiante);
-    if (!ramos) {
-      return [];
-    }
-
-    const alertas: Alerta[] = [];
-
-    for (const ramo of ramos) {
-      if (
-        opciones.soloRamosDelEstudiante &&
-        ramo.rut_estudiante !== rut_estudiante
-      ) {
-        continue;
-      }
-      // Solo se reclama la nota de un ramo que todavía la espera. Un ELIMINADO
-      // no la necesita, y un ramo ya evaluado sin nota (APROBADO/REPROBADO) es
-      // de los que no se califican con nota: reclamársela sería una alerta
-      // permanente que nunca se puede cerrar.
-      if (
-        ramo.estado !== EstadoRamo.CURSANDO &&
-        ramo.estado !== EstadoRamo.PENDIENTE
-      ) {
-        continue;
-      }
-      if (ramo.nota_final != null) {
-        continue;
-      }
-
-      const semestre = await this.alertasRepository.getSemestreById(
-        ramo.semestre_id,
-      );
-      if (!semestre || !this.semestreVencidoHace30Dias(semestre)) {
-        continue;
-      }
-
-      const alerta: Alerta = {
+  evaluar(ramos: RamoSinNota[]): Alerta[] {
+    return ramos
+      .filter((ramo) => this.semestreVencidoHace30Dias(ramo.semestre))
+      .map((ramo) => ({
         tipo: AlertaTipo.AUSENCIA_NOTAS,
         message: `Alumno sin nota final para ${ramo.nombre}`,
         created_at: new Date(),
-      };
-      if (opciones.incluirRut) {
-        alerta.rut_estudiante = ramo.rut_estudiante;
-      }
-      alertas.push(alerta);
-    }
-
-    return alertas;
+      }));
   }
 
   private semestreVencidoHace30Dias(semestre: {

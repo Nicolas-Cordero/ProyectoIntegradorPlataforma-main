@@ -7,20 +7,19 @@ const DIAS_LIMITE = 60; // 2 meses sin entrevista
 /**
  * Regla de negocio de la alerta de entrevistas.
  *
- * Es lógica pura: recibe las entrevistas de un estudiante y decide si
- * corresponde una alerta. La obtención de las entrevistas queda en el gestor
- * (AlertasService) porque la estrategia de carga varía según el endpoint
- * (todas de una vez vs. por estudiante).
+ * Es lógica pura: recibe la fecha de la última entrevista de un estudiante y
+ * decide si corresponde una alerta. El gestor (AlertasService) trae esas
+ * fechas en bloque.
  */
 @Injectable()
 export class AlertaEntrevistaService {
   /**
-   * Devuelve una alerta si el estudiante nunca ha tenido una entrevista o si
-   * su última entrevista fue hace más de DIAS_LIMITE días. En caso contrario
-   * devuelve null.
+   * Devuelve una alerta si el estudiante nunca ha tenido una entrevista
+   * (`ultimaEntrevista` undefined) o si su última entrevista fue hace más de
+   * DIAS_LIMITE días. En caso contrario devuelve null.
    */
-  evaluar(entrevistas: { fecha_hora: Date }[]): Alerta | null {
-    if (entrevistas.length === 0) {
+  evaluar(ultimaEntrevista: Date | undefined): Alerta | null {
+    if (!ultimaEntrevista) {
       return {
         tipo: AlertaTipo.ENTREVISTA_VENCIDA,
         message: 'Estudiante sin entrevista',
@@ -28,11 +27,8 @@ export class AlertaEntrevistaService {
       };
     }
 
-    const ultima = [...entrevistas].sort(
-      (a, b) => b.fecha_hora.getTime() - a.fecha_hora.getTime(),
-    )[0];
     const dias = Math.floor(
-      (Date.now() - ultima.fecha_hora.getTime()) / MS_POR_DIA,
+      (Date.now() - ultimaEntrevista.getTime()) / MS_POR_DIA,
     );
 
     if (dias > DIAS_LIMITE) {

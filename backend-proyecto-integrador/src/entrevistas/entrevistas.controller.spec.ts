@@ -85,4 +85,41 @@ describe('EntrevistasController — permisos de rol', () => {
     // Act & Assert
     expect(guard.canActivate(ctx)).toBe(true);
   });
+
+  it.each([UserRol.ADMIN, UserRol.TUTOR, UserRol.VISITA])(
+    'Un %s puede ver el resumen de entrevistas',
+    (rol) => {
+      const ctx = mockContext(
+        EntrevistasController.prototype.resumen,
+        EntrevistasController,
+        rol,
+      );
+
+      expect(guard.canActivate(ctx)).toBe(true);
+    },
+  );
+
+  it('Un ESTUDIANTE NO puede ver el resumen de entrevistas', () => {
+    const ctx = mockContext(
+      EntrevistasController.prototype.resumen,
+      EntrevistasController,
+      UserRol.ESTUDIANTE,
+    );
+
+    expect(() => guard.canActivate(ctx)).toThrow(ForbiddenException);
+  });
+
+  it.each([
+    ['las entrevistas de un estudiante', 'findAllByEstudiante'],
+    ['el detalle de una entrevista', 'findOne'],
+    ['el listado de entrevistas', 'findAll'],
+  ] as const)('Una VISITA NO puede ver %s', (_desc, metodo) => {
+    const ctx = mockContext(
+      EntrevistasController.prototype[metodo],
+      EntrevistasController,
+      UserRol.VISITA,
+    );
+
+    expect(() => guard.canActivate(ctx)).toThrow(ForbiddenException);
+  });
 });

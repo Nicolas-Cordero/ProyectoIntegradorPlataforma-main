@@ -74,9 +74,22 @@ function carreraRepresentativa(carreras: CarreraItem[]): CarreraItem | null {
   return ordenadas[ordenadas.length - 1];
 }
 
-// Ver decisiones-informe-general-becarios.md: sin carreras, se aproxima con
-// generacion.año porque el sistema no registra el año escolar (media) actual
-// de cada estudiante — es una estimación, no un dato exacto.
+// Carrera por la que un estudiante cuenta como titulado o egresado: la
+// TITULADA, o la EGRESADA si no tiene ninguna titulada (misma prioridad que
+// clasificarSituacion); entre varias, la más reciente. No se usa la
+// representativa porque puede ser una carrera posterior aún en curso.
+function carreraEgresada(carreras: CarreraItem[]): CarreraItem | null {
+  const tituladas = carreras.filter((c) => c.estado === 'TITULADO');
+  return carreraRepresentativa(
+    tituladas.length > 0
+      ? tituladas
+      : carreras.filter((c) => c.estado === 'EGRESADO'),
+  );
+}
+
+// Sin carreras, se aproxima con generacion.año porque el sistema no registra
+// el año escolar (media) actual de cada estudiante — es una estimación, no un
+// dato exacto.
 function clasificarSituacion(
   est: EstudianteItem,
   añoActual: number,
@@ -96,8 +109,7 @@ function clasificarSituacion(
     : 'No matriculado';
 }
 
-// Ver decisiones-informe-general-becarios.md, regla (a)/(b)/(c): cuenta como
-// cambio de carrera (booleano) solo si una carrera fue abandonada
+// Cuenta como cambio de carrera (booleano) solo si una carrera fue abandonada
 // (SUSPENDIDO/RETIRADO/ELIMINADO) y la siguiente carrera del estudiante
 // comenzó después de ese abandono. Dos carreras simultáneas no cuentan.
 function tuvoCambioDeCarrera(carreras: CarreraItem[]): boolean {
@@ -113,23 +125,14 @@ function tuvoCambioDeCarrera(carreras: CarreraItem[]): boolean {
   return false;
 }
 
-const SEMESTRE_NUM: Record<string, number> = {
-  PRIMER_SEMESTRE: 1,
-  SEGUNDO_SEMESTRE: 2,
-};
-
-// Duración real en semestres: distancia entre anio_ingreso (asumido S1) y el
-// último semestre REGULAR (no recuperativo de invierno/verano) con ramos
-// registrados. Se usa el semestre académico real de los ramos, no la fecha en
-// que se registró el cambio de estado en la plataforma — esa fecha es solo
-// cuándo alguien hizo clic, que puede ser mucho después del hecho real
-// (carga de datos históricos, atrasos administrativos), e inflaba la
-// duración con tiempo que el estudiante nunca cursó.
+// Duración real en semestres: cantidad de semestres REGULARES (no
+// recuperativos de invierno/verano, que la duración nominal tampoco cuenta)
+// con al menos un ramo cargado en el avance curricular de la carrera.
 //
-// Las suspensiones no necesitan tratamiento aparte: si el estudiante
-// congeló 2 semestres a mitad de carrera, ese hueco simplemente queda dentro
-// del rango entre el primer y el último semestre real, contando como el
-// atraso que efectivamente representa.
+// Los semestres sin ramos no cuentan: si el estudiante suspendió estudios un
+// año, esos dos semestres no tienen ramos y quedan fuera del conteo. Tampoco
+// se usa la fecha en que se registró el cambio de estado en la plataforma,
+// que puede ser muy posterior al hecho real (carga de datos históricos).
 //
 // null si la carrera no llegó a EGRESADO/TITULADO, o no tiene ramos en
 // ningún semestre regular.
@@ -139,18 +142,14 @@ function duracionRealSemestres(carrera: CarreraItem): number | null {
   );
   if (!llegoAEgresarOTitular) return null;
 
-  let ultimo: { año: number; semestre: number } | null = null;
-  for (const { semestre: s } of carrera.ramos) {
-    if (s.tipo !== 'REGULAR') continue;
-    const numero = SEMESTRE_NUM[s.semestre];
-    if (!numero) continue;
-    if (!ultimo || s.year * 2 + numero > ultimo.año * 2 + ultimo.semestre) {
-      ultimo = { año: s.year, semestre: numero };
-    }
-  }
-  if (!ultimo) return null;
-
-  return (ultimo.año - carrera.anio_ingreso) * 2 + ultimo.semestre;
+  // (year, semestre) identifica al semestre (@@unique en el esquema); varios
+  // ramos del mismo semestre cuentan una sola vez.
+  const semestresConRamos = new Set(
+    carrera.ramos
+      .filter(({ semestre: s }) => s.tipo === 'REGULAR')
+      .map(({ semestre: s }) => `${s.year}-${s.semestre}`),
+  );
+  return semestresConRamos.size > 0 ? semestresConRamos.size : null;
 }
 
 function agruparConteo<T>(
@@ -511,9 +510,11 @@ export class PdfEstadisticasGenerator
 
     // ── 3. Egresados y titulados ─────────────────────────────────────────────
 
-    const egresadosTitulados = estudiantes.filter((e) => {
-      const s = situaciones.get(e.rut_estudiante)!;
-      return s === 'Titulado' || s === 'Egresado (titulación pendiente)';
+    // Cada becario con al menos una carrera titulada o egresada, junto con
+    // esa carrera (ver carreraEgresada).
+    const egresadosTitulados = estudiantes.flatMap((e) => {
+      const c = carreraEgresada(e.carreras);
+      return c ? [{ e, c }] : [];
     });
 
     content.push(
@@ -530,18 +531,15 @@ export class PdfEstadisticasGenerator
         ],
         InformeBuilder.tableBuilder(
           ['Apellido', 'Nombre', 'Gen.', 'Liceo', 'Carrera', 'Institución', 'Estado'],
-          egresadosTitulados.map((e) => {
-            const c = carreraRepresentativa(e.carreras)!;
-            return [
-              e.apellido,
-              e.nombre,
-              String(e.generacion_rel.año),
-              e.liceo.nombre,
-              c.nombre,
-              c.universidad.nombre,
-              situaciones.get(e.rut_estudiante)! === 'Titulado' ? 'Titulado' : 'Egresado',
-            ];
-          }),
+          egresadosTitulados.map(({ e, c }) => [
+            e.apellido,
+            e.nombre,
+            String(e.generacion_rel.año),
+            e.liceo.nombre,
+            c.nombre,
+            c.universidad.nombre,
+            c.estado === 'TITULADO' ? 'Titulado' : 'Egresado',
+          ]),
           [70, 70, 35, '*', '*', 65, 60],
           ['left', 'left', 'center', 'left', 'left', 'left', 'center'] as Alignment[],
           ['Total', `${egresadosTitulados.length} becarios`, '', '', '', '', ''],
@@ -551,8 +549,7 @@ export class PdfEstadisticasGenerator
     n++;
 
     const conDuracion = egresadosTitulados
-      .map((e) => {
-        const c = carreraRepresentativa(e.carreras)!;
+      .map(({ e, c }) => {
         const real = duracionRealSemestres(c);
         return real !== null ? { e, c, real } : null;
       })
@@ -611,10 +608,7 @@ export class PdfEstadisticasGenerator
         `institución en la que estudiaron.`,
       'Egresados y titulados según institución',
       tablaDesglose(
-        agruparConteo(
-          egresadosTitulados,
-          (e) => carreraRepresentativa(e.carreras)!.universidad.nombre,
-        ),
+        agruparConteo(egresadosTitulados, ({ c }) => c.universidad.nombre),
         egresadosTitulados.length,
         'Institución',
       ),

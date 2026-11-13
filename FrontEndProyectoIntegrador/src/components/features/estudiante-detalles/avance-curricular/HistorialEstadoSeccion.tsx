@@ -3,7 +3,7 @@ import { Select } from '../../../ui';
 import { historialEstadoCarreraService } from '../../../../services';
 import type { EstadoEstudiante } from '../../../../types';
 import type { CarreraUI } from './types';
-import { ESTADO_CARRERA_CHIP, ESTADO_CARRERA_OPTS } from './constants';
+import { ESTADO_CARRERA_CHIP, ESTADO_CARRERA_OPTS } from '../../../common/constants';
 import { formatDate } from '../../../../utils/dateUtils';
 
 interface HistorialEstadoSeccionProps {

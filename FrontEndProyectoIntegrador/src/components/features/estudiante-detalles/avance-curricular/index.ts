@@ -11,7 +11,6 @@ export { ModalRamo } from './ModalRamo';
 export type { FormRamo } from './ModalRamo';
 export {
   UI_TO_BACKEND, BACKEND_TO_UI, ORDEN_SEMESTRE,
-  ESTADO_CARRERA_CHIP, ESTADO_CARRERA_OPTS,
   ESTADO_CHIP, ESTADO_RAMO_OPTS, VIA_ACCESO_OPTS,
   semLabel, normalizarNota,
 } from './constants';

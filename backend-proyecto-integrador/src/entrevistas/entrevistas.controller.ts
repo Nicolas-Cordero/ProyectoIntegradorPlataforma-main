@@ -8,6 +8,7 @@ import {
   Param,
   UseGuards,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { EntrevistasService } from './entrevistas.service';
 import { CreateEntrevistaDto } from './dto/create-entrevista.dto';
@@ -46,6 +47,16 @@ export class EntrevistasController {
   @Get()
   findAll() {
     return this.entrevistasService.findAll();
+  }
+
+  // Última entrevista y entrevistas del año por estudiante, para la tabla de
+  // estudiantes. Debe declararse antes de ':id_entrevista'.
+  @Get('resumen')
+  resumen(
+    @Query('generacion_id', new ParseIntPipe({ optional: true }))
+    generacion_id?: number,
+  ) {
+    return this.entrevistasService.resumenPorEstudiante(generacion_id);
   }
 
   //Busca todas las entrevistas

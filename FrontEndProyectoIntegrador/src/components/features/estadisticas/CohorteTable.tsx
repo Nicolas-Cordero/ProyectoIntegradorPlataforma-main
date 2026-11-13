@@ -1,5 +1,6 @@
 import type { EstadoEstudiante } from '../../../types';
-import { fmtNum, fmtPct, ESTADO_COLORS, ESTADO_LABELS } from './shared';
+import { fmtNum, fmtPct } from './shared';
+import { ESTADO_CARRERA_CHIP } from '../../common/constants';
 import type { CohorteRow } from './shared';
 
 interface CohorteTableProps {
@@ -20,9 +21,9 @@ export function CohorteTable({ presentStates, rows }: CohorteTableProps) {
               <th
                 key={est}
                 className="text-right py-2 px-2 font-semibold whitespace-nowrap"
-                style={{ color: ESTADO_COLORS[est] }}
+                style={{ color: ESTADO_CARRERA_CHIP[est].hex }}
               >
-                {ESTADO_LABELS[est]}
+                {ESTADO_CARRERA_CHIP[est].label}
               </th>
             ))}
           </tr>

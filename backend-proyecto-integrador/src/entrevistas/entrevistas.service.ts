@@ -8,6 +8,13 @@ import { PrismaService } from '../prisma/prisma.service';
 import { entrevista, TipoSemestre } from '@prisma/client';
 import { UpdateEntrevistaDto, CreateEntrevistaDto } from './dto';
 import { Semestre } from '../semestre/semestre.enum';
+import { inicioAnioChile } from '../common/fecha-chile.util';
+
+export interface ResumenEntrevistasEstudiante {
+  rut_estudiante: string;
+  ultima_entrevista: Date | null;
+  entrevistas_anio: number;
+}
 
 @Injectable()
 export class EntrevistasService {
@@ -59,6 +66,26 @@ export class EntrevistasService {
     rut_estudiante: string,
   ): Promise<EntrevistaConRelaciones[]> {
     return this.entrevistaRepo.findByEstudiante(rut_estudiante);
+  }
+
+  // Resumen para la tabla de estudiantes: reemplaza pedir las entrevistas de
+  // cada estudiante por separado. Solo incluye estudiantes con entrevistas.
+  async resumenPorEstudiante(
+    generacion_id?: number,
+  ): Promise<ResumenEntrevistasEstudiante[]> {
+    const { ultimas, recientes } =
+      await this.entrevistaRepo.resumenPorEstudiante(
+        inicioAnioChile(),
+        generacion_id,
+      );
+    const conteoAnio = new Map(
+      recientes.map((r) => [r.rut_estudiante, r._count._all]),
+    );
+    return ultimas.map((u) => ({
+      rut_estudiante: u.rut_estudiante,
+      ultima_entrevista: u._max.fecha_hora,
+      entrevistas_anio: conteoAnio.get(u.rut_estudiante) ?? 0,
+    }));
   }
 
   async findOne(id_entrevista: number): Promise<EntrevistaConDetalle> {

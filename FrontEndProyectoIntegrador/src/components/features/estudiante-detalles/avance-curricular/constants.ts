@@ -1,4 +1,3 @@
-import type { EstadoEstudiante } from '../../../../types';
 import type { EstadoRamoAvance } from '../../../../services/ramo-avance.service';
 import type { BackendSemestre, TipoSemestre } from '../../../../services/semestre-avance.service';
 import type { CodigoSemUI } from './types';
@@ -24,24 +23,6 @@ export const ORDEN_SEMESTRE: Record<CodigoSemUI, number> = {
   '2':        2,
   'VERANO':   3,
 };
-
-export const ESTADO_CARRERA_CHIP: Record<EstadoEstudiante, { bg: string; text: string; label: string }> = {
-  ACTIVO:    { bg: 'bg-green-100',  text: 'text-green-700',  label: 'Activo'    },
-  SUSPENDIDO:{ bg: 'bg-amber-100',  text: 'text-amber-700',  label: 'Suspendido'},
-  RETIRADO:  { bg: 'bg-red-100',    text: 'text-red-700',    label: 'Retirado'  },
-  EGRESADO:  { bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Egresado'  },
-  TITULADO:  { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Titulado'  },
-  ELIMINADO: { bg: 'bg-gray-100',   text: 'text-gray-500',   label: 'Eliminado' },
-};
-
-export const ESTADO_CARRERA_OPTS = [
-  { valor: 'ACTIVO',     etiqueta: 'Activo'     },
-  { valor: 'SUSPENDIDO', etiqueta: 'Suspendido' },
-  { valor: 'RETIRADO',   etiqueta: 'Retirado'   },
-  { valor: 'EGRESADO',   etiqueta: 'Egresado'   },
-  { valor: 'TITULADO',   etiqueta: 'Titulado'   },
-  { valor: 'ELIMINADO',  etiqueta: 'Eliminado'  },
-];
 
 export const ESTADO_CHIP: Record<EstadoRamoAvance, { bg: string; text: string; label: string }> = {
   APROBADO:  { bg: 'bg-green-100', text: 'text-green-700', label: 'Aprobado'  },

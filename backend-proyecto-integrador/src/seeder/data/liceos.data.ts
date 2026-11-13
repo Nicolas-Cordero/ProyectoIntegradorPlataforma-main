@@ -69,7 +69,7 @@ export const liceosData = [
     rbd: '597',
     nombre: 'Colegio Pedro Pablo Muñoz',
     comuna: 'La Higuera',
-    especialidad: 'Educación Básica',
+    especialidad: 'Científico-Humanista',
   },
   {
     rbd: '530',

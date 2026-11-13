@@ -632,6 +632,7 @@ export default function EstudianteAvanceCurricular() {
       <ModalRamo
         abierto={modalRamo !== null}
         esEdicion={!!modalRamo?.editRamo}
+        nombreRamo={modalRamo?.editRamo?.nombre}
         onCerrar={() => setModalRamo(null)}
         form={formRamo}
         setForm={setFormRamo}

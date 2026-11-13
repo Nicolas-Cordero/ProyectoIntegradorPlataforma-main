@@ -6,6 +6,7 @@ import { Spinner } from '../../components/ui';
 import { Navbar } from '../../components/common/Navbar';
 import { useAuthContext } from '../../context/AuthContext';
 import { BackgroundParticles } from '../../components/common/Particles';
+import { ESTADO_CARRERA_CHIP } from '../../components/common/constants';
 import { ErrorMessage } from '../../components/ui';
 import { logger } from '../../config';
 import type { Estudiante, Liceo, Generacion } from '../../types';
@@ -19,15 +20,6 @@ export interface EstudianteOutletContext {
   canEdit: boolean;
   refresh: () => void;
 }
-
-const ESTADO_CHIP: Record<string, string> = {
-  ACTIVO:    'bg-green-100 text-green-700',
-  EGRESADO:  'bg-blue-100 text-blue-700',
-  TITULADO:  'bg-blue-100 text-blue-700',
-  RETIRADO:  'bg-red-100 text-red-700',
-  ELIMINADO: 'bg-red-100 text-red-700',
-  SUSPENDIDO: 'bg-yellow-100 text-yellow-700',
-};
 
 export default function EstudianteDetail() {
   const { id } = useParams<{ id: string }>();
@@ -99,7 +91,7 @@ export default function EstudianteDetail() {
   const generacion = estudiante.generacion_rel ?? null;
   const liceo = estudiante.liceo ?? null;
 
-  const chipClass = ESTADO_CHIP[estudiante.estado] ?? 'bg-gray-100 text-gray-700';
+  const chip = ESTADO_CARRERA_CHIP[estudiante.estado];
   const contactoEmergencia = estudiante.familiares?.find(f => f.es_contacto_emergencia) ?? null;
 
   return (
@@ -119,9 +111,11 @@ export default function EstudianteDetail() {
             <h1 className="text-lg font-bold text-gray-800">
               {estudiante.nombre} {estudiante.apellido}
             </h1>
-            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${chipClass}`}>
-              {estudiante.estado}
-            </span>
+            {chip && (
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${chip.bg} ${chip.text}`}>
+                {chip.label}
+              </span>
+            )}
             {contactoEmergencia ? (
               <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#65B39B]/15 text-[#3a7a6b] border border-[#65B39B]/40" title="Contacto de emergencia">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

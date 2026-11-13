@@ -11,16 +11,8 @@ export interface CohorteRow {
 export const fmtNum = (n: number) => n.toLocaleString('es-CL');
 export const fmtPct = (n: number) => `${n.toFixed(1).replace('.', ',')}%`;
 
-export const ESTADO_LABELS: Record<EstadoEstudiante, string> = {
-  ACTIVO: 'Estudiando', TITULADO: 'Titulado/a', EGRESADO: 'Egresado/a',
-  SUSPENDIDO: 'Suspendido/a', RETIRADO: 'Retirado/a', ELIMINADO: 'Eliminado/a',
-};
-
-export const ESTADO_COLORS: Record<EstadoEstudiante, string> = {
-  ACTIVO: '#65B39B', TITULADO: '#4CAF50', EGRESADO: '#7B8FD4',
-  SUSPENDIDO: '#C7654F', RETIRADO: '#9E9E9E', ELIMINADO: '#BF360C',
-};
-
+// Etiquetas y colores de estado: paleta única en components/common/constants.ts
+// (ESTADO_CARRERA_CHIP). Aquí solo el orden de presentación.
 export const ESTADO_ORDER: EstadoEstudiante[] = [
   'ACTIVO', 'TITULADO', 'EGRESADO', 'SUSPENDIDO', 'RETIRADO', 'ELIMINADO',
 ];

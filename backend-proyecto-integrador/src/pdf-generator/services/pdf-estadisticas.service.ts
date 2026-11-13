@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Content, Alignment } from 'pdfmake';
+import type { ContentTable } from 'pdfmake/interfaces';
 import { IPdfGenerator } from '../interfaces';
 import { CreatePdfEstadisticasDto } from '../dto';
 import { InformeBuilder } from '../builders/pdf-layout.builder';
@@ -164,17 +165,93 @@ function agruparConteo<T>(
   return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
 }
 
+function promedio(valores: number[]): string {
+  const prom = valores.reduce((acc, v) => acc + v, 0) / valores.length;
+  return prom.toFixed(1).replace('.', ',');
+}
+
+// La fila de total suma las filas (no repite `total`), así que si algún
+// grupo quedara fuera se vería en el porcentaje.
 function tablaDesglose(
   grupos: Array<[string, number]>,
   total: number,
   etiquetaColumna: string,
-): Content {
+): ContentTable {
+  const suma = grupos.reduce((acc, [, n]) => acc + n, 0);
   return InformeBuilder.tableBuilder(
     [etiquetaColumna, 'N°', '%'],
     grupos.map(([label, n]) => [label, String(n), pct(n, total)]),
     ['*', 60, 70],
     ['left', 'right', 'right'] as Alignment[],
+    ['Total', String(suma), pct(suma, total)],
   );
+}
+
+// Un bloque es lo que presenta una tabla (título de sección, párrafo, rótulo)
+// más la tabla, y no debe quedar cortado entre páginas. No se usa
+// `unbreakable`: pdfmake no soporta bloques de más de una página y trunca el
+// resto sin avisar. En su lugar se marcan el primer texto del bloque y un
+// texto mínimo justo después de la tabla (pdfmake solo registra la posición
+// de los textos, no de tablas ni stacks; y las celdas no sirven de marca
+// porque con `dontBreakRows` sus posiciones se calculan fuera de la página),
+// y `saltoAntesDeBloque` decide el salto.
+function bloque(id: number, presentacion: Content[], tabla: ContentTable): Content[] {
+  (presentacion[0] as { id?: string }).id = `bloque-${id}`;
+  tabla.table.dontBreakRows = true;
+  const finDeBloque: Content = {
+    text: ' ',
+    fontSize: 1,
+    id: `fin-bloque-${id}`,
+  };
+  return [...presentacion, tabla, finDeBloque];
+}
+
+interface NodoPdf {
+  id?: string;
+  startPosition: { verticalRatio: number };
+}
+
+// Margen (fracción de la altura útil) para errores de redondeo al comparar
+// posiciones.
+const HOLGURA = 0.01;
+
+// Un bloque que igual se va a cortar se mueve a una página nueva si empieza
+// por debajo de esta fracción de la página, para que el título y el párrafo
+// no queden solos al pie.
+const INICIO_TARDIO = 0.7;
+
+// Callback `pageBreakBefore` de pdfmake 0.3:
+// - si el bloque termina en la misma página, no hay corte;
+// - si termina en la página siguiente más arriba de donde empezó, cabe
+//   completo en una página nueva y se mueve;
+// - si no, no cabe en una página y se deja cortar (el encabezado de la tabla
+//   se repite), salvo que empiece al pie de la página.
+function saltoAntesDeBloque(
+  nodo: NodoPdf,
+  consultas: {
+    getFollowingNodesOnPage: () => NodoPdf[];
+    getNodesOnNextPage: () => NodoPdf[];
+  },
+): boolean {
+  if (!nodo.id?.startsWith('bloque-')) return false;
+  const idFin = `fin-${nodo.id}`;
+  if (consultas.getFollowingNodesOnPage().some((n) => n.id === idFin)) {
+    return false;
+  }
+  const inicio = nodo.startPosition.verticalRatio;
+  const fin = consultas.getNodesOnNextPage().find((n) => n.id === idFin);
+  if (fin && fin.startPosition.verticalRatio + HOLGURA < inicio) {
+    return true;
+  }
+  return inicio > INICIO_TARDIO;
+}
+
+function tituloSeccion(texto: string): Content {
+  return {
+    text: texto,
+    style: 'header',
+    margin: [0, 16, 0, 6] as [number, number, number, number],
+  };
 }
 
 @Injectable()
@@ -244,22 +321,31 @@ export class PdfEstadisticasGenerator
       ),
     ];
 
-    // ── II.I Estadísticas generales ─────────────────────────────────────────
+    // Agrega "párrafo + rótulo + tabla" como un bloque que no se corta.
+    // `previo` antepone lo que no debe quedar huérfano antes del párrafo
+    // (título y párrafo de introducción de una sección).
+    const pushTabla = (
+      parrafo: string,
+      titulo: string,
+      tabla: ContentTable,
+      previo: Content[] = [],
+    ) => {
+      content.push(
+        ...bloque(
+          n,
+          [
+            ...previo,
+            InformeBuilder.paragrafBuilder(parrafo, previo.length > 0 ? 0 : 14),
+            InformeBuilder.tableCaption(n, titulo),
+          ],
+          tabla,
+        ),
+      );
+      n++;
+    };
 
-    content.push({
-      text: 'Estadísticas generales de becarias y becarios',
-      style: 'header',
-      margin: [0, 10, 0, 6] as [number, number, number, number],
-    });
+    // ── 1. Estadísticas generales ───────────────────────────────────────────
 
-    content.push(
-      InformeBuilder.paragrafBuilder(
-        `Desde su creación, la Fundación ha becado a un total de ${totalHistorico} ` +
-          `estudiantes. La Tabla ${n} a continuación muestra cuántos becarios ` +
-          `ingresaron cada año (su "generación"), junto con el acumulado y el ` +
-          `porcentaje que representa cada generación sobre el total histórico.`,
-      ),
-    );
     const porGeneracion = agruparConteo(estudiantes, (e) =>
       String(e.generacion_rel.año),
     ).sort(([a], [b]) => Number(a) - Number(b));
@@ -273,111 +359,94 @@ export class PdfEstadisticasGenerator
         pct(acumulado, totalHistorico),
       ];
     });
-    content.push(
-      InformeBuilder.tableCaption(n, 'Becarios según año de ingreso (generación)'),
+    pushTabla(
+      `Desde su creación, la Fundación ha becado a un total de ${totalHistorico} ` +
+        `estudiantes. La Tabla ${n} a continuación muestra cuántos becarios ` +
+        `ingresaron cada año (su "generación"), junto con el acumulado y el ` +
+        `porcentaje que representa cada generación sobre el total histórico.`,
+      'Becarios según año de ingreso (generación)',
       InformeBuilder.tableBuilder(
         ['Generación', 'N°', 'N° acumulado', '% acumulado'],
         filasGeneracion,
         ['*', 55, 90, 85],
         ['left', 'right', 'right', 'right'] as Alignment[],
       ),
+      [
+        {
+          text: '1. Estadísticas generales de becarias y becarios',
+          style: 'header',
+          margin: [0, 10, 0, 6] as [number, number, number, number],
+        },
+      ],
     );
-    n++;
 
-    content.push(
-      InformeBuilder.paragrafBuilder(
-        `La Tabla ${n} muestra la composición de género de la comunidad de ` +
-          `becarios, según las categorías que el sistema permite registrar hoy.`,
-        14,
-      ),
-    );
-    content.push(
-      InformeBuilder.tableCaption(n, 'Becarios según género'),
+    pushTabla(
+      `La Tabla ${n} muestra la composición de género de la comunidad de ` +
+        `becarios, según las categorías que el sistema permite registrar hoy.`,
+      'Becarios según género',
       tablaDesglose(
         agruparConteo(estudiantes, (e) => GENERO_LABELS[e.genero]),
         totalHistorico,
         'Género',
       ),
     );
-    n++;
 
-    content.push(
-      InformeBuilder.paragrafBuilder(
-        `La Tabla ${n} indica de qué liceos de origen provienen los becarios, ` +
-          `lo que permite ver qué establecimientos aportan más estudiantes al ` +
-          `programa.`,
-        14,
-      ),
-    );
-    content.push(
-      InformeBuilder.tableCaption(n, 'Becarios según liceo de origen'),
+    pushTabla(
+      `La Tabla ${n} indica de qué liceos de origen provienen los becarios, ` +
+        `lo que permite ver qué establecimientos aportan más estudiantes al ` +
+        `programa.`,
+      'Becarios según liceo de origen',
       tablaDesglose(
         agruparConteo(estudiantes, (e) => e.liceo.nombre),
         totalHistorico,
         'Liceo',
       ),
     );
-    n++;
 
-    content.push(
-      InformeBuilder.paragrafBuilder(
-        `La Tabla ${n} agrupa a los becarios según la comuna del liceo del que ` +
-          `provienen, para ver desde qué zonas llega el programa.`,
-        14,
-      ),
-    );
-    content.push(
-      InformeBuilder.tableCaption(n, 'Becarios según comuna del liceo de origen'),
+    pushTabla(
+      `La Tabla ${n} agrupa a los becarios según la comuna del liceo del que ` +
+        `provienen, para ver desde qué zonas llega el programa.`,
+      'Becarios según comuna del liceo de origen',
       tablaDesglose(
         agruparConteo(estudiantes, (e) => e.liceo.comuna),
         totalHistorico,
         'Comuna',
       ),
     );
-    n++;
 
-    content.push(
-      InformeBuilder.paragrafBuilder(
-        `La Tabla ${n} muestra la modalidad de enseñanza media de la que ` +
-          `provienen los becarios, tal como está registrada en el sistema para ` +
-          `cada liceo.`,
-        14,
-      ),
-    );
-    content.push(
-      InformeBuilder.tableCaption(n, 'Becarios según modalidad del liceo de origen'),
+    pushTabla(
+      `La Tabla ${n} muestra la modalidad de enseñanza media de la que ` +
+        `provienen los becarios, tal como está registrada en el sistema para ` +
+        `cada liceo.`,
+      'Becarios según modalidad del liceo de origen',
       tablaDesglose(
         agruparConteo(estudiantes, (e) => e.liceo.especialidad),
         totalHistorico,
         'Modalidad',
       ),
     );
-    n++;
 
-    content.push(
-      InformeBuilder.paragrafBuilder(
-        `La Tabla ${n} resume en qué etapa se encuentra cada becario hoy: si ya ` +
-          `se tituló o egresó, si está cursando su carrera, si su beca está ` +
-          `suspendida, si se retiró del programa, o si aún no ingresa a la ` +
-          `educación superior. Cuando un becario no tiene ninguna carrera ` +
-          `registrada, se estima si todavía cursa enseñanza media o si no se ` +
-          `matriculó, usando el año en que se unió a la Fundación como ` +
-          `referencia (el sistema no registra el curso escolar de cada ` +
-          `estudiante, por lo que esta distinción puntual es una aproximación).`,
-        14,
-      ),
-    );
-    content.push(
-      InformeBuilder.tableCaption(n, 'Becarios según situación académica actual'),
+    pushTabla(
+      `La Tabla ${n} resume en qué etapa se encuentra cada becario hoy: si ya ` +
+        `se tituló o egresó, si está cursando su carrera, si su beca está ` +
+        `suspendida, si se retiró del programa, o si aún no ingresa a la ` +
+        `educación superior. Cuando un becario no tiene ninguna carrera ` +
+        `registrada, se estima si todavía cursa enseñanza media o si no se ` +
+        `matriculó, usando el año en que se unió a la Fundación como ` +
+        `referencia (el sistema no registra el curso escolar de cada ` +
+        `estudiante, por lo que esta distinción puntual es una aproximación).`,
+      'Becarios según situación académica actual',
       tablaDesglose(
         agruparConteo(estudiantes, (e) => situaciones.get(e.rut_estudiante)!),
         totalHistorico,
         'Situación académica',
       ),
     );
-    n++;
 
-    // ── II.II Caracterización en estudios superiores ────────────────────────
+    // ── 2. Caracterización en estudios superiores ───────────────────────────
+    // Sin tabla por carrera: el nombre de la carrera es texto libre por
+    // estudiante (no hay catálogo), así que agrupar por él junta carreras
+    // distintas y separa las mismas escritas de otra forma.
 
     const enEducacionSuperior = estudiantes.filter((e) => {
       const s = situaciones.get(e.rut_estudiante)!;
@@ -385,49 +454,10 @@ export class PdfEstadisticasGenerator
     });
     const totalSuperior = enEducacionSuperior.length;
 
-    content.push({
-      text: 'Becarias y becarios en estudios superiores',
-      style: 'header',
-      margin: [0, 16, 0, 6] as [number, number, number, number],
-    });
-    content.push(
-      InformeBuilder.paragrafBuilder(
-        `Esta sección describe a los ${totalSuperior} becarios que en algún ` +
-          `momento ingresaron a la educación superior y no se han retirado del ` +
-          `programa (excluye a quienes aún cursan enseñanza media, a quienes no ` +
-          `se han matriculado, y a los becarios retirados).`,
-      ),
-    );
-
-    content.push(
-      InformeBuilder.paragrafBuilder(
-        `La Tabla ${n} muestra en qué carreras están o estuvieron matriculados ` +
-          `estos becarios.`,
-        14,
-      ),
-    );
-    content.push(
-      InformeBuilder.tableCaption(n, 'Becarios según carrera'),
-      tablaDesglose(
-        agruparConteo(
-          enEducacionSuperior,
-          (e) => carreraRepresentativa(e.carreras)!.nombre,
-        ),
-        totalSuperior,
-        'Carrera',
-      ),
-    );
-    n++;
-
-    content.push(
-      InformeBuilder.paragrafBuilder(
-        `La Tabla ${n} muestra en qué institución de educación superior estudian ` +
-          `estos becarios.`,
-        14,
-      ),
-    );
-    content.push(
-      InformeBuilder.tableCaption(n, 'Becarios según institución de educación superior'),
+    pushTabla(
+      `La Tabla ${n} muestra en qué institución de educación superior estudian ` +
+        `estos becarios.`,
+      'Becarios según institución de educación superior',
       tablaDesglose(
         agruparConteo(
           enEducacionSuperior,
@@ -436,18 +466,21 @@ export class PdfEstadisticasGenerator
         totalSuperior,
         'Institución',
       ),
+      [
+        tituloSeccion('2. Becarias y becarios en estudios superiores'),
+        InformeBuilder.paragrafBuilder(
+          `Esta sección describe a los ${totalSuperior} becarios que en algún ` +
+            `momento ingresaron a la educación superior y no se han retirado del ` +
+            `programa (excluye a quienes aún cursan enseñanza media, a quienes no ` +
+            `se han matriculado, y a los becarios retirados).`,
+        ),
+      ],
     );
-    n++;
 
-    content.push(
-      InformeBuilder.paragrafBuilder(
-        `La Tabla ${n} muestra en qué ciudad (comuna de la institución) estudian ` +
-          `estos becarios.`,
-        14,
-      ),
-    );
-    content.push(
-      InformeBuilder.tableCaption(n, 'Becarios según ciudad de estudio'),
+    pushTabla(
+      `La Tabla ${n} muestra en qué ciudad (comuna de la institución) estudian ` +
+        `estos becarios.`,
+      'Becarios según ciudad de estudio',
       tablaDesglose(
         agruparConteo(
           enEducacionSuperior,
@@ -457,21 +490,15 @@ export class PdfEstadisticasGenerator
         'Ciudad',
       ),
     );
-    n++;
 
     const conCambio = enEducacionSuperior.filter((e) =>
       tuvoCambioDeCarrera(e.carreras),
     ).length;
-    content.push(
-      InformeBuilder.paragrafBuilder(
-        `La Tabla ${n} indica cuántos becarios abandonaron una carrera ` +
-          `(suspendida, retirada o eliminada) y luego comenzaron otra distinta, ` +
-          `es decir, cambiaron de carrera durante su trayectoria.`,
-        14,
-      ),
-    );
-    content.push(
-      InformeBuilder.tableCaption(n, 'Becarios según cambio de carrera'),
+    pushTabla(
+      `La Tabla ${n} indica cuántos becarios abandonaron una carrera ` +
+        `(suspendida, retirada o eliminada) y luego comenzaron otra distinta, ` +
+        `es decir, cambiaron de carrera durante su trayectoria.`,
+      'Becarios según cambio de carrera',
       tablaDesglose(
         [
           ['Con cambio de carrera', conCambio],
@@ -481,45 +508,44 @@ export class PdfEstadisticasGenerator
         'Permanencia en carrera',
       ),
     );
-    n++;
 
-    // ── II.III Egresados y titulados ─────────────────────────────────────────
+    // ── 3. Egresados y titulados ─────────────────────────────────────────────
 
     const egresadosTitulados = estudiantes.filter((e) => {
       const s = situaciones.get(e.rut_estudiante)!;
       return s === 'Titulado' || s === 'Egresado (titulación pendiente)';
     });
 
-    content.push({
-      text: 'Becarias y becarios egresados y titulados',
-      style: 'header',
-      margin: [0, 16, 0, 6] as [number, number, number, number],
-    });
     content.push(
-      InformeBuilder.paragrafBuilder(
-        `A la fecha, ${egresadosTitulados.length} becarios han egresado o se ` +
-          `han titulado de su carrera. La Tabla ${n} los lista de forma ` +
-          `individual, con su liceo de origen, carrera e institución.`,
-      ),
-    );
-    content.push(
-      InformeBuilder.tableCaption(n, 'Becarios egresados y titulados'),
-      InformeBuilder.tableBuilder(
-        ['Apellido', 'Nombre', 'Gen.', 'Liceo', 'Carrera', 'Institución', 'Estado'],
-        egresadosTitulados.map((e) => {
-          const c = carreraRepresentativa(e.carreras)!;
-          return [
-            e.apellido,
-            e.nombre,
-            String(e.generacion_rel.año),
-            e.liceo.nombre,
-            c.nombre,
-            c.universidad.nombre,
-            situaciones.get(e.rut_estudiante)! === 'Titulado' ? 'Titulado' : 'Egresado',
-          ];
-        }),
-        [70, 70, 35, '*', '*', 65, 60],
-        ['left', 'left', 'center', 'left', 'left', 'left', 'center'] as Alignment[],
+      ...bloque(
+        n,
+        [
+          tituloSeccion('3. Becarias y becarios egresados y titulados'),
+          InformeBuilder.paragrafBuilder(
+            `A la fecha, ${egresadosTitulados.length} becarios han egresado o se ` +
+              `han titulado de su carrera. La Tabla ${n} los lista de forma ` +
+              `individual, con su liceo de origen, carrera e institución.`,
+          ),
+          InformeBuilder.tableCaption(n, 'Becarios egresados y titulados'),
+        ],
+        InformeBuilder.tableBuilder(
+          ['Apellido', 'Nombre', 'Gen.', 'Liceo', 'Carrera', 'Institución', 'Estado'],
+          egresadosTitulados.map((e) => {
+            const c = carreraRepresentativa(e.carreras)!;
+            return [
+              e.apellido,
+              e.nombre,
+              String(e.generacion_rel.año),
+              e.liceo.nombre,
+              c.nombre,
+              c.universidad.nombre,
+              situaciones.get(e.rut_estudiante)! === 'Titulado' ? 'Titulado' : 'Egresado',
+            ];
+          }),
+          [70, 70, 35, '*', '*', 65, 60],
+          ['left', 'left', 'center', 'left', 'left', 'left', 'center'] as Alignment[],
+          ['Total', `${egresadosTitulados.length} becarios`, '', '', '', '', ''],
+        ),
       ),
     );
     n++;
@@ -533,20 +559,15 @@ export class PdfEstadisticasGenerator
       .filter((x): x is { e: EstudianteItem; c: CarreraItem; real: number } => x !== null);
 
     if (conDuracion.length > 0) {
-      content.push(
-        InformeBuilder.paragrafBuilder(
-          `La Tabla ${n} compara, para cada becario egresado o titulado, la ` +
-            `duración oficial de su carrera con la cantidad real de semestres ` +
-            `que le tomó completarla, para dimensionar cuánto se atrasan en ` +
-            `promedio los becarios respecto al plan de estudios.`,
-          14,
-        ),
-      );
       const sobreduracionProm =
         conDuracion.reduce((acc, { c, real }) => acc + (real - c.duracion_sem), 0) /
         conDuracion.length;
-      content.push(
-        InformeBuilder.tableCaption(n, 'Duración nominal, real y sobreduración'),
+      pushTabla(
+        `La Tabla ${n} compara, para cada becario egresado o titulado, la ` +
+          `duración oficial de su carrera con la cantidad real de semestres ` +
+          `que le tomó completarla, para dimensionar cuánto se atrasan en ` +
+          `promedio los becarios respecto al plan de estudios.`,
+        'Duración nominal, real y sobreduración',
         InformeBuilder.tableBuilder(
           ['Apellido', 'Nombre', 'Carrera', 'Nominal (sem.)', 'Real (sem.)', 'Sobreduración'],
           conDuracion.map(({ e, c, real }) => [
@@ -559,7 +580,17 @@ export class PdfEstadisticasGenerator
           ]),
           [70, 70, '*', 75, 65, 85],
           ['left', 'left', 'left', 'right', 'right', 'right'] as Alignment[],
+          [
+            'Total / promedio',
+            `${conDuracion.length} becarios`,
+            '',
+            promedio(conDuracion.map(({ c }) => c.duracion_sem)),
+            promedio(conDuracion.map(({ real }) => real)),
+            promedio(conDuracion.map(({ c, real }) => real - c.duracion_sem)),
+          ],
         ),
+      );
+      content.push(
         InformeBuilder.paragrafBuilder(
           sobreduracionProm > 0
             ? `En promedio, los becarios egresados o titulados se demoran ` +
@@ -573,18 +604,12 @@ export class PdfEstadisticasGenerator
                 `carrera exactamente en la duración oficial.`,
         ),
       );
-      n++;
     }
 
-    content.push(
-      InformeBuilder.paragrafBuilder(
-        `La Tabla ${n} agrupa a los becarios egresados y titulados según la ` +
-          `institución en la que estudiaron.`,
-        14,
-      ),
-    );
-    content.push(
-      InformeBuilder.tableCaption(n, 'Egresados y titulados según institución'),
+    pushTabla(
+      `La Tabla ${n} agrupa a los becarios egresados y titulados según la ` +
+        `institución en la que estudiaron.`,
+      'Egresados y titulados según institución',
       tablaDesglose(
         agruparConteo(
           egresadosTitulados,
@@ -594,98 +619,98 @@ export class PdfEstadisticasGenerator
         'Institución',
       ),
     );
-    n++;
 
-    // ── II.IV Retirados ───────────────────────────────────────────────────────
+    // ── 4. Retirados ──────────────────────────────────────────────────────────
 
     const retirados = estudiantes.filter(
       (e) => situaciones.get(e.rut_estudiante)! === 'Retirado',
     );
 
-    content.push({
-      text: 'Becarias y becarios retirados',
-      style: 'header',
-      margin: [0, 16, 0, 6] as [number, number, number, number],
-    });
-    content.push(
-      InformeBuilder.paragrafBuilder(
-        `Desde su creación, ${retirados.length} becarios han abandonado el ` +
-          `programa. La Tabla ${n} muestra de qué liceos de origen provienen.`,
-      ),
-    );
-    content.push(
-      InformeBuilder.tableCaption(n, 'Becarios retirados según liceo de origen'),
-      retirados.length > 0
-        ? tablaDesglose(
-            agruparConteo(retirados, (e) => e.liceo.nombre),
-            retirados.length,
-            'Liceo',
-          )
-        : InformeBuilder.paragrafBuilder('No hay becarios retirados registrados.'),
-    );
-    n++;
+    const tituloRetirados = tituloSeccion('4. Becarias y becarios retirados');
+    const parrafoRetirados =
+      `Desde su creación, ${retirados.length} becarios han abandonado el ` +
+      `programa. La Tabla ${n} muestra de qué liceos de origen provienen.`;
+    if (retirados.length > 0) {
+      pushTabla(
+        parrafoRetirados,
+        'Becarios retirados según liceo de origen',
+        tablaDesglose(
+          agruparConteo(retirados, (e) => e.liceo.nombre),
+          retirados.length,
+          'Liceo',
+        ),
+        [tituloRetirados],
+      );
+    } else {
+      content.push(
+        tituloRetirados,
+        InformeBuilder.paragrafBuilder(parrafoRetirados),
+        InformeBuilder.tableCaption(n, 'Becarios retirados según liceo de origen'),
+        InformeBuilder.paragrafBuilder('No hay becarios retirados registrados.'),
+      );
+      n++;
+    }
 
-    // ── III. Trayectoria durante el año en curso ────────────────────────────
+    // ── 5. Trayectoria durante el año en curso ──────────────────────────────
 
-    content.push({
-      text: `Trayectoria durante el año en curso (${añoActual})`,
-      style: 'header',
-      margin: [0, 16, 0, 6] as [number, number, number, number],
-    });
-    content.push(
-      InformeBuilder.paragrafBuilder(
-        `Esta sección resume qué ha pasado, desde el 1 de enero de ${añoActual} ` +
-          `hasta la fecha, con los becarios que estudian en la educación ` +
-          `superior: cuántos continúan su carrera con normalidad, cuántos ` +
-          `egresaron o se titularon, cuántos congelaron sus estudios y cuántos ` +
-          `se retiraron. Se recalcula cada vez que se genera este informe, por ` +
-          `lo que siempre refleja lo ocurrido desde el inicio del año hasta hoy.`,
-      ),
-    );
-
+    // Cada becario se clasifica por la carrera que lo hizo entrar a la tabla
+    // (activa hoy o con cambios de estado este año); si hay varias, la más
+    // reciente. Así todo becario contado cae en exactamente una fila: si tuvo
+    // cambios este año manda el último, y si no los tuvo es porque la carrera
+    // está activa.
+    const carreraDelAño = (c: CarreraItem) =>
+      c.anio_ingreso <= añoActual &&
+      (c.estado === 'ACTIVO' ||
+        c.historial_estados.some((h) => h.created_at >= inicioAño));
     const universitariosDelAño = estudiantes.filter((e) =>
-      e.carreras.some(
-        (c) =>
-          c.anio_ingreso <= añoActual &&
-          (c.estado === 'ACTIVO' ||
-            c.historial_estados.some((h) => h.created_at >= inicioAño)),
-      ),
+      e.carreras.some(carreraDelAño),
     );
     let continuan = 0;
     let egresaronEsteAño = 0;
     let congelaronEsteAño = 0;
     let seRetiraronEsteAño = 0;
     for (const e of universitariosDelAño) {
-      const carrera = carreraRepresentativa(e.carreras)!;
+      const carrera = carreraRepresentativa(e.carreras.filter(carreraDelAño))!;
       const transicionesDelAño = carrera.historial_estados.filter(
         (h) => h.created_at >= inicioAño,
       );
-      const ultima = transicionesDelAño[transicionesDelAño.length - 1];
-      if (!ultima) {
-        if (carrera.estado === 'ACTIVO') continuan++;
-        continue;
-      }
-      if (ultima.estado_nuevo === 'TITULADO' || ultima.estado_nuevo === 'EGRESADO') {
+      const estadoFinal =
+        transicionesDelAño[transicionesDelAño.length - 1]?.estado_nuevo ?? carrera.estado;
+      if (estadoFinal === 'TITULADO' || estadoFinal === 'EGRESADO') {
         egresaronEsteAño++;
-      } else if (ultima.estado_nuevo === 'SUSPENDIDO') {
+      } else if (estadoFinal === 'SUSPENDIDO') {
         congelaronEsteAño++;
-      } else if (ultima.estado_nuevo === 'RETIRADO' || ultima.estado_nuevo === 'ELIMINADO') {
+      } else if (estadoFinal === 'RETIRADO' || estadoFinal === 'ELIMINADO') {
         seRetiraronEsteAño++;
-      } else if (ultima.estado_nuevo === 'ACTIVO') {
+      } else {
         continuan++;
       }
     }
     content.push(
-      InformeBuilder.tableCaption(n, `Trayectoria de becarios en educación superior en ${añoActual}`),
-      tablaDesglose(
+      ...bloque(
+        n,
         [
-          ['Continúan sus estudios con normalidad', continuan],
-          ['Egresaron o se titularon', egresaronEsteAño],
-          ['Congelaron sus estudios', congelaronEsteAño],
-          ['Se retiraron', seRetiraronEsteAño],
+          tituloSeccion(`5. Trayectoria durante el año en curso (${añoActual})`),
+          InformeBuilder.paragrafBuilder(
+            `Esta sección resume qué ha pasado, desde el 1 de enero de ${añoActual} ` +
+              `hasta la fecha, con los becarios que estudian en la educación ` +
+              `superior: cuántos continúan su carrera con normalidad, cuántos ` +
+              `egresaron o se titularon, cuántos congelaron sus estudios y cuántos ` +
+              `se retiraron. Se recalcula cada vez que se genera este informe, por ` +
+              `lo que siempre refleja lo ocurrido desde el inicio del año hasta hoy.`,
+          ),
+          InformeBuilder.tableCaption(n, `Trayectoria de becarios en educación superior en ${añoActual}`),
         ],
-        universitariosDelAño.length,
-        'Situación',
+        tablaDesglose(
+          [
+            ['Continúan sus estudios con normalidad', continuan],
+            ['Egresaron o se titularon', egresaronEsteAño],
+            ['Congelaron sus estudios', congelaronEsteAño],
+            ['Se retiraron', seRetiraronEsteAño],
+          ],
+          universitariosDelAño.length,
+          'Situación',
+        ),
       ),
     );
     n++;
@@ -696,70 +721,55 @@ export class PdfEstadisticasGenerator
     const nuevaGeneracion = estudiantes.filter(
       (e) => e.generacion_rel.año === generacionNueva,
     );
-    content.push(
-      InformeBuilder.paragrafBuilder(
-        `La Tabla ${n} muestra de qué liceos y comunas provienen los becarios ` +
-          `de la Generación ${generacionNueva}, la más reciente en incorporarse ` +
-          `a la Fundación.`,
-        14,
-      ),
-    );
-    content.push(
-      InformeBuilder.tableCaption(n, `Liceos de origen — Generación ${generacionNueva}`),
+    pushTabla(
+      `La Tabla ${n} muestra de qué liceos y comunas provienen los becarios ` +
+        `de la Generación ${generacionNueva}, la más reciente en incorporarse ` +
+        `a la Fundación.`,
+      `Liceos de origen — Generación ${generacionNueva}`,
       tablaDesglose(
         agruparConteo(nuevaGeneracion, (e) => `${e.liceo.nombre} (${e.liceo.comuna})`),
         nuevaGeneracion.length,
         'Liceo (comuna)',
       ),
     );
-    n++;
 
     const ingresanEsteAño = estudiantes.filter((e) => {
       const primera = ordenarPorIngreso(e.carreras)[0];
       return primera && primera.anio_ingreso === añoActual;
     });
     if (ingresanEsteAño.length > 0) {
-      const generacionesIngresantes = agruparConteo(
-        ingresanEsteAño,
-        (e) => String(e.generacion_rel.año),
-      );
-      content.push(
-        InformeBuilder.paragrafBuilder(
-          `La Tabla ${n} muestra cuántos becarios comenzaron su primera carrera ` +
-            `en una institución de educación superior durante ${añoActual}, ` +
-            `agrupados por la generación a la ` +
-            `que pertenecen (no necesariamente la más nueva: suele ser una ` +
-            `generación que ya lleva un tiempo en la Fundación y recién ahora ` +
-            `entra a la educación superior).`,
-          14,
-        ),
-      );
-      content.push(
-        InformeBuilder.tableCaption(n, `Becarios que ingresan a la educación superior en ${añoActual}`),
+      pushTabla(
+        `La Tabla ${n} muestra cuántos becarios comenzaron su primera carrera ` +
+          `en una institución de educación superior durante ${añoActual}, ` +
+          `agrupados por la generación a la ` +
+          `que pertenecen (no necesariamente la más nueva: suele ser una ` +
+          `generación que ya lleva un tiempo en la Fundación y recién ahora ` +
+          `entra a la educación superior).`,
+        `Becarios que ingresan a la educación superior en ${añoActual}`,
         tablaDesglose(
-          generacionesIngresantes,
+          agruparConteo(ingresanEsteAño, (e) => String(e.generacion_rel.año)),
           ingresanEsteAño.length,
           'Generación',
         ),
       );
-      n++;
     }
 
     // ── Anexo ─────────────────────────────────────────────────────────────────
+    // Única tabla que puede cortarse entre páginas: no se arma como bloque.
 
-    content.push({
-      text: 'Anexo: listado histórico de becarias y becarios',
-      style: 'header',
-      margin: [0, 16, 0, 6] as [number, number, number, number],
-    });
     content.push(
+      tituloSeccion('Anexo: listado histórico de becarias y becarios'),
       InformeBuilder.paragrafBuilder(
         `La Tabla ${n} lista a todos los becarios que ha tenido la Fundación ` +
-          `desde su creación, con su generación y su situación académica actual.`,
+          `desde su creación, de la generación más nueva a la más antigua, con ` +
+          `su situación académica actual.`,
       ),
     );
     const listado = [...estudiantes].sort(
-      (a, b) => a.apellido.localeCompare(b.apellido) || a.nombre.localeCompare(b.nombre),
+      (a, b) =>
+        b.generacion_rel.año - a.generacion_rel.año ||
+        a.apellido.localeCompare(b.apellido) ||
+        a.nombre.localeCompare(b.nombre),
     );
     content.push(
       InformeBuilder.tableCaption(n, 'Listado histórico de becarios'),
@@ -773,13 +783,16 @@ export class PdfEstadisticasGenerator
         ]),
         ['*', '*', 75, '*'],
         ['left', 'left', 'center', 'left'] as Alignment[],
+        ['Total', `${listado.length} becarios`, '', ''],
       ),
     );
+    (content[content.length - 1] as ContentTable).table.dontBreakRows = true;
 
     const docDefinition = {
       content,
       footer: () => InformeBuilder.footerBuilder(),
       styles: InformeBuilder.styles,
+      pageBreakBefore: saltoAntesDeBloque,
     };
 
     return this.printer.createPdf(docDefinition);

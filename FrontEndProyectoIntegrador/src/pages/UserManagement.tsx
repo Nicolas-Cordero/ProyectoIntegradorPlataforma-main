@@ -131,7 +131,16 @@ export const UserManagement: React.FC = () => {
       };
 
       if (editingUser) {
-        await userService.update(editingUser.rut_usuario!, userData);
+        // El RUT es la clave (va en la URL); UpdateUserDto no lo admite en el body
+        // y el ValidationPipe (forbidNonWhitelisted) respondería 400.
+        const updateData: Omit<UserPayload, 'rut_usuario'> = {
+          nombre:   userData.nombre,
+          apellido: userData.apellido,
+          email:    userData.email,
+          telefono: userData.telefono,
+          rol:      userData.rol,
+        };
+        await userService.update(editingUser.rut_usuario!, updateData);
         setSnackbar({ open: true, message: 'Usuario actualizado exitosamente', severity: 'success' });
       } else {
         await userService.create(userData);

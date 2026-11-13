@@ -14,6 +14,14 @@ export interface CreateEntrevistaPayload {
   comentario?: string;
 }
 
+// Resumen por estudiante (GET /entrevistas/resumen). Solo trae estudiantes con
+// al menos una entrevista; `entrevistas_anio` cuenta desde el 1 de enero (hora de Chile).
+export interface ResumenEntrevistasEstudiante {
+  rut_estudiante: string;
+  ultima_entrevista: string | null;
+  entrevistas_anio: number;
+}
+
 class EntrevistaService extends BaseHttpClient {
 
   async getAll(): Promise<Entrevista[]> {
@@ -22,6 +30,11 @@ class EntrevistaService extends BaseHttpClient {
 
   async getById(id: string): Promise<Entrevista> {
     return await this.request<Entrevista>(`/entrevistas/${id}`);
+  }
+
+  async getResumen(generacionId?: number): Promise<ResumenEntrevistasEstudiante[]> {
+    const query = generacionId ? `?generacion_id=${generacionId}` : '';
+    return await this.request<ResumenEntrevistasEstudiante[]>(`/entrevistas/resumen${query}`);
   }
 
   async getByEstudiante(estudianteId: string): Promise<Entrevista[]> {

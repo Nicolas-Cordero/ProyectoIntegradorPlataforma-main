@@ -127,7 +127,8 @@ export interface Carrera {
   via_acceso: 'ESPECIAL' | 'REGULAR' | 'PACE';
   estado: EstadoEstudiante;
   anio_ingreso: number;
-  // Solo viene poblado desde /complete (findEstudianteByRutComplete incluye la relación).
+  // /complete trae la universidad completa; los listados de estudiantes
+  // (/estudiante y por generación) traen solo `nombre`.
   universidad?: Universidad;
 }
 

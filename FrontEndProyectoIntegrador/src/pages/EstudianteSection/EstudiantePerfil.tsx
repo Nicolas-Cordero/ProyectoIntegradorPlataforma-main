@@ -8,7 +8,8 @@ import type { Alerta } from '../../services';
 import type { EstudianteOutletContext } from './EstudianteDetail';
 import type { Genero, Ramo } from '../../types';
 import type { UpdateEstudianteDto } from '../../services/estudiante.service';
-import { LiceoSelector } from '../../components/features/estudiantes';
+import { LiceoSelector, ordenarPorIngreso } from '../../components/features/estudiantes';
+import { ESTADO_CARRERA_CHIP } from '../../components/common/constants';
 import { FotoPerfilModal } from '../../components/features/estudiante-detalles/FotoPerfilModal';
 import { BACKEND_TO_UI, ORDEN_SEMESTRE, semLabel } from '../../components/features/estudiante-detalles/avance-curricular';
 import { esTelefonoValido, normalizarTelefono } from '../../utils/validators';
@@ -52,12 +53,8 @@ export default function EstudiantePerfil() {
   const [alertas, setAlertas] = useState<Alerta[]>([]);
   const [ultimaEntrevistaFecha, setUltimaEntrevistaFecha] = useState<string | null>(null);
 
-  // Carrera seleccionada para mostrar en "Información General" — por defecto
-  // la primera ACTIVA, o si no hay ninguna, la primera de la lista.
-  const carreras = estudiante.carreras ?? [];
-  const [carreraSeleccionadaId, setCarreraSeleccionadaId] = useState<number | null>(
-    () => (carreras.find(c => c.estado === 'ACTIVO') ?? carreras[0])?.codigo_carrera ?? null
-  );
+  // Todas las carreras (también retiradas/suspendidas), con su estado.
+  const carreras = ordenarPorIngreso(estudiante.carreras ?? []);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editForm, setEditForm] = useState<Partial<UpdateEstudianteDto>>({});
@@ -127,15 +124,13 @@ export default function EstudiantePerfil() {
     }
   };
 
-  const infoFieldsAntesCarrera = [
+  const infoFields = [
     { label: 'Nombre Completo', value: `${estudiante.nombre} ${estudiante.apellido}` },
     { label: 'RUT',             value: estudiante.rut_estudiante },
     { label: 'Correo',          value: estudiante.email },
     { label: 'Teléfono',        value: estudiante.telefono },
     { label: 'Liceo',           value: liceo?.nombre ?? `RBD: ${estudiante.rbd_liceo}` },
     { label: 'Generación',      value: generacion ? `${generacion.año}${generacion.descripcion ? ` — ${generacion.descripcion}` : ''}` : `ID: ${estudiante.generacion_id ?? '—'}` },
-  ];
-  const infoFieldsDespuesCarrera = [
     {
       label: 'Última entrevista',
       value: ultimaEntrevistaFecha ? formatDate(ultimaEntrevistaFecha) : (canEdit ? 'Sin entrevistas' : '—'),
@@ -187,42 +182,47 @@ export default function EstudiantePerfil() {
               )}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {infoFieldsAntesCarrera.map(field => (
+              {infoFields.map(field => (
                 <div key={field.label}>
                   <p className="text-xs text-gray-500 uppercase tracking-wide">{field.label}</p>
                   {/* Bug 6 fix: ?? en lugar de || para que 0 no sea falsy */}
                   <p className="font-semibold text-gray-800 mt-0.5">{field.value ?? 'No especificado'}</p>
                 </div>
               ))}
-
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Carrera</p>
-                {carreras.length === 0 ? (
-                  <p className="font-semibold text-gray-800 mt-0.5">Sin carrera</p>
-                ) : carreras.length === 1 ? (
-                  <p className="font-semibold text-gray-800 mt-0.5">{carreras[0].nombre}</p>
-                ) : (
-                  <select
-                    value={carreraSeleccionadaId ?? ''}
-                    onChange={(e) => setCarreraSeleccionadaId(Number(e.target.value))}
-                    className="font-semibold text-gray-800 mt-0.5 w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B]/30"
-                  >
-                    {carreras.map(c => (
-                      <option key={c.codigo_carrera} value={c.codigo_carrera}>
-                        {c.nombre}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-
-              {infoFieldsDespuesCarrera.map(field => (
-                <div key={field.label}>
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">{field.label}</p>
-                  <p className="font-semibold text-gray-800 mt-0.5">{field.value ?? 'No especificado'}</p>
-                </div>
-              ))}
             </div>
+
+            {carreras.length > 0 && (
+              <div className="mt-5">
+                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1.5">
+                  {carreras.length === 1 ? 'Carrera' : 'Carreras'}
+                </p>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 text-left text-xs text-gray-500">
+                      <th scope="col" className="py-1.5 pr-4 font-medium">Carrera</th>
+                      <th scope="col" className="py-1.5 pr-4 font-medium">Universidad</th>
+                      <th scope="col" className="py-1.5 font-medium text-right">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {carreras.map(c => {
+                      const chip = ESTADO_CARRERA_CHIP[c.estado];
+                      return (
+                        <tr key={c.codigo_carrera} className="border-b border-gray-100 last:border-b-0">
+                          <td className="py-2 pr-4 font-semibold text-gray-800">{c.nombre}</td>
+                          <td className="py-2 pr-4 text-gray-700">{c.universidad?.nombre ?? '—'}</td>
+                          <td className="py-2 text-right">
+                            <span className={`inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-wide ${chip.bg} ${chip.text}`}>
+                              {chip.label}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             {alertas.length > 0 && (
               <div className="mt-4 space-y-2">

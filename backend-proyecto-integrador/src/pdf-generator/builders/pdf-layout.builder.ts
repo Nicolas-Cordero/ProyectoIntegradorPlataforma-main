@@ -1,4 +1,5 @@
 import type { Content, CustomTableLayout, Alignment } from 'pdfmake';
+import type { ContentTable } from 'pdfmake/interfaces';
 import fs from 'fs';
 import path from 'path';
 
@@ -110,22 +111,29 @@ export class InformeBuilder {
    * Tabla con encabezado en mayúsculas, franjas alternadas y sin líneas
    * verticales — pensada para leerse como un reporte, no como una hoja de cálculo.
    * `aligns` controla la alineación por columna (por defecto 'left').
+   * `totalRow`, si se pasa, se agrega al final en negrita, separada del resto
+   * por una línea y sin franja.
    */
   static tableBuilder(
     headers: string[],
     rows: (string | Content)[][],
     widths?: (string | number)[],
     aligns?: Alignment[],
-  ): Content {
+    totalRow?: string[],
+  ): ContentTable {
     const alignOf = (col: number): Alignment => aligns?.[col] ?? 'left';
+    const filaTotal = totalRow ? rows.length + 1 : -1;
 
     const layout: CustomTableLayout = {
       hLineWidth: (i, node) =>
-        i === 1 || i === node.table.body.length ? 1 : 0,
+        i === 1 || i === filaTotal || i === node.table.body.length ? 1 : 0,
       vLineWidth: () => 0,
-      hLineColor: (i) => (i === 1 ? TABLE_ACCENT : TABLE_RULE),
+      hLineColor: (i) =>
+        i === 1 || i === filaTotal ? TABLE_ACCENT : TABLE_RULE,
       fillColor: (rowIndex) =>
-        rowIndex > 0 && rowIndex % 2 === 0 ? TABLE_ROW_STRIPE : null,
+        rowIndex > 0 && rowIndex % 2 === 0 && rowIndex !== filaTotal
+          ? TABLE_ROW_STRIPE
+          : null,
       paddingLeft: () => 8,
       paddingRight: () => 8,
       paddingTop: () => 7,
@@ -149,6 +157,16 @@ export class InformeBuilder {
                 : cell,
             ),
           ),
+          ...(totalRow
+            ? [
+                totalRow.map((cell, col) => ({
+                  text: cell,
+                  style: 'tableCell',
+                  bold: true,
+                  alignment: alignOf(col),
+                })),
+              ]
+            : []),
         ],
       },
       layout,

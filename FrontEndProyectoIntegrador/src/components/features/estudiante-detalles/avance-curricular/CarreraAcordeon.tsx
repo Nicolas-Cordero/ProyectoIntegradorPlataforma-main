@@ -35,6 +35,41 @@ export function CarreraAcordeon({
 }: CarreraAcordeonProps) {
   const [expandido, setExpandido] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Barra de desplazamiento superior, sincronizada con la nativa de abajo.
+  const scrollSuperiorRef = useRef<HTMLDivElement>(null);
+  const [anchoSemestres, setAnchoSemestres] = useState(0);
+  // Barra que inició el desplazamiento; mientras dure, se ignora el eco de la
+  // otra para que no se corrijan mutuamente (y no se corte el scroll suave).
+  const origenScroll = useRef<'superior' | 'inferior' | null>(null);
+  const liberarOrigen = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const sincronizarScroll = (origen: 'superior' | 'inferior') => {
+    if (origenScroll.current && origenScroll.current !== origen) return;
+    origenScroll.current = origen;
+    const [desde, hacia] = origen === 'inferior'
+      ? [scrollRef.current, scrollSuperiorRef.current]
+      : [scrollSuperiorRef.current, scrollRef.current];
+    if (desde && hacia) hacia.scrollLeft = desde.scrollLeft;
+    if (liberarOrigen.current) clearTimeout(liberarOrigen.current);
+    liberarOrigen.current = setTimeout(() => { origenScroll.current = null; }, 150);
+  };
+
+  // La barra superior necesita el ancho real del contenido, que cambia al
+  // agregar semestres o ramos, o al redimensionar la ventana.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const medir = () => setAnchoSemestres(el.scrollWidth);
+    const observador = new ResizeObserver(medir);
+    observador.observe(el);
+    if (el.firstElementChild) observador.observe(el.firstElementChild);
+    medir();
+    return () => observador.disconnect();
+  }, [expandido, carrera.cargando, carrera.semestres.length]);
+
+  useEffect(() => () => {
+    if (liberarOrigen.current) clearTimeout(liberarOrigen.current);
+  }, []);
 
   useEffect(() => {
     if (!expandido || carrera.cargando || carrera.semestres.length === 0) return;
@@ -145,7 +180,16 @@ export function CarreraAcordeon({
                   )}
                 </div>
               ) : (
-                <div ref={scrollRef} className="overflow-x-auto pb-2">
+                <>
+                <div
+                  ref={scrollSuperiorRef}
+                  onScroll={() => sincronizarScroll('superior')}
+                  className="overflow-x-auto mb-2"
+                  aria-hidden="true"
+                >
+                  <div style={{ width: anchoSemestres, height: 1 }} />
+                </div>
+                <div ref={scrollRef} onScroll={() => sincronizarScroll('inferior')} className="overflow-x-auto pb-2">
                   <div className="flex gap-5" style={{ minWidth: 'max-content' }}>
                     {carrera.semestres.map(sem => (
                       <SemestreColumna
@@ -162,6 +206,7 @@ export function CarreraAcordeon({
                     ))}
                   </div>
                 </div>
+                </>
               )}
             </>
           )}

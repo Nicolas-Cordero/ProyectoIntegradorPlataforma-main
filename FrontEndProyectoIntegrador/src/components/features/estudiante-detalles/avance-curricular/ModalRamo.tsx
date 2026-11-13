@@ -16,6 +16,8 @@ export interface FormRamo {
 interface ModalRamoProps {
   abierto: boolean;
   esEdicion: boolean;
+  // Nombre guardado del ramo que se edita (no el del formulario, que cambia al tipear).
+  nombreRamo?: string;
   onCerrar: () => void;
   form: FormRamo;
   setForm: (fn: (f: FormRamo) => FormRamo) => void;
@@ -24,7 +26,7 @@ interface ModalRamoProps {
   onGuardar: () => void;
 }
 
-export function ModalRamo({ abierto, esEdicion, onCerrar, form, setForm, error, guardando, onGuardar }: ModalRamoProps) {
+export function ModalRamo({ abierto, esEdicion, nombreRamo, onCerrar, form, setForm, error, guardando, onGuardar }: ModalRamoProps) {
   const [vista, setVista] = useState<Vista>('edicion');
 
   // Cada apertura del modal parte en "Edición", aunque la anterior se haya
@@ -37,7 +39,7 @@ export function ModalRamo({ abierto, esEdicion, onCerrar, form, setForm, error, 
 
   return (
     <Modal
-      titulo={esEdicion ? 'Editar ramo' : 'Nuevo ramo'}
+      titulo={!esEdicion ? 'Nuevo ramo' : nombreRamo ? `Editar ramo: ${nombreRamo}` : 'Editar ramo'}
       abierto={abierto}
       onCerrar={onCerrar}
       tamanio="lg"
@@ -132,10 +134,6 @@ export function ModalRamo({ abierto, esEdicion, onCerrar, form, setForm, error, 
             </div>
           ) : (
             <div className="space-y-2">
-              <p className="text-sm text-gray-500">
-                Observaciones sobre el ramo: contexto, acuerdos con el estudiante o cualquier
-                antecedente que convenga dejar registrado.
-              </p>
               <Textarea
                 valor={form.comentario}
                 onChange={v => setForm(f => ({ ...f, comentario: v }))}

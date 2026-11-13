@@ -185,12 +185,13 @@ describe('PdfEstadisticasGenerator', () => {
     await service.pdfGenerate(dtoValido);
     const [docDefinition] = mockPrinter.createPdf.mock.calls[0];
     const contenidoStr = JSON.stringify(docDefinition.content);
-    expect(contenidoStr).toContain('Estadísticas generales de becarias y becarios');
-    expect(contenidoStr).toContain('Becarias y becarios en estudios superiores');
-    expect(contenidoStr).toContain('Becarias y becarios egresados y titulados');
-    expect(contenidoStr).toContain('Becarias y becarios retirados');
-    expect(contenidoStr).toContain('Trayectoria durante el año en curso');
-    expect(contenidoStr).toContain('Anexo: listado histórico de becarias y becarios');
+    expect(contenidoStr).toContain('1. Estadísticas generales de becarias y becarios');
+    expect(contenidoStr).toContain('2. Becarias y becarios en estudios superiores');
+    expect(contenidoStr).toContain('3. Becarias y becarios egresados y titulados');
+    expect(contenidoStr).toContain('4. Becarias y becarios retirados');
+    expect(contenidoStr).toContain('5. Trayectoria durante el año en curso');
+    expect(contenidoStr).toContain('"Anexo: listado histórico de becarias y becarios"');
+    expect(contenidoStr).not.toContain('Becarios según carrera');
   });
 
   it('debe clasificar la situación académica de cada becario en el anexo', async () => {
@@ -230,4 +231,99 @@ describe('PdfEstadisticasGenerator', () => {
     // Bruno: ingreso 2014, último ramo regular en 2019/1S -> 11 semestres reales.
     expect(contenidoStr).toContain('"11"');
   });
+
+  it('debe agregar fila de total a todas las tablas salvo la de generaciones', async () => {
+    await service.pdfGenerate(dtoValido);
+    const tablas = tablasDe(mockPrinter.createPdf.mock.calls[0][0]);
+    const [generaciones, ...resto] = tablas;
+    expect(textoCelda(generaciones.at(-1)![0])).not.toBe('Total');
+    for (const body of resto) {
+      expect(textoCelda(body.at(-1)![0])).toMatch(/^Total/);
+    }
+    // Género: 4 femenino + 4 masculino = 8 de 8.
+    const genero = resto[0];
+    expect(genero.at(-1)!.map(textoCelda)).toEqual(['Total', '8', '100,0%']);
+  });
+
+  it('debe ordenar el anexo por generación, de la más nueva a la más antigua', async () => {
+    await service.pdfGenerate(dtoValido);
+    const anexo = tablasDe(mockPrinter.createPdf.mock.calls[0][0]).at(-1)!;
+    expect(anexo.slice(1).map((fila) => textoCelda(fila[0]))).toEqual([
+      'Media', 'NoMatriculado', 'Estudiante', 'Suspendido', 'Cambio',
+      'Retirado', 'Egresado', 'Titulada', 'Total',
+    ]);
+  });
+
+  it('debe clasificar en la trayectoria del año a todo becario que cuenta en el total', async () => {
+    // Carrera antigua activa y carrera más reciente retirada antes de este año:
+    // entra al total por la activa y debe contar como que continúa.
+    mockPrisma.estudiante.findMany.mockResolvedValue([
+      {
+        ...estudiantesFake[2],
+        carreras: [
+          carrera({ codigo_carrera: 1, anio_ingreso: 2018, estado: 'ACTIVO' }),
+          carrera({
+            codigo_carrera: 2,
+            anio_ingreso: 2020,
+            estado: 'RETIRADO',
+            historial_estados: [{ estado_nuevo: 'RETIRADO', created_at: new Date('2021-04-01') }],
+          }),
+        ],
+      },
+    ]);
+    await service.pdfGenerate(dtoValido);
+    const trayectoria = tablasDe(mockPrinter.createPdf.mock.calls[0][0]).find(
+      (body) => textoCelda(body[0][0]) === 'SITUACIÓN',
+    )!;
+    expect(trayectoria[1].map(textoCelda)).toEqual(['Continúan sus estudios con normalidad', '1', '100,0%']);
+    expect(trayectoria.at(-1)!.map(textoCelda)).toEqual(['Total', '1', '100,0%']);
+  });
+
+  describe('pageBreakBefore', () => {
+    const nodo = (id: string, verticalRatio: number) => ({ id, startPosition: { verticalRatio } });
+    let saltoAntes: (n: unknown, q: unknown) => boolean;
+
+    beforeEach(async () => {
+      await service.pdfGenerate(dtoValido);
+      saltoAntes = mockPrinter.createPdf.mock.calls[0][0].pageBreakBefore;
+    });
+
+    const consultas = (mismaPagina: unknown[], siguiente: unknown[]) => ({
+      getFollowingNodesOnPage: () => mismaPagina,
+      getNodesOnNextPage: () => siguiente,
+    });
+
+    it('mueve el bloque a la página siguiente si allí cabe completo', () => {
+      expect(saltoAntes(nodo('bloque-3', 0.6), consultas([], [nodo('fin-bloque-3', 0.3)]))).toBe(true);
+    });
+
+    it('no mueve el bloque si termina en la misma página', () => {
+      expect(saltoAntes(nodo('bloque-3', 0.8), consultas([nodo('fin-bloque-3', 0.9)], []))).toBe(false);
+    });
+
+    it('deja cortarse el bloque si no cabe en una página', () => {
+      expect(saltoAntes(nodo('bloque-3', 0.4), consultas([], [nodo('fin-bloque-3', 0.9)]))).toBe(false);
+      expect(saltoAntes(nodo('bloque-3', 0.4), consultas([], []))).toBe(false);
+    });
+
+    it('mueve el bloque que se va a cortar si empieza al pie de la página', () => {
+      expect(saltoAntes(nodo('bloque-3', 0.9), consultas([], []))).toBe(true);
+    });
+
+    it('ignora los nodos que no inician un bloque', () => {
+      expect(saltoAntes(nodo('fin-bloque-3', 0.95), consultas([], []))).toBe(false);
+    });
+  });
 });
+
+type Celda = { text?: unknown };
+
+function tablasDe(docDefinition: { content: unknown[] }): Celda[][][] {
+  return docDefinition.content
+    .filter((c): c is { table: { body: Celda[][] } } => typeof c === 'object' && c !== null && 'table' in c)
+    .map((c) => c.table.body);
+}
+
+function textoCelda(celda: Celda): string {
+  return String(celda.text);
+}

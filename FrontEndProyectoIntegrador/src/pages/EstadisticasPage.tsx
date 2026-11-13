@@ -16,7 +16,8 @@ import { useEstudiantes } from '../hooks/useEstudiantes';
 import { estudianteService } from '../services';
 import { descargarPdf } from '../utils/pdfDownload';
 import { useSnackbar } from '../hooks/useSnackbar';
-import type { Generacion, EstadoEstudiante, Genero } from '../types';
+import type { Estudiante, Generacion, EstadoEstudiante, Genero } from '../types';
+import { ESTADO_CARRERA_CHIP } from '../components/common/constants';
 import {
   EstadoPieChart,
   GeneracionBarChart,
@@ -26,34 +27,50 @@ import {
   Section,
   fmtNum,
   fmtPct,
-  ESTADO_LABELS,
-  ESTADO_COLORS,
   ESTADO_ORDER,
 } from '../components/features/estadisticas';
 import type { PieItem, CohorteRow } from '../components/features/estadisticas';
 
-// ── Clasificación Activo / No-Activo ──────────────────────────────────────────
-// Activo   : ACTIVO — becario actualmente cursando con beca vigente
-// No-Activo: TITULADO, EGRESADO, RETIRADO, ELIMINADO, SUSPENDIDO
-//   • TITULADO/EGRESADO : completaron la educación superior y salieron del programa
-//   • RETIRADO/ELIMINADO: salieron del programa antes de completarlo
-//   • SUSPENDIDO : beca temporalmente suspendida; no reciben beneficios activos.
-//     Es el estado más ambiguo (el becario puede seguir inscrito en la universidad),
-//     pero se clasifica como No-Activo porque no participa activamente del programa de becas.
+// ── Subconjuntos del selector ─────────────────────────────────────────────────
+// Se cuentan estudiantes, no carreras:
+// • Activos    : estado derivado ACTIVO (alguna carrera ACTIVA, o sin carreras).
+// • No activos : ninguna carrera ACTIVA. Activos + No activos = Todos.
+// • Por estado : al menos una carrera en ese estado, así que un estudiante puede
+//   estar en varios subconjuntos (p. ej. una carrera ACTIVA y otra TITULADA →
+//   Activos y TITULADO). ACTIVO no tiene botón propio: coincidiría con Activos.
+// La torta y la tabla de cohorte usan el estado derivado (uno por estudiante,
+// suman el total) y solo se muestran en Todos y No activos; en el resto serían
+// redundantes.
+// Reglas provisionales: se replantearán cuando se migre el sistema de estados.
 //
 // Nota sobre el backend: el endpoint GET /estudiante no soporta filtrado por estado.
 // El filtrado se realiza en el cliente sobre el listado completo ya cargado.
 
-const ESTADOS_ACTIVOS: EstadoEstudiante[]    = ['ACTIVO'];
-const ESTADOS_NO_ACTIVOS: EstadoEstudiante[] = ['TITULADO', 'EGRESADO', 'SUSPENDIDO', 'RETIRADO', 'ELIMINADO'];
+type EstadoFiltro = Exclude<EstadoEstudiante, 'ACTIVO'>;
+type Filtro = 'TODOS' | 'ACTIVOS' | 'NO_ACTIVOS' | EstadoFiltro;
 
-type Filtro = 'ACTIVOS' | 'NO_ACTIVOS' | 'TODOS';
+const ESTADOS_FILTRO = ESTADO_ORDER.filter((e): e is EstadoFiltro => e !== 'ACTIVO');
+const FILTROS: Filtro[] = ['TODOS', 'ACTIVOS', 'NO_ACTIVOS', ...ESTADOS_FILTRO];
 
 const FILTRO_LABELS: Record<Filtro, string> = {
+  TODOS:      'Todos',
   ACTIVOS:    'Activos',
   NO_ACTIVOS: 'No activos',
-  TODOS:      'Todos',
+  TITULADO:   ESTADO_CARRERA_CHIP.TITULADO.label,
+  EGRESADO:   ESTADO_CARRERA_CHIP.EGRESADO.label,
+  SUSPENDIDO: ESTADO_CARRERA_CHIP.SUSPENDIDO.label,
+  RETIRADO:   ESTADO_CARRERA_CHIP.RETIRADO.label,
+  ELIMINADO:  ESTADO_CARRERA_CHIP.ELIMINADO.label,
 };
+
+function perteneceAFiltro(e: Estudiante, filtro: Filtro): boolean {
+  switch (filtro) {
+    case 'TODOS':      return true;
+    case 'ACTIVOS':    return e.estado === 'ACTIVO';
+    case 'NO_ACTIVOS': return e.estado !== 'ACTIVO';
+    default:           return (e.carreras ?? []).some(c => c.estado === filtro);
+  }
+}
 
 const GENERO_LABELS: Record<Genero, string> = {
   FEMENINO:   'Femenino',
@@ -99,18 +116,17 @@ export function EstadisticasPage() {
   }, [generaciones]);
 
   // Conteos globales (sobre todos los estudiantes, no filtrados) para las etiquetas del selector
-  const globalCounts = useMemo(() => ({
-    ACTIVOS:    estudiantes.filter(e => ESTADOS_ACTIVOS.includes(e.estado)).length,
-    NO_ACTIVOS: estudiantes.filter(e => ESTADOS_NO_ACTIVOS.includes(e.estado)).length,
-    TODOS:      estudiantes.length,
-  }), [estudiantes]);
+  const globalCounts = useMemo(() => {
+    const counts = {} as Record<Filtro, number>;
+    FILTROS.forEach(f => { counts[f] = estudiantes.filter(e => perteneceAFiltro(e, f)).length; });
+    return counts;
+  }, [estudiantes]);
 
   // Subconjunto filtrado según selector (filtrado en cliente; el endpoint no soporta estado como query param)
-  const filteredEstudiantes = useMemo(() => {
-    if (filtro === 'ACTIVOS')    return estudiantes.filter(e => ESTADOS_ACTIVOS.includes(e.estado));
-    if (filtro === 'NO_ACTIVOS') return estudiantes.filter(e => ESTADOS_NO_ACTIVOS.includes(e.estado));
-    return estudiantes;
-  }, [estudiantes, filtro]);
+  const filteredEstudiantes = useMemo(
+    () => estudiantes.filter(e => perteneceAFiltro(e, filtro)),
+    [estudiantes, filtro],
+  );
 
   // A. KPIs (calculados sobre el subconjunto filtrado)
   const kpis = useMemo(() => {
@@ -136,10 +152,10 @@ export function EstadisticasPage() {
     if (total === 0) return [];
     return ESTADO_ORDER
       .map(est => ({
-        label: ESTADO_LABELS[est],
+        label: ESTADO_CARRERA_CHIP[est].label,
         count: filteredEstudiantes.filter(e => e.estado === est).length,
         pct: (filteredEstudiantes.filter(e => e.estado === est).length / total) * 100,
-        color: ESTADO_COLORS[est],
+        color: ESTADO_CARRERA_CHIP[est].hex,
       }))
       .filter(d => d.count > 0)
       .sort((a, b) => b.count - a.count);
@@ -198,15 +214,17 @@ export function EstadisticasPage() {
   const isEmpty = estudiantes.length === 0;
   const isFilteredEmpty = !isEmpty && filteredEstudiantes.length === 0;
 
+  const esTodos = filtro === 'TODOS';
+  const esFiltroEstado = !esTodos && filtro !== 'ACTIVOS' && filtro !== 'NO_ACTIVOS';
+  // Distribución por estado derivado: solo tiene sentido si el subconjunto mezcla estados
+  const mostrarPorEstado = esTodos || filtro === 'NO_ACTIVOS';
+
   // Etiqueta del KPI "total" varía según el filtro activo
   const totalLabel =
+    esTodos                 ? 'Total histórico' :
     filtro === 'ACTIVOS'    ? 'Total activos' :
     filtro === 'NO_ACTIVOS' ? 'Total no activos' :
-    'Total histórico';
-
-  // Texto del subtítulo de deserción varía según el filtro (no se muestra para ACTIVOS; sería 0)
-  const subtituloDesercion =
-    filtro === 'NO_ACTIVOS' ? 'Retirados / no activos' : 'Retirados / total';
+    `Total ${FILTRO_LABELS[filtro]}`;
 
   return (
     <div className="min-h-screen bg-[#FFFBF0]/90 py-8 rounded-2xl">
@@ -270,7 +288,7 @@ export function EstadisticasPage() {
                 role="tablist"
                 aria-label="Filtrar becarios por estado"
               >
-                {(['ACTIVOS', 'NO_ACTIVOS', 'TODOS'] as Filtro[]).map(f => (
+                {FILTROS.map(f => (
                   <button
                     key={f}
                     role="tab"
@@ -310,25 +328,25 @@ export function EstadisticasPage() {
                 {/* A. KPIs ─────────────────────────────────────────────────── */}
                 {/*
                  * Visibilidad condicional según el filtro activo:
-                 * - "En el programa": solo para Activos o Todos (sería 0 en No-Activos)
-                 * - "Titulados + egresados", "Retirados", "Tasa de deserción":
-                 *   solo para No-Activos o Todos (serían 0 en Activos y confundirían al usuario)
                  * - "Total" y "Última generación": siempre visibles, con etiqueta adaptada al filtro
+                 * - Desgloses por estado ("En el programa", "Titulados + egresados",
+                 *   "Retirados", "Tasa de deserción"): solo en Todos, sobre el estado derivado
                  *
                  * TODO-DATA: el esquema no distingue becarios en educación superior de los que
                  * están en enseñanza media (3.º/4.º medio) ni los no matriculados dentro del
                  * estado ACTIVO. Para los KPIs "Estudiando en ES" y "En enseñanza media"
                  * se necesitaría un campo adicional o nuevos valores en EstadoEstudiante.
                  */}
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+                <div className={`grid gap-4 mb-8 ${esTodos ? 'grid-cols-2 md:grid-cols-3 xl:grid-cols-6' : 'grid-cols-2'}`}>
                   <KpiCard
                     label={totalLabel}
                     value={kpis.total}
+                    subtitle={esFiltroEstado ? `Con al menos una carrera ${FILTRO_LABELS[filtro]}` : undefined}
                     icon={PeopleIcon}
                     color="#65B39B"
                     bg="rgba(101,179,155,0.12)"
                   />
-                  {(filtro === 'ACTIVOS' || filtro === 'TODOS') && (
+                  {esTodos && (
                     <KpiCard
                       label="En el programa"
                       value={kpis.activos}
@@ -338,7 +356,7 @@ export function EstadisticasPage() {
                       bg="rgba(123,143,212,0.12)"
                     />
                   )}
-                  {(filtro === 'NO_ACTIVOS' || filtro === 'TODOS') && (
+                  {esTodos && (
                     <KpiCard
                       label="Titulados + egresados"
                       value={kpis.titulados + kpis.egresados}
@@ -348,7 +366,7 @@ export function EstadisticasPage() {
                       bg="rgba(76,175,80,0.12)"
                     />
                   )}
-                  {(filtro === 'NO_ACTIVOS' || filtro === 'TODOS') && (
+                  {esTodos && (
                     <KpiCard
                       label="Retirados"
                       value={kpis.retirados}
@@ -357,11 +375,11 @@ export function EstadisticasPage() {
                       bg="rgba(158,158,158,0.12)"
                     />
                   )}
-                  {(filtro === 'NO_ACTIVOS' || filtro === 'TODOS') && (
+                  {esTodos && (
                     <KpiCard
                       label="Tasa de deserción"
                       value={fmtPct(kpis.tasaDesercion)}
-                      subtitle={subtituloDesercion}
+                      subtitle="Retirados / total"
                       icon={TrendingDownIcon}
                       color="#C7654F"
                       bg="rgba(199,101,79,0.12)"
@@ -378,10 +396,12 @@ export function EstadisticasPage() {
                 </div>
 
                 {/* C. Situación académica + B. Género ─────────────────────── */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <Section title="Situación académica actual">
-                    <EstadoPieChart data={estadoData} />
-                  </Section>
+                <div className={`grid grid-cols-1 gap-6 mb-6 ${mostrarPorEstado ? 'md:grid-cols-2' : ''}`}>
+                  {mostrarPorEstado && (
+                    <Section title="Situación académica actual">
+                      <EstadoPieChart data={estadoData} />
+                    </Section>
+                  )}
 
                   <Section title="Composición por género">
                     <SegmentedBar data={generoData} total={filteredEstudiantes.length} />
@@ -396,14 +416,16 @@ export function EstadisticasPage() {
                 </div>
 
                 {/* G. Estado actual por cohorte ────────────────────────────── */}
-                <div className="mb-6">
-                  <Section title="Estado actual por cohorte de ingreso">
-                    <CohorteTable
-                      presentStates={cohorteData.presentStates}
-                      rows={cohorteData.rows}
-                    />
-                  </Section>
-                </div>
+                {mostrarPorEstado && (
+                  <div className="mb-6">
+                    <Section title="Estado actual por cohorte de ingreso">
+                      <CohorteTable
+                        presentStates={cohorteData.presentStates}
+                        rows={cohorteData.rows}
+                      />
+                    </Section>
+                  </div>
+                )}
 
                 {/*
                  * Las secciones siguientes requieren datos que el backend no expone actualmente.

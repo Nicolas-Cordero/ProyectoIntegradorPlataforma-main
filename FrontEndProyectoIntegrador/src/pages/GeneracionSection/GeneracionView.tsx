@@ -4,19 +4,15 @@ import {
   estudianteService,
   entrevistaService,
   alertasService,
-  liceoService,
 } from '../../services';
 import { logger } from '../../config';
 import { GenerationHeader, StudentsTable } from '../../components/features/generacion-view';
-import { CreateEstudianteModal } from '../../components/features/estudiantes';
+import { CreateEstudianteModal, StudentFilters, useStudentFilters, conResumenEntrevistas } from '../../components/features/estudiantes';
 import { ExcelImportModal } from '../../components/features/estudiantes/ExcelImportModal';
 import { Spinner, ErrorMessage, useConfirmDialog } from '../../components/ui';
 import { useAuthContext } from '../../context/AuthContext';
 import PermissionService from '../../services/permissionService';
 import type { Estudiante } from '../../types';
-
-const SELECT_CLASS =
-  'text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] transition-colors flex-1 min-w-[140px]';
 
 export type UIStudent = Estudiante & {
   ultimaEntrevista?: string;
@@ -32,9 +28,6 @@ export default function GeneracionViewSimple() {
   const [generacionLoading, setGeneracionLoading] = useState(true);
   const [generacionError, setGeneracionError] = useState<string | null>(null);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterEstado, setFilterEstado] = useState('');
-  const [filterAlertas, setFilterAlertas] = useState<'todas' | 'con' | 'sin'>('todas');
   const [sortField, setSortField] = useState<keyof UIStudent>('apellido');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [students, setStudents] = useState<UIStudent[]>([]);
@@ -68,63 +61,19 @@ export default function GeneracionViewSimple() {
       .catch(() => setAlertasRuts([]));
   }, [año]);
 
-  const enrichStudentsWithStats = useCallback(async (rawStudents: Estudiante[]): Promise<UIStudent[]> => {
-    const currentYear = new Date().getFullYear();
-
-    return Promise.all(
-      rawStudents.map(async (student) => {
-        const studentId = student.rut_estudiante;
-
-        if (!studentId) {
-          return {
-            ...student,
-            totalEntrevistasAno: 0,
-          };
-        }
-
-        const entrevistas = await entrevistaService.getByEstudiante(studentId).catch((error) => {
-          logger.warn('⚠️ No se pudieron cargar entrevistas', { studentId, error });
-          return [];
-        });
-
-        const entrevistasList = Array.isArray(entrevistas) ? entrevistas : [];
-
-        const ultimaEntrevistaDate = entrevistasList
-          .map((e) => (e?.fecha_hora ? new Date(e.fecha_hora) : undefined))
-          .filter((d): d is Date => Boolean(d))
-          .sort((a, b) => b.getTime() - a.getTime())[0];
-
-        const ultimaEntrevista = ultimaEntrevistaDate?.toISOString();
-        const totalEntrevistasAno = entrevistasList.filter((e) => {
-          const f = e?.fecha_hora ? new Date(e.fecha_hora) : undefined;
-          return f?.getFullYear() === currentYear;
-        }).length;
-
-        return {
-          ...student,
-          ultimaEntrevista,
-          totalEntrevistasAno,
-        };
-      })
-    );
-  }, []);
-
   const loadStudents = useCallback(async () => {
     if (generacionId === null) return;
     logger.log('🔍 Cargando estudiantes de generación id:', generacionId);
     setStudentsLoading(true);
     try {
-      const [dataStudents, liceos] = await Promise.all([
+      const [dataStudents, resumen] = await Promise.all([
         estudianteService.getByGeneracion(generacionId),
-        liceoService.getAll().catch(() => []),
+        entrevistaService.getResumen(generacionId).catch((error) => {
+          logger.warn('⚠️ No se pudo cargar el resumen de entrevistas', error);
+          return [];
+        }),
       ]);
-      const liceoMap = new Map(liceos.map(l => [l.rbd, l]));
-      const dataConLiceo = dataStudents.map(s => ({
-        ...s,
-        liceo: liceoMap.get(s.rbd_liceo) ?? s.liceo,
-      }));
-      const studentsWithStats = await enrichStudentsWithStats(dataConLiceo);
-      setStudents(studentsWithStats);
+      setStudents(conResumenEntrevistas(dataStudents, resumen));
       logger.log('✅ Estudiantes cargados:', dataStudents.length);
 
       if (dataStudents.length === 0) {
@@ -137,39 +86,17 @@ export default function GeneracionViewSimple() {
     } finally {
       setStudentsLoading(false);
     }
-  }, [generacionId, enrichStudentsWithStats]);
+  }, [generacionId]);
 
   useEffect(() => {
     loadStudents();
   }, [loadStudents]);
 
-  const estados = [...new Set(students.map((s) => s.estado))];
+  const studentFilters = useStudentFilters(students, alertasRuts);
+  const { filtrados } = studentFilters;
 
   const filteredAndSortedStudents = useMemo(() => {
-    const alertasSet = new Set(alertasRuts);
-
-    let filtered = students.filter((student) => {
-      const nombre = student.nombre || '';
-      const apellido = student.apellido || '';
-      const rut = student.rut_estudiante || '';
-      const estado = student.estado;
-
-      const matchesSearch =
-        nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        rut.includes(searchTerm);
-
-      const matchesEstado = !filterEstado || estado === filterEstado;
-
-      return matchesSearch && matchesEstado;
-    });
-
-    if (filterAlertas !== 'todas') {
-      filtered = filtered.filter((s) => {
-        const tieneAlerta = alertasSet.has(s.rut_estudiante || '');
-        return filterAlertas === 'con' ? tieneAlerta : !tieneAlerta;
-      });
-    }
+    const filtered = [...filtrados];
 
     filtered.sort((a, b) => {
       let aVal: string | number | null | undefined = a[sortField] as string | number | null | undefined;
@@ -189,7 +116,7 @@ export default function GeneracionViewSimple() {
     });
 
     return filtered;
-  }, [students, alertasRuts, searchTerm, filterEstado, filterAlertas, sortField, sortDirection]);
+  }, [filtrados, sortField, sortDirection]);
 
   const handleSort = (field: keyof UIStudent) => {
     if (sortField === field) {
@@ -231,40 +158,7 @@ export default function GeneracionViewSimple() {
         onUploadExcel={canEdit ? () => setOpenExcelImport(true) : undefined}
       />
 
-      <div
-        className="bg-white rounded-xl px-5 py-4 space-y-3"
-        style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}
-      >
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Búsqueda y filtros</p>
-        <div className="flex flex-wrap items-center gap-3">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Nombre, apellido o RUT..."
-            className="w-56 text-sm border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#65B39B] focus:ring-1 focus:ring-[#65B39B] transition-colors bg-gray-50 focus:bg-white"
-          />
-          <select
-            value={filterAlertas}
-            onChange={(e) => setFilterAlertas(e.target.value as 'todas' | 'con' | 'sin')}
-            className={SELECT_CLASS}
-          >
-            <option value="todas">Alertas: Todas</option>
-            <option value="con">Con alerta</option>
-            <option value="sin">Sin alerta</option>
-          </select>
-          <select
-            value={filterEstado}
-            onChange={(e) => setFilterEstado(e.target.value)}
-            className={SELECT_CLASS}
-          >
-            <option value="">Todos los estados</option>
-            {estados.map((estado) => (
-              <option key={estado} value={estado}>{estado}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <StudentFilters {...studentFilters} onLimpiar={studentFilters.limpiar} />
       <div className="mt-6">
         {studentsLoading ? (
           <Spinner message="Cargando estudiantes..." />

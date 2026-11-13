@@ -4,6 +4,15 @@ import { estudiante, EstadoEstudiante, Prisma } from '@prisma/client';
 import { CreateEstudianteDto } from './dto/create-estudiante.dto';
 import { UpdateEstudianteDto } from './dto/update-estudiante.dto';
 
+// Campos de carrera que necesitan los listados de estudiantes.
+const CARRERA_LISTADO_SELECT = {
+  codigo_carrera: true,
+  nombre: true,
+  estado: true,
+  anio_ingreso: true,
+  universidad: { select: { nombre: true } },
+} satisfies Prisma.carreraSelect;
+
 @Injectable()
 export class EstudianteRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -80,26 +89,29 @@ export class EstudianteRepository {
   }
 
   /**
-   * Incluye `carreras: { estado }` porque EstudianteService las necesita para
-   * derivar el `estado` agregado del estudiante (ver derivarEstado).
+   * Incluye `carreras` con `estado` (EstudianteService lo usa para derivar el
+   * `estado` agregado del estudiante, ver derivarEstado) y con nombre, año de
+   * ingreso y nombre de la institución para las columnas de la tabla de
+   * estudiantes. Prisma resuelve la relación en lote, sin N+1.
+   *
+   * No se agrega `orderBy` a `carreras`: derivarEstado toma la última carrera
+   * de la lista y cambiar el orden cambiaría el estado derivado. El orden de
+   * presentación lo resuelve el frontend.
    */
   async findEstudianteByGeneracionId(generacion_id: number) {
     return this.prisma.estudiante.findMany({
       where: { generacion_id },
       include: {
-        carreras: { select: { estado: true } },
+        carreras: { select: CARRERA_LISTADO_SELECT },
       },
     });
   }
 
-  /**
-   * Incluye `carreras: { estado }` porque EstudianteService las necesita para
-   * derivar el `estado` agregado del estudiante (ver derivarEstado).
-   */
+  /** Mismo `include` que findEstudianteByGeneracionId. */
   async findAllEstudiantes() {
     return this.prisma.estudiante.findMany({
       include: {
-        carreras: { select: { estado: true } },
+        carreras: { select: CARRERA_LISTADO_SELECT },
       },
     });
   }

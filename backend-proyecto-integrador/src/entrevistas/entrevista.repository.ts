@@ -105,6 +105,28 @@ export class EntrevistaRepository {
     }) as Promise<EntrevistaConRelaciones[]>;
   }
 
+  /**
+   * Fecha de la última entrevista y cantidad de entrevistas desde `desde`, por
+   * estudiante, opcionalmente acotado a una generación. Son dos consultas
+   * agregadas (GROUP BY rut_estudiante), sin importar cuántos estudiantes haya.
+   */
+  async resumenPorEstudiante(desde: Date, generacion_id?: number) {
+    const where = generacion_id ? { estudiante: { generacion_id } } : {};
+    const [ultimas, recientes] = await Promise.all([
+      this.prisma.entrevista.groupBy({
+        by: ['rut_estudiante'],
+        where,
+        _max: { fecha_hora: true },
+      }),
+      this.prisma.entrevista.groupBy({
+        by: ['rut_estudiante'],
+        where: { ...where, fecha_hora: { gte: desde } },
+        _count: { _all: true },
+      }),
+    ]);
+    return { ultimas, recientes };
+  }
+
   async findByEntrevistador(rut_entrevistador: string): Promise<entrevista[]> {
     return this.prisma.entrevista.findMany({
       where: { rut_entrevistador },
